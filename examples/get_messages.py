@@ -10,10 +10,6 @@ load_dotenv()
 async def find():
     server_token: str = os.getenv("POSTMARK_SERVER_TOKEN")
     
-    if not server_token:
-        print("Please set POSTMARK_SERVER_TOKEN in your .env file")
-        return
-
     try:
         messages, total = await postmark.messages.Outbound.find(server_token=server_token)
         print(messages)
@@ -33,10 +29,6 @@ async def find():
 async def find_all():
     server_token: str = os.getenv("POSTMARK_SERVER_TOKEN")
     
-    if not server_token:
-        print("Please set POSTMARK_SERVER_TOKEN in your .env file")
-        return
-
     try:
         messages = await postmark.messages.Outbound.find_all(server_token=server_token)
         print(f"Found messages, retrieved {len(messages)} messages.")
