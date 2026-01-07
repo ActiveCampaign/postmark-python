@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # Remove Python 3.8, start from 3.9
         python-version: ["3.9", "3.10", "3.11", "3.12"]
 
     steps:
@@ -25,7 +24,7 @@ jobs:
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
-          version: 1.8.3 # Use a specific stable version instead of 'latest'
+          version: 1.8.3
           virtualenvs-create: true
           virtualenvs-in-project: true
 
@@ -68,7 +67,7 @@ jobs:
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
-          version: 1.8.3 # Use a specific stable version
+          version: 1.8.3
           virtualenvs-create: true
           virtualenvs-in-project: true
 

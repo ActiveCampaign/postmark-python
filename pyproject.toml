@@ -2,7 +2,7 @@
 name = "postmark"
 version = "0.1.0"
 description = "The Official Postmark Python SDK."
-authors = ["Greg Svoboda gsvoboda@activecampaign.com"]
+authors = ["Greg Svoboda <gsvoboda@activecampaign.com>"]
 license = "MIT"
 readme = "README.md"
 
