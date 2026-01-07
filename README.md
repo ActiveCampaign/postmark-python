@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://github.com/ActiveCampaign/postmark-python/actions/workflows/tests.yml/badge.svg)](https://github.com/ActiveCampaign/postmark-python/actions/workflows/tests.yml)
 
-The official Python SDK for [Postmark](https://postmarkapp.com) - a fast and reliable email delivery service.
+The official Python SDK for [Postmark](https://postmarkapp.com) - The email delivery service that people actually like.
 
 ## Installation
 
@@ -362,7 +362,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## About Postmark
 
-Postmark is a fast and reliable transactional email service designed for developers. Learn more at [postmarkapp.com](https://postmarkapp.com).
+Postmark is a fast and reliable transactional email service... that people actually like. Learn more at [postmarkapp.com](https://postmarkapp.com).
 
 ---
 
