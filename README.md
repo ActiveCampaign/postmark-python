@@ -1,7 +1,9 @@
 # postmark-python
 
 [![PyPI version](https://badge.fury.io/py/postmark.svg)](https://badge.fury.io/py/postmark)
-[![Python Versions](https://img.shields.io/pypi/pyversions/postmark.svg)](https://pypi.org/project/postmark/)
+[![Python Versions](https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12-blue)](https://www.python.org/)
+<!-- Change Python Versions to below when ready to publish to PyPI -->\
+<!-- [![Python Versions](https://img.shields.io/pypi/pyversions/postmark.svg)](https://pypi.org/project/postmark/) -->
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://github.com/ActiveCampaign/postmark-python/actions/workflows/tests.yml/badge.svg)](https://github.com/ActiveCampaign/postmark-python/actions/workflows/tests.yml)
 
