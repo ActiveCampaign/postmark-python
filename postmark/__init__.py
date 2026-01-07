@@ -5,10 +5,17 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 # Export exceptions for easy access
-from .exceptions import (InactiveRecipientException, InvalidAPIKeyException,
-                         PostmarkAPIException, PostmarkException,
-                         RateLimitException, ServerException, TimeoutException,
-                         ValidationException)
+from .exceptions import (
+    InactiveRecipientException,
+    InvalidAPIKeyException,
+    PostmarkAPIException,
+    PostmarkException,
+    RateLimitException,
+    ServerException,
+    TimeoutException,
+    ValidationException,
+)
+
 # Import modules
 from .models import client, messages
 

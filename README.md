@@ -3,6 +3,7 @@
 [![PyPI version](https://badge.fury.io/py/postmark.svg)](https://badge.fury.io/py/postmark)
 [![Python Versions](https://img.shields.io/pypi/pyversions/postmark.svg)](https://pypi.org/project/postmark/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://github.com/ActiveCampaign/postmark-python/actions/workflows/tests.yml/badge.svg)](https://github.com/ActiveCampaign/postmark-python/actions/workflows/tests.yml)
 
 The official Python SDK for [Postmark](https://postmarkapp.com) - a fast and reliable email delivery service.
 
@@ -12,31 +13,38 @@ The official Python SDK for [Postmark](https://postmarkapp.com) - a fast and rel
 pip install postmark
 ```
 
+**Requirements:** Python 3.9 or higher
+
 ## Quick Start
 
 ```python
 import asyncio
 import postmark
 
-async def send_email():
+async def get_messages():
     server_token = "your-server-token"
     
-    # Send a simple email
-    response = await postmark.emails.send(
+    # Search for messages
+    messages, total = await postmark.messages.Outbound.find(
         server_token=server_token,
-        from_="sender@example.com",
-        to="recipient@example.com",
-        subject="Hello from Postmark!",
-        html_body="<h1>Welcome</h1><p>This email was sent using Postmark Python SDK.</p>"
+        recipient="user@example.com",
+        fromdate="2024-01-01"
     )
-    print(f"Message sent! ID: {response.message_id}")
+    
+    print(f"Found {total} messages")
+    for msg in messages[:5]:
+        print(f"  - {msg.subject} (from: {msg.from_})")
 
-asyncio.run(send_email())
+asyncio.run(get_messages())
 ```
 
 ## Authentication
 
 The SDK requires a Postmark Server Token for API authentication. You can find your token in the [Postmark dashboard](https://account.postmarkapp.com/servers).
+
+```python
+server_token = "your-postmark-server-token"
+```
 
 For security, we recommend storing your token in environment variables:
 
@@ -59,11 +67,13 @@ import postmark
 async def search_messages():
     server_token = "your-server-token"
     
-    # Find messages sent in the last 7 days
+    # Search with filters
     messages, total = await postmark.messages.Outbound.find(
         server_token=server_token,
         count=50,
         recipient="user@example.com",
+        tag="onboarding",
+        status="sent",
         fromdate="2024-01-01"
     )
     
@@ -93,7 +103,7 @@ async def get_message_details():
 asyncio.run(get_message_details())
 ```
 
-### Pagination
+### Pagination (Auto-handling)
 
 ```python
 async def get_all_messages():
@@ -110,6 +120,57 @@ async def get_all_messages():
 
 asyncio.run(get_all_messages())
 ```
+
+## Error Handling
+
+The SDK provides specific exception types for different error scenarios:
+
+```python
+import postmark
+from postmark.exceptions import (
+    InvalidAPIKeyException,
+    ValidationException,
+    RateLimitException,
+    InactiveRecipientException,
+    PostmarkException
+)
+
+async def safe_message_search():
+    try:
+        messages, total = await postmark.messages.Outbound.find(
+            server_token="your-token",
+            recipient="user@example.com"
+        )
+        print(f"Found {total} messages")
+        
+    except InvalidAPIKeyException as e:
+        print(f"Invalid API key: {e}")
+        
+    except ValidationException as e:
+        print(f"Invalid parameters: {e}")
+        
+    except RateLimitException as e:
+        print(f"Rate limit hit: {e}")
+        # Implement retry logic here
+        
+    except InactiveRecipientException as e:
+        print(f"Recipient has bounced: {e}")
+        
+    except PostmarkException as e:
+        print(f"General Postmark error: {e}")
+
+asyncio.run(safe_message_search())
+```
+
+### Exception Types
+
+- **`InvalidAPIKeyException`**: Invalid or missing API key (401)
+- **`ValidationException`**: Invalid request parameters (422)
+- **`RateLimitException`**: Rate limit exceeded (429)
+- **`InactiveRecipientException`**: Inactive recipient (406)
+- **`ServerException`**: Server errors (500/503)
+- **`TimeoutException`**: Request timeout
+- **`PostmarkException`**: Base exception for all Postmark errors
 
 ## Advanced Configuration
 
@@ -177,34 +238,10 @@ Retrieve all messages matching filters with automatic pagination.
 
 **Returns:** List of all matching `Outbound` objects
 
-## Error Handling
-
-```python
-import asyncio
-import postmark
-from httpx import HTTPStatusError
-
-async def safe_message_search():
-    try:
-        messages, total = await postmark.messages.Outbound.find(
-            server_token="your-token",
-            recipient="user@example.com"
-        )
-        print(f"Found {total} messages")
-    except HTTPStatusError as e:
-        print(f"API error: {e.response.status_code}")
-    except ValueError as e:
-        print(f"Invalid parameters: {e}")
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-
-asyncio.run(safe_message_search())
-```
-
 ## Development
 
 ### Prerequisites
-- Python 3.8+
+- Python 3.9+
 - Poetry (for dependency management)
 
 ### Setup
@@ -220,6 +257,9 @@ poetry install
 # Run tests
 poetry run pytest
 
+# Run with coverage
+poetry run pytest --cov=postmark --cov-report=term-missing
+
 # Run examples
 poetry run python examples/get_messages.py
 ```
@@ -230,18 +270,20 @@ poetry run python examples/get_messages.py
 postmark-python/
 ├── postmark/
 │   ├── __init__.py
+│   ├── exceptions.py       # Custom exception classes
 │   ├── models/
 │   │   ├── __init__.py
-│   │   ├── client.py      # HTTP client logic
-│   │   └── messages.py    # Message models and API methods
-│   └── logging.py          # Logging utilities
+│   │   ├── client.py       # HTTP client with error handling
+│   │   └── messages.py     # Message models and API methods
+│   └── tests/              # Test suite
+│       ├── test_client.py
+│       └── test_messages.py
 ├── examples/
 │   └── get_messages.py     # Usage examples
-├── tests/
-│   └── test_messages.py    # Test suite
 ├── README.md
 ├── LICENSE
-└── pyproject.toml          # Project dependencies
+├── pytest.ini              # Pytest configuration
+└── pyproject.toml          # Project dependencies and configuration
 ```
 
 ### Running Tests
@@ -250,20 +292,38 @@ postmark-python/
 # Run all tests
 poetry run pytest
 
-# Run with coverage
-poetry run pytest --cov=postmark
+# Run with coverage report
+poetry run pytest --cov=postmark --cov-report=term-missing
 
 # Run specific test file
-poetry run pytest tests/test_messages.py
-
-# Run specific test
-poetry run pytest tests/test_messages.py::TestOutboundMessages::test_find_messages_success
+poetry run pytest postmark/tests/test_messages.py
 
 # Run with verbose output
 poetry run pytest -v
 
-# Run only failed tests
-poetry run pytest --lf
+# See HTML coverage report
+poetry run pytest --cov=postmark --cov-report=html
+open htmlcov/index.html
+```
+
+### Code Formatting
+
+This project uses [Black](https://github.com/psf/black) for code formatting:
+
+```bash
+# Format code
+poetry run black postmark/
+
+# Check formatting without making changes
+poetry run black --check postmark/
+```
+
+### Type Checking
+
+Run type checking with mypy:
+
+```bash
+poetry run mypy postmark/
 ```
 
 ## Contributing
@@ -272,25 +332,20 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+3. Format your code with Black (`poetry run black postmark/`)
+4. Add tests for your changes
+5. Run tests to ensure everything passes (`poetry run pytest`)
+6. Commit your changes (`git commit -m 'Add amazing feature'`)
+7. Push to the branch (`git push origin feature/amazing-feature`)
+8. Open a Pull Request
 
-### Code Style
+### Development Guidelines
 
-This project uses:
-- [Black](https://github.com/psf/black) for code formatting
-- [isort](https://github.com/PyCQA/isort) for import sorting
-- [mypy](https://github.com/python/mypy) for type checking
-
-```bash
-# Format code
-poetry run black postmark/
-poetry run isort postmark/
-
-# Type checking
-poetry run mypy postmark/
-```
+- All code must be formatted with Black (line length: 100)
+- Add type hints where possible
+- Write tests for new functionality
+- Update documentation as needed
+- Follow existing code style and conventions
 
 ## Support
 
@@ -302,14 +357,6 @@ poetry run mypy postmark/
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for a list of changes.
-
-### Version History
-
-- **0.0.1** - Alpha release with very limited functionality
 
 ## About Postmark
 

@@ -14,15 +14,8 @@
     "python.formatting.blackArgs": [
         "--line-length=100"
     ],
-    // Sort imports on save
-    "python.sortImports.args": [
-        "--profile",
-        "black"
-    ],
     "[python]": {
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": true
-        }
+        "editor.codeActionsOnSave": {}
     },
     // File associations
     "files.associations": {

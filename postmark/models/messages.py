@@ -4,8 +4,15 @@ from datetime import datetime
 from enum import Enum
 from typing import Annotated, Any, Dict, List, Optional, Union
 
-from pydantic import (BaseModel, BeforeValidator, ConfigDict, EmailStr, Field,
-                      TypeAdapter, ValidationError)
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    EmailStr,
+    Field,
+    TypeAdapter,
+    ValidationError,
+)
 
 from . import client
 

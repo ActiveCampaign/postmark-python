@@ -78,9 +78,6 @@ jobs:
       - name: Run Black
         run: poetry run black --check postmark/
 
-      - name: Run isort
-        run: poetry run isort --check-only postmark/
-
       - name: Run MyPy
         run: poetry run mypy postmark/
         continue-on-error: true

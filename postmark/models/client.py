@@ -5,9 +5,13 @@ from typing import Optional
 
 import httpx
 
-from ..exceptions import (InvalidAPIKeyException, PostmarkAPIException,
-                          PostmarkException, TimeoutException,
-                          get_exception_class)
+from ..exceptions import (
+    InvalidAPIKeyException,
+    PostmarkAPIException,
+    PostmarkException,
+    TimeoutException,
+    get_exception_class,
+)
 
 # Get a logger for this module
 logger = logging.getLogger(__name__)
