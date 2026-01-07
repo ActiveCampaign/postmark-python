@@ -237,7 +237,7 @@ class Outbound(BaseModel):
             raise ValueError("Count + Offset cannot exceed 10,000 messages")
 
         # Build params
-        params = {
+        params: Dict[str, Any] = {
             "count": count,
             "offset": offset,
         }

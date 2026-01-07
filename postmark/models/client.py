@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from typing import Optional
+from typing import Optional, Dict, Any
 
 import httpx
 
@@ -85,20 +85,28 @@ async def request(
             raise PostmarkException(f"Request failed: {str(e)}") from e
 
 
-async def get(endpoint: str, server_token: str, params: dict = None) -> httpx.Response:
+async def get(
+    endpoint: str, server_token: str, params: Optional[Dict[str, Any]] = None
+) -> httpx.Response:
     return await request("GET", endpoint, server_token=server_token, params=params)
 
 
-async def post(endpoint: str, server_token: str, json: dict = None) -> httpx.Response:
+async def post(
+    endpoint: str, server_token: str, json: Optional[Dict[str, Any]] = None
+) -> httpx.Response:
     return await request("POST", endpoint, server_token=server_token, json=json)
 
 
-async def put(endpoint: str, server_token: str, json: dict = None) -> httpx.Response:
+async def put(
+    endpoint: str, server_token: str, json: Optional[Dict[str, Any]] = None
+) -> httpx.Response:
     return await request("PUT", endpoint, server_token=server_token, json=json)
 
 
-async def delete(endpoint: str, server_token: str) -> httpx.Response:
-    return await request("DELETE", endpoint, server_token=server_token)
+# async def delete(
+#     endpoint: str, server_token: str, json: Optional[Dict[str, Any]] = None
+# ) -> httpx.Response:
+#     return await request("DELETE", endpoint, server_token=server_token, json=json)
 
 
 def parse_error_response(response: httpx.Response) -> tuple[str, Optional[int]]:
