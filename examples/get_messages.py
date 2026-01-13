@@ -3,7 +3,6 @@ import asyncio
 from dotenv import load_dotenv  #
 import postmark
 
-
 # Load the variables from the .env file into os.environ
 load_dotenv()
 
@@ -11,11 +10,11 @@ load_dotenv()
 async def find():
     server_token: str = os.getenv("POSTMARK_SERVER_TOKEN")
 
+    server = postmark.ServerClient(server_token=server_token)
+
     try:
-        messages, total = await postmark.messages.Outbound.find(
-            server_token=server_token
-        )
-        print(messages)
+        messages, total = await server.messages.Outbound.find()
+
         print(f"Found {total} messages, retrieved {len(messages)} messages.")
         if messages:
             for msg in messages[:3]:
@@ -33,8 +32,10 @@ async def find():
 async def find_all():
     server_token: str = os.getenv("POSTMARK_SERVER_TOKEN")
 
+    server = postmark.ServerClient(server_token=server_token)
+
     try:
-        messages = await postmark.messages.Outbound.find_all(server_token=server_token)
+        messages = await server.messages.Outbound.find_all()
         print(f"Found messages, retrieved {len(messages)} messages.")
         if messages:
             for msg in messages[:3]:

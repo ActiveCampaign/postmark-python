@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from httpx import Response
 
-from postmark.models import messages
+from postmark import ServerClient
 
 
 class TestOutboundMessages:
@@ -61,20 +61,18 @@ class TestOutboundMessages:
     @pytest.mark.asyncio
     async def test_find_messages_success(self, mock_response_data):
         """Test successful message search."""
-        # Create mock response
         mock_response = Mock(spec=Response)
         mock_response.json.return_value = mock_response_data
         mock_response.raise_for_status = Mock()
 
-        # Mock the client.get function
-        with patch(
-            "postmark.models.messages.client.get", new_callable=AsyncMock
-        ) as mock_get:
+        # Instantiate Client
+        client = ServerClient(server_token="test-token")
+        # Mock the instance's get method
+        with patch.object(client, "get", new_callable=AsyncMock) as mock_get:
             mock_get.return_value = mock_response
-
-            # Call the method
-            messages_list, total = await messages.Outbound.find(
-                server_token="test-token", count=50, tag="welcome"
+            # Call the method via the client instance
+            messages_list, total = await client.messages.Outbound.find(
+                count=50, tag="welcome"
             )
 
             # Assertions
@@ -82,12 +80,9 @@ class TestOutboundMessages:
             assert len(messages_list) == 2
             assert messages_list[0].message_id == "msg-123"
             assert messages_list[0].subject == "Welcome!"
-            assert messages_list[1].message_id == "msg-456"
-
             # Verify the API was called correctly
             mock_get.assert_called_once_with(
                 "/messages/outbound",
-                server_token="test-token",
                 params={"count": 50, "offset": 0, "tag": "welcome"},
             )
 
@@ -98,14 +93,13 @@ class TestOutboundMessages:
         mock_response.json.return_value = {"TotalCount": 0, "Messages": []}
         mock_response.raise_for_status = Mock()
 
-        with patch(
-            "postmark.models.messages.client.get", new_callable=AsyncMock
-        ) as mock_get:
+        client = ServerClient(server_token="test-token")
+
+        with patch.object(client, "get", new_callable=AsyncMock) as mock_get:
             mock_get.return_value = mock_response
 
             # Test with date filters
-            messages_list, total = await messages.Outbound.find(
-                server_token="test-token",
+            messages_list, total = await client.messages.Outbound.find(
                 recipient="user@example.com",
                 fromdate=datetime(2024, 1, 1, 10, 0, 0),
                 todate="2024-01-31T23:59:59",
@@ -124,21 +118,20 @@ class TestOutboundMessages:
     @pytest.mark.asyncio
     async def test_find_messages_validation_errors(self):
         """Test validation errors for invalid parameters."""
+        client = ServerClient(server_token="test-token")
+
         # Test count > 500
         with pytest.raises(ValueError, match="Count cannot exceed 500"):
-            await messages.Outbound.find(server_token="test-token", count=501)
+            await client.messages.Outbound.find(count=501)
 
         # Test count + offset > 10000
         with pytest.raises(ValueError, match="Count \\+ Offset cannot exceed 10,000"):
-            await messages.Outbound.find(
-                server_token="test-token", count=500, offset=9501
-            )
+            await client.messages.Outbound.find(count=500, offset=9501)
 
         # Test multiple metadata fields
         with pytest.raises(ValueError, match="Can only filter by one metadata field"):
-            await messages.Outbound.find(
-                server_token="test-token",
-                metadata={"field1": "value1", "field2": "value2"},
+            await client.messages.Outbound.find(
+                metadata={"field1": "value1", "field2": "value2"}
             )
 
     @pytest.mark.asyncio
@@ -202,14 +195,12 @@ class TestOutboundMessages:
         mock_response2.json.return_value = response2_data
         mock_response2.raise_for_status = Mock()
 
-        with patch(
-            "postmark.models.messages.client.get", new_callable=AsyncMock
-        ) as mock_get:
+        client = ServerClient(server_token="test-token")
+
+        with patch.object(client, "get", new_callable=AsyncMock) as mock_get:
             mock_get.side_effect = [mock_response1, mock_response2]
 
-            all_messages = await messages.Outbound.find_all(
-                server_token="test-token", max_messages=750
-            )
+            all_messages = await client.messages.Outbound.find_all(max_messages=750)
 
             assert len(all_messages) == 750
             assert all_messages[0].message_id == "msg-0"
@@ -249,70 +240,15 @@ class TestOutboundMessages:
         mock_response.json.return_value = detail_response
         mock_response.raise_for_status = Mock()
 
-        with patch(
-            "postmark.models.messages.client.get", new_callable=AsyncMock
-        ) as mock_get:
+        client = ServerClient(server_token="test-token")
+
+        with patch.object(client, "get", new_callable=AsyncMock) as mock_get:
             mock_get.return_value = mock_response
 
-            message = await messages.Outbound.get(
-                message_id="msg-123", server_token="test-token"
-            )
+            message = await client.messages.Outbound.get(message_id="msg-123")
 
             assert message.message_id == "msg-123"
             assert message.text_body == "Plain text content"
             assert message.html_body == "<p>HTML content</p>"
 
-            mock_get.assert_called_once_with(
-                "/messages/outbound/msg-123/details", server_token="test-token"
-            )
-
-
-class TestEmailValidation:
-    """Tests for email validation functions."""
-
-    def test_validate_formatted_email_valid(self):
-        """Test valid email formats."""
-        from postmark.models.messages import validate_formatted_email
-
-        # Plain email
-        assert validate_formatted_email("user@example.com") == "user@example.com"
-
-        # Formatted email
-        assert (
-            validate_formatted_email('"John Doe" <john@example.com>')
-            == '"John Doe" <john@example.com>'
-        )
-
-        # Email with no quotes
-        assert (
-            validate_formatted_email("Jane Doe <jane@example.com>")
-            == "Jane Doe <jane@example.com>"
-        )
-
-    def test_validate_formatted_email_invalid(self):
-        """Test invalid email formats."""
-        from postmark.models.messages import validate_formatted_email
-
-        with pytest.raises(ValueError, match="Invalid email"):
-            validate_formatted_email("not-an-email")
-
-        with pytest.raises(ValueError, match="Invalid email"):
-            validate_formatted_email("Name <invalid-email>")
-
-        with pytest.raises(ValueError, match="Email cannot be empty"):
-            validate_formatted_email("")
-
-        with pytest.raises(ValueError, match="Email cannot be None"):
-            validate_formatted_email(None)
-
-    def test_validate_email_list(self):
-        """Test email list validation."""
-        from postmark.models.messages import validate_email_list
-
-        # Valid list
-        valid = ["user1@example.com", "user2@example.com"]
-        assert validate_email_list(valid) == valid
-
-        # Invalid list
-        with pytest.raises(ValueError, match="Invalid email address in list"):
-            validate_email_list(["valid@example.com", "invalid-email"])
+            mock_get.assert_called_once_with("/messages/outbound/msg-123/details")

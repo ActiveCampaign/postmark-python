@@ -22,11 +22,11 @@ import asyncio
 import postmark
 
 async def get_messages():
-    server_token = "your-server-token"
+    # Initialize the client
+    server = postmark.ServerClient(server_token="your-server-token")
     
     # Search for messages
-    messages, total = await postmark.messages.Outbound.find(
-        server_token=server_token,
+    messages, total = await server.messages.Outbound.find(
         recipient="user@example.com",
         fromdate="2024-01-01"
     )
@@ -53,7 +53,8 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
-server_token = os.getenv("POSTMARK_SERVER_TOKEN")
+token = os.getenv("POSTMARK_SERVER_TOKEN")
+server = postmark.ServerClient(server_token=token)
 ```
 
 ## Usage Examples
@@ -65,11 +66,10 @@ import asyncio
 import postmark
 
 async def search_messages():
-    server_token = "your-server-token"
+    server = postmark.ServerClient(server_token="your-server-token")
     
     # Search with filters
-    messages, total = await postmark.messages.Outbound.find(
-        server_token=server_token,
+    messages, total = await server.messages.Outbound.find(
         count=50,
         recipient="user@example.com",
         tag="onboarding",
@@ -88,13 +88,10 @@ asyncio.run(search_messages())
 
 ```python
 async def get_message_details():
-    server_token = "your-server-token"
+    server = postmark.ServerClient(server_token="your-server-token")
     message_id = "your-message-id"
     
-    message = await postmark.messages.Outbound.find_by_id(
-        message_id=message_id,
-        server_token=server_token
-    )
+    message = await server.messages.Outbound.get(message_id=message_id)
     
     print(f"Subject: {message.subject}")
     print(f"From: {message.from_}")
@@ -107,11 +104,10 @@ asyncio.run(get_message_details())
 
 ```python
 async def get_all_messages():
-    server_token = "your-server-token"
+    server = postmark.ServerClient(server_token="your-server-token")
     
     # Automatically handles pagination to retrieve up to 1000 messages
-    all_messages = await postmark.messages.Outbound.find_all(
-        server_token=server_token,
+    all_messages = await server.messages.Outbound.find_all(
         max_messages=1000,
         tag="onboarding"
     )
@@ -136,9 +132,10 @@ from postmark.exceptions import (
 )
 
 async def safe_message_search():
+    server = postmark.ServerClient(server_token="your-server-token")
+
     try:
-        messages, total = await postmark.messages.Outbound.find(
-            server_token="your-token",
+        messages, total = await server.messages.Outbound.find(
             recipient="user@example.com"
         )
         print(f"Found {total} messages")
@@ -160,6 +157,7 @@ async def safe_message_search():
         print(f"General Postmark error: {e}")
 
 asyncio.run(safe_message_search())
+
 ```
 
 ### Exception Types
@@ -199,13 +197,13 @@ logging.getLogger('postmark').setLevel(logging.DEBUG)
 
 ## API Reference
 
-### Messages API
+### Outbound Messages API
+Access via `Access via server.messages.Outbound`
 
 #### `Outbound.find()`
 Search for outbound messages with various filters.
 
 **Parameters:**
-- `server_token` (str): Your Postmark server token
 - `count` (int): Number of messages to return (max 500, default 100)
 - `offset` (int): Number of messages to skip (default 0)
 - `recipient` (str): Filter by recipient email
@@ -219,12 +217,11 @@ Search for outbound messages with various filters.
 
 **Returns:** Tuple of (list of messages, total count)
 
-#### `Outbound.find_by_id()`
+#### `Outbound.get()`
 Get detailed information about a specific message.
 
 **Parameters:**
 - `message_id` (str): The message ID to retrieve
-- `server_token` (str): Your Postmark server token
 
 **Returns:** `OutboundMessageDetails` object with full message content
 
@@ -232,7 +229,6 @@ Get detailed information about a specific message.
 Retrieve all messages matching filters with automatic pagination.
 
 **Parameters:**
-- `server_token` (str): Your Postmark server token
 - `max_messages` (int): Maximum messages to retrieve (up to 10,000, default 1000)
 - `**filters`: Same filter parameters as `find()` method
 
@@ -248,7 +244,7 @@ Retrieve all messages matching filters with automatic pagination.
 
 ```bash
 # Clone the repository
-git clone https://github.com/ActiveCampaign/postmark-python.git
+git clone [https://github.com/ActiveCampaign/postmark-python.git](https://github.com/ActiveCampaign/postmark-python.git)
 cd postmark-python
 
 # Install dependencies
@@ -262,28 +258,6 @@ poetry run pytest --cov=postmark --cov-report=term-missing
 
 # Run examples
 poetry run python examples/get_messages.py
-```
-
-### Project Structure
-
-```
-postmark-python/
-├── postmark/
-│   ├── __init__.py
-│   ├── exceptions.py       # Custom exception classes
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── client.py       # HTTP client with error handling
-│   │   └── messages.py     # Message models and API methods
-│   └── tests/              # Test suite
-│       ├── test_client.py
-│       └── test_messages.py
-├── examples/
-│   └── get_messages.py     # Usage examples
-├── README.md
-├── LICENSE
-├── pytest.ini              # Pytest configuration
-└── pyproject.toml          # Project dependencies and configuration
 ```
 
 ### Running Tests

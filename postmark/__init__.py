@@ -17,10 +17,12 @@ from .exceptions import (
 )
 
 # Import modules
-from .models import client, messages
+from .clients.server_client import ServerClient
+from .models import messages
+from .utils import server_utils
 
 __all__ = [
-    "client",
+    "ServerClient",
     "messages",
     "PostmarkException",
     "PostmarkAPIException",
@@ -30,4 +32,5 @@ __all__ = [
     "RateLimitException",
     "ServerException",
     "TimeoutException",
+    "server_utils",
 ]
