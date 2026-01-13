@@ -72,15 +72,19 @@ class EmailAddress(BaseModel):
 
 class Attachment(BaseModel):
     name: str = Field(alias="Name")
-    content: Optional[str] = Field(None, alias="Content")
-    content_type: Optional[str] = Field(None, alias="ContentType")
+    content: str = Field(alias="Content")
+    content_type: str = Field(alias="ContentType")
     content_id: Optional[str] = Field(None, alias="ContentID")
     content_length: Optional[int] = Field(None, alias="ContentLength")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class Header(BaseModel):
     name: str = Field(alias="Name")
     value: str = Field(alias="Value")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class ClientInfo(BaseModel):
@@ -134,6 +138,46 @@ class MessageEvent(BaseModel):
     type: MessageEventType = Field(alias="Type")
     received_at: datetime = Field(alias="ReceivedAt")
     details: Optional[MessageEventDetails] = Field(None, alias="Details")
+
+
+# --- Response Models ---
+
+
+class SendResponse(BaseModel):
+    """Response returned when an email is sent."""
+
+    to: str = Field(alias="To")
+    submitted_at: datetime = Field(alias="SubmittedAt")
+    message_id: str = Field(alias="MessageID")
+    error_code: int = Field(alias="ErrorCode")
+    message: str = Field(alias="Message")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+# --- Request Models ---
+
+
+class Email(BaseModel):
+    """Model for sending an email."""
+
+    from_: str = Field(alias="From")
+    to: str = Field(alias="To")
+    cc: Optional[str] = Field(None, alias="Cc")
+    bcc: Optional[str] = Field(None, alias="Bcc")
+    subject: Optional[str] = Field(None, alias="Subject")
+    tag: Optional[str] = Field(None, alias="Tag")
+    html_body: Optional[str] = Field(None, alias="HtmlBody")
+    text_body: Optional[str] = Field(None, alias="TextBody")
+    reply_to: Optional[str] = Field(None, alias="ReplyTo")
+    headers: List[Header] = Field(default_factory=list, alias="Headers")
+    track_opens: Optional[bool] = Field(None, alias="TrackOpens")
+    track_links: Optional[TrackLinksOption] = Field(None, alias="TrackLinks")
+    attachments: List[Attachment] = Field(default_factory=list, alias="Attachments")
+    metadata: Dict[str, str] = Field(default_factory=dict, alias="Metadata")
+    message_stream: Optional[str] = Field(None, alias="MessageStream")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 # Main Message models
@@ -255,6 +299,54 @@ class OutboundManager:
 
     def __init__(self, client: "ServerClient"):
         self.client = client
+
+    async def send(self, message: Union[Email, Dict[str, Any]]) -> SendResponse:
+        """
+        Send a single email.
+
+        Args:
+            message: An Email object or a dictionary containing the email details.
+        """
+        if isinstance(message, dict):
+            # Validate and convert dict to Email model
+            email_payload = Email(**message)
+        else:
+            email_payload = message
+
+        logger.debug(f"Sending email to {email_payload.to}")
+
+        response = await self.client.post(
+            "/email", json=email_payload.model_dump(by_alias=True, exclude_none=True)
+        )
+
+        return SendResponse(**response.json())
+
+    async def send_batch(
+        self, messages: List[Union[Email, Dict[str, Any]]]
+    ) -> List[SendResponse]:
+        """
+        Send multiple emails in a single batch (max 500).
+
+        Args:
+            messages: A list of Email objects or dictionaries.
+        """
+        if len(messages) > 500:
+            raise ValueError("Batch size cannot exceed 500 messages")
+
+        logger.debug(f"Sending batch of {len(messages)} emails")
+
+        payload = []
+        for msg in messages:
+            if isinstance(msg, dict):
+                email_obj = Email(**msg)
+            else:
+                email_obj = msg
+            payload.append(email_obj.model_dump(by_alias=True, exclude_none=True))
+
+        response = await self.client.post("/email/batch", json=payload)
+
+        # Batch response is a list of SendResponse objects
+        return [SendResponse(**item) for item in response.json()]
 
     async def find(
         self,
