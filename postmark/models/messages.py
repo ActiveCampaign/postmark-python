@@ -27,8 +27,11 @@ def validate_formatted_email(v: str) -> str:
     """
     Validate email fields that may contain formatted strings like "Name" <email@example.com>
     """
-    if not v:
-        return v
+
+    if v is None:  # None
+        raise ValueError("Email cannot be None")
+    if not v:  # Empty string
+        raise ValueError("Email cannot be empty")
 
     # Extract email from formats like: "Name" <email@example.com> or just email@example.com
     email_pattern = r'<([^>]+)>|([^\s<>"]+@[^\s<>"]+)'
