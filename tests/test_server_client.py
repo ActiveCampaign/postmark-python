@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from httpx import AsyncClient, HTTPStatusError, Response
 
-from postmark.clients.server_client import ServerClient
+from ..postmark.clients.server_client import ServerClient
 
 from postmark.exceptions import (
     PostmarkException,
