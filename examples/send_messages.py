@@ -2,13 +2,13 @@ import os
 import asyncio
 from dotenv import load_dotenv
 import postmark
-from postmark.models.messages import Email
+from postmark import Email
 
 # Load the variables from the .env file into os.environ
 load_dotenv()
 
 
-async def send_single_email():
+async def send_single_email_using_json():
     """
     Example: Sending a single email.
     """
@@ -38,7 +38,7 @@ async def send_single_email():
         print(f"Error sending email: {e}")
 
 
-async def send_using_model():
+async def send_single_email_using_model():
     """
     Example: Sending an email using the Pydantic Email model for better type safety.
     """
@@ -56,6 +56,8 @@ async def send_using_model():
             text_body="This email was built using the Pydantic model.",
             metadata={"user_id": "12345"},
         )
+
+        email = Email(subject="")
 
         response = await server.messages.Outbound.send(email)
 
@@ -105,8 +107,8 @@ async def send_batch_emails():
 if __name__ == "__main__":
 
     async def main():
-        await send_single_email()
-        # await send_using_model()
+        await send_single_email_using_json()
+        # await send_single_email_using_model()
         # await send_batch_emails()
 
     asyncio.run(main())

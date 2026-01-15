@@ -16,13 +16,20 @@ from .exceptions import (
     ValidationException,
 )
 
-# Import modules
+# Import Client
 from .clients.server_client import ServerClient
+
 from .models import messages
+from .models.messages import Email, SendResponse, Attachment, Header
+
 from .utils import server_utils
 
 __all__ = [
     "ServerClient",
+    "Email",
+    "SendResponse",
+    "Attachment",
+    "Header",
     "messages",
     "PostmarkException",
     "PostmarkAPIException",
