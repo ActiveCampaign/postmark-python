@@ -9,9 +9,7 @@ The official Python SDK for [Postmark](https://postmarkapp.com) - The email deli
 
 ## Installation
 
-```bash
-pip install postmark
-```
+(pip install coming soon)
 
 **Requirements:** Python 3.9 or higher
 
