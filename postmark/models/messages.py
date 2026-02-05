@@ -2,7 +2,16 @@ import logging
 import re
 from datetime import datetime
 from enum import Enum
-from typing import Annotated, Any, Dict, List, Optional, Union, TYPE_CHECKING
+from typing import (
+    Annotated,
+    Any,
+    Dict,
+    List,
+    Optional,
+    Union,
+    TYPE_CHECKING,
+    AsyncGenerator,
+)
 
 from ..utils.message_utils import validate_formatted_email, validate_email_list
 
@@ -25,7 +34,6 @@ email_adapter = TypeAdapter(EmailStr)
 
 # Logging Initialize
 logger = logging.getLogger(__name__)
-
 
 # Type aliases for commonly used field patterns
 FormattedEmailStr = Annotated[str, BeforeValidator(validate_formatted_email)]
@@ -161,7 +169,7 @@ class SendResponse(BaseModel):
 class Email(BaseModel):
     """Model for sending an email."""
 
-    from_: str = Field(alias="From")
+    sender: str = Field(alias="From")
     to: str = Field(alias="To")
     cc: Optional[str] = Field(None, alias="Cc")
     bcc: Optional[str] = Field(None, alias="Bcc")
@@ -192,7 +200,7 @@ class Outbound(BaseModel):
     bcc: List[EmailAddress] = Field(default_factory=list, alias="Bcc")
     recipients: EmailList = Field(alias="Recipients")
     received_at: datetime = Field(alias="ReceivedAt")
-    from_: FormattedEmailStr = Field(alias="From")
+    sender: FormattedEmailStr = Field(alias="From")
     subject: str = Field(alias="Subject")
     attachments: List[Union[str, Attachment]] = Field(
         default_factory=list, alias="Attachments"
@@ -220,9 +228,9 @@ class OutboundMessageDetails(Outbound):
 class InboundMessageSummary(BaseModel):
     """Inbound message summary returned from search/list endpoints"""
 
-    from_: FormattedEmailStr = Field(alias="From")
-    from_name: Optional[str] = Field(None, alias="FromName")
-    from_full: Optional[EmailAddress] = Field(None, alias="FromFull")
+    sender: FormattedEmailStr = Field(alias="From")
+    sendername: Optional[str] = Field(None, alias="FromName")
+    senderfull: Optional[EmailAddress] = Field(None, alias="FromFull")
     to: str = Field(alias="To")
     to_full: List[EmailAddress] = Field(default_factory=list, alias="ToFull")
     cc: str = Field("", alias="Cc")
@@ -348,7 +356,7 @@ class OutboundManager:
         # Batch response is a list of SendResponse objects
         return [SendResponse(**item) for item in response.json()]
 
-    async def find(
+    async def list(
         self,
         count: int = 100,
         offset: int = 0,
@@ -363,9 +371,12 @@ class OutboundManager:
         metadata: Optional[Dict[str, str]] = None,
     ) -> tuple[List[Outbound], int]:
         """
-        Search for outbound messages.
+        List outbound messages.
+
+        Returns:
+            A tuple containing (list of Outbound messages, total count matching filter).
         """
-        logger.info(f"Searching for outbound messages (count={count}, offset={offset})")
+        logger.info(f"Listing outbound messages (count={count}, offset={offset})")
 
         # Validate constraints
         if count > 500:
@@ -425,36 +436,58 @@ class OutboundManager:
 
         return messages, total_count
 
-    async def find_all(self, max_messages: int = 1000, **filters) -> List[Outbound]:
+    async def stream(
+        self, batch_size: int = 500, max_messages: int = 1000, **filters
+    ) -> AsyncGenerator[Outbound, None]:
         """
-        Find all messages matching the filters, handling pagination automatically.
+        Stream messages matching the filters, handling pagination automatically.
+        Yields messages one by one.
+
+        Args:
+            batch_size: Number of messages to fetch per API call (max 500).
+            max_messages: Maximum number of messages to yield (max 10,000 via API).
+            **filters: Arguments passed to list() (e.g. tag, status, recipient).
         """
-        logger.debug(f"Finding all messages (max={max_messages})")
+        logger.debug(f"Streaming messages (max={max_messages})")
 
         if max_messages > 10000:
             raise ValueError("Cannot retrieve more than 10,000 messages")
 
-        all_messages = []
         offset = 0
-        count = min(500, max_messages)
+        yielded_count = 0
 
-        while offset < max_messages:
-            messages, total_count = await self.find(
-                count=count, offset=offset, **filters
+        # Cap batch_size at 500 (API limit)
+        batch_size = min(batch_size, 500)
+
+        while yielded_count < max_messages:
+            # Determine how many to fetch in this batch
+            remaining = max_messages - yielded_count
+            current_limit = min(batch_size, remaining)
+
+            # Ensure we don't breach the 10k hard limit of offset + count
+            if offset + current_limit > 10000:
+                current_limit = 10000 - offset
+                if current_limit <= 0:
+                    break
+
+            messages, total_count = await self.list(
+                count=current_limit, offset=offset, **filters
             )
 
-            all_messages.extend(messages)
-
-            # Check if all available messages have been retrieved
-            if not messages or len(all_messages) >= total_count:
+            if not messages:
                 break
 
-            offset += count
-            remaining = max_messages - offset
-            count = min(500, remaining)
+            for msg in messages:
+                yield msg
+                yielded_count += 1
+                if yielded_count >= max_messages:
+                    return
 
-        logger.info(f"Retrieved {len(all_messages)} messages total")
-        return all_messages[:max_messages]
+            offset += len(messages)
+
+            # If we've reached the end of results on the server
+            if offset >= total_count:
+                break
 
     async def get(self, message_id: str) -> OutboundMessageDetails:
         """

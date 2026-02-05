@@ -59,8 +59,8 @@ class TestOutboundMessages:
         }
 
     @pytest.mark.asyncio
-    async def test_find_messages_success(self, mock_response_data):
-        """Test successful message search."""
+    async def test_list_messages_success(self, mock_response_data):
+        """Test successful message search using .list()."""
         mock_response = Mock(spec=Response)
         mock_response.json.return_value = mock_response_data
         mock_response.raise_for_status = Mock()
@@ -70,8 +70,10 @@ class TestOutboundMessages:
         # Mock the instance's get method
         with patch.object(client, "get", new_callable=AsyncMock) as mock_get:
             mock_get.return_value = mock_response
+
             # Call the method via the client instance
-            messages_list, total = await client.messages.Outbound.find(
+            # CHANGED: .find() -> .list()
+            messages_list, total = await client.messages.Outbound.list(
                 count=50, tag="welcome"
             )
 
@@ -87,8 +89,8 @@ class TestOutboundMessages:
             )
 
     @pytest.mark.asyncio
-    async def test_find_messages_with_filters(self):
-        """Test message search with multiple filters."""
+    async def test_list_messages_with_filters(self):
+        """Test message search with multiple filters using .list()."""
         mock_response = Mock(spec=Response)
         mock_response.json.return_value = {"TotalCount": 0, "Messages": []}
         mock_response.raise_for_status = Mock()
@@ -99,7 +101,8 @@ class TestOutboundMessages:
             mock_get.return_value = mock_response
 
             # Test with date filters
-            messages_list, total = await client.messages.Outbound.find(
+            # CHANGED: .find() -> .list()
+            messages_list, total = await client.messages.Outbound.list(
                 recipient="user@example.com",
                 fromdate=datetime(2024, 1, 1, 10, 0, 0),
                 todate="2024-01-31T23:59:59",
@@ -116,27 +119,28 @@ class TestOutboundMessages:
             assert params["status"] == "sent"
 
     @pytest.mark.asyncio
-    async def test_find_messages_validation_errors(self):
-        """Test validation errors for invalid parameters."""
+    async def test_list_messages_validation_errors(self):
+        """Test validation errors for invalid parameters in .list()."""
         client = ServerClient(server_token="test-token")
 
         # Test count > 500
         with pytest.raises(ValueError, match="Count cannot exceed 500"):
-            await client.messages.Outbound.find(count=501)
+            # CHANGED: .find() -> .list()
+            await client.messages.Outbound.list(count=501)
 
         # Test count + offset > 10000
         with pytest.raises(ValueError, match="Count \\+ Offset cannot exceed 10,000"):
-            await client.messages.Outbound.find(count=500, offset=9501)
+            await client.messages.Outbound.list(count=500, offset=9501)
 
         # Test multiple metadata fields
         with pytest.raises(ValueError, match="Can only filter by one metadata field"):
-            await client.messages.Outbound.find(
+            await client.messages.Outbound.list(
                 metadata={"field1": "value1", "field2": "value2"}
             )
 
     @pytest.mark.asyncio
-    async def test_find_all_pagination(self):
-        """Test find_all handles pagination correctly."""
+    async def test_stream_pagination(self):
+        """Test .stream() handles pagination via AsyncGenerator."""
         # First response
         response1_data = {
             "TotalCount": 750,
@@ -200,7 +204,10 @@ class TestOutboundMessages:
         with patch.object(client, "get", new_callable=AsyncMock) as mock_get:
             mock_get.side_effect = [mock_response1, mock_response2]
 
-            all_messages = await client.messages.Outbound.find_all(max_messages=750)
+            # CHANGED: Iterate over the AsyncGenerator to collect results
+            all_messages = [
+                msg async for msg in client.messages.Outbound.stream(max_messages=750)
+            ]
 
             assert len(all_messages) == 750
             assert all_messages[0].message_id == "msg-0"
@@ -212,8 +219,8 @@ class TestOutboundMessages:
             assert mock_get.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_find_by_id(self):
-        """Test getting message details by ID."""
+    async def test_get_by_id(self):
+        """Test getting message details by ID using .get()."""
         detail_response = {
             "MessageID": "msg-123",
             "Subject": "Test Subject",

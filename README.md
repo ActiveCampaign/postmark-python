@@ -23,8 +23,8 @@ async def get_messages():
     # Initialize the client
     server = postmark.ServerClient(server_token="your-server-token")
     
-    # Search for messages
-    messages, total = await server.messages.Outbound.find(
+    # List messages (paginated)
+    messages, total = await server.messages.Outbound.list(
         recipient="user@example.com",
         fromdate="2024-01-01"
     )
@@ -57,6 +57,38 @@ server = postmark.ServerClient(server_token=token)
 
 ## Usage Examples
 
+### Sending Email
+
+You can send emails using a simple dictionary or a strict Pydantic model.
+
+```python
+import asyncio
+import postmark
+from postmark import Email
+
+async def send_email():
+    server = postmark.ServerClient(server_token="your-server-token")
+
+    # Method 1: Using a dictionary
+    await server.messages.Outbound.send({
+        "From": "sender@example.com",
+        "To": "receiver@example.com",
+        "Subject": "Hello from Postmark!",
+        "TextBody": "This is a test."
+    })
+
+    # Method 2: Using the Email model (Recommended for type safety)
+    email = Email(
+        from_="sender@example.com",
+        to="receiver@example.com",
+        subject="Hello via Model",
+        text_body="This is a test using the model."
+    )
+    await server.messages.Outbound.send(email)
+
+asyncio.run(send_email())
+```
+
 ### Search Outbound Messages
 
 ```python
@@ -66,8 +98,8 @@ import postmark
 async def search_messages():
     server = postmark.ServerClient(server_token="your-server-token")
     
-    # Search with filters
-    messages, total = await server.messages.Outbound.find(
+    # List a specific page of messages
+    messages, total = await server.messages.Outbound.list(
         count=50,
         recipient="user@example.com",
         tag="onboarding",
@@ -89,6 +121,7 @@ async def get_message_details():
     server = postmark.ServerClient(server_token="your-server-token")
     message_id = "your-message-id"
     
+    # Get full details (including body and events)
     message = await server.messages.Outbound.get(message_id=message_id)
     
     print(f"Subject: {message.subject}")
@@ -98,21 +131,22 @@ async def get_message_details():
 asyncio.run(get_message_details())
 ```
 
-### Pagination (Auto-handling)
+### Streaming (Auto-pagination)
+
+Efficiently iterate over thousands of messages without loading them all into memory at once.
 
 ```python
-async def get_all_messages():
+async def stream_all_messages():
     server = postmark.ServerClient(server_token="your-server-token")
     
-    # Automatically handles pagination to retrieve up to 1000 messages
-    all_messages = await server.messages.Outbound.find_all(
+    # Lazily yields messages one by one
+    async for message in server.messages.Outbound.stream(
         max_messages=1000,
         tag="onboarding"
-    )
-    
-    print(f"Retrieved {len(all_messages)} messages with 'onboarding' tag")
+    ):
+        print(f"Processing: {message.subject}")
 
-asyncio.run(get_all_messages())
+asyncio.run(stream_all_messages())
 ```
 
 ## Error Handling
@@ -133,7 +167,7 @@ async def safe_message_search():
     server = postmark.ServerClient(server_token="your-server-token")
 
     try:
-        messages, total = await server.messages.Outbound.find(
+        messages, total = await server.messages.Outbound.list(
             recipient="user@example.com"
         )
         print(f"Found {total} messages")
@@ -196,10 +230,18 @@ logging.getLogger('postmark').setLevel(logging.DEBUG)
 ## API Reference
 
 ### Outbound Messages API
-Access via `Access via server.messages.Outbound`
+Access via `server.messages.Outbound`
 
-#### `Outbound.find()`
-Search for outbound messages with various filters.
+#### `Outbound.send()`
+Send a single email.
+
+**Parameters:**
+- `message` (Email|dict): The email to send.
+
+**Returns:** `SendResponse` object
+
+#### `Outbound.list()`
+Search for outbound messages with various filters. Returns a specific page of results.
 
 **Parameters:**
 - `count` (int): Number of messages to return (max 500, default 100)
@@ -213,7 +255,7 @@ Search for outbound messages with various filters.
 - `subject` (str): Filter by subject
 - `messagestream` (str): Filter by message stream
 
-**Returns:** Tuple of (list of messages, total count)
+**Returns:** Tuple of `(List[Outbound], int)` where int is the total count.
 
 #### `Outbound.get()`
 Get detailed information about a specific message.
@@ -223,14 +265,14 @@ Get detailed information about a specific message.
 
 **Returns:** `OutboundMessageDetails` object with full message content
 
-#### `Outbound.find_all()`
-Retrieve all messages matching filters with automatic pagination.
+#### `Outbound.stream()`
+Async generator that lazily retrieves messages matching filters, handling pagination automatically.
 
 **Parameters:**
 - `max_messages` (int): Maximum messages to retrieve (up to 10,000, default 1000)
-- `**filters`: Same filter parameters as `find()` method
+- `**filters`: Same filter parameters as `list()` method
 
-**Returns:** List of all matching `Outbound` objects
+**Returns:** AsyncGenerator yielding `Outbound` objects
 
 ## Development
 

@@ -10,16 +10,15 @@ load_dotenv()
 
 async def send_single_email_using_json():
     """
-    Example: Sending a single email.
+    Example: Sending a single email using a raw dictionary.
     """
-    server_token = os.getenv(
-        "POSTMARK_SERVER_TOKEN"
-    )  # Set a verified sender signature in your .env file
+    server_token = os.getenv("POSTMARK_SERVER_TOKEN")
     server = postmark.ServerClient(server_token=server_token)
     send_email = os.getenv("POSTMARK_SENDER_EMAIL")
-    print("--- Sending Single Email ---")
+
+    print("--- Sending Single Email (JSON) ---")
     try:
-        # You can pass a dictionary or an Email object
+        # You can pass a dictionary matching the API fields
         response = await server.messages.Outbound.send(
             {
                 "From": send_email,
@@ -46,18 +45,16 @@ async def send_single_email_using_model():
     server = postmark.ServerClient(server_token=server_token)
     send_email = os.getenv("POSTMARK_SENDER_EMAIL")
 
-    print("\n--- Sending Email using Model ---")
+    print("\n--- Sending Email (Model) ---")
     try:
         # Create the email object first
         email = Email(
-            from_=send_email,  # Note: use from_ to avoid Python keyword conflict
+            sender=send_email,
             to="receiver@example.com",
             subject="Hello via Model",
             text_body="This email was built using the Pydantic model.",
             metadata={"user_id": "12345"},
         )
-
-        email = Email(subject="")
 
         response = await server.messages.Outbound.send(email)
 
@@ -75,7 +72,7 @@ async def send_batch_emails():
     server = postmark.ServerClient(server_token=server_token)
     send_email = os.getenv("POSTMARK_SENDER_EMAIL")
 
-    print("\n--- Sending Batch Emails Using JSON---")
+    print("\n--- Sending Batch Emails (JSON) ---")
     try:
         messages = [
             {
@@ -108,7 +105,7 @@ if __name__ == "__main__":
 
     async def main():
         await send_single_email_using_json()
-        # await send_single_email_using_model()
-        # await send_batch_emails()
+        await send_single_email_using_model()
+        await send_batch_emails()
 
     asyncio.run(main())
