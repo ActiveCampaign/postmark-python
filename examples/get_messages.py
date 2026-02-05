@@ -36,8 +36,7 @@ async def list_example():
 
 async def stream_example():
     """
-    Example using .stream() (formerly .find_all())
-    Best for: Iterating over large datasets without memory issues.
+    Use .stream() to iterate over large datasets without memory issues.
     """
     server_token: str = os.getenv("POSTMARK_SERVER_TOKEN")
     server = postmark.ServerClient(server_token=server_token)
