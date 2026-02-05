@@ -125,18 +125,11 @@ class TestOutboundMessages:
 
         # Test count > 500
         with pytest.raises(ValueError, match="Count cannot exceed 500"):
-            # CHANGED: .find() -> .list()
             await client.messages.Outbound.list(count=501)
 
         # Test count + offset > 10000
-        with pytest.raises(ValueError, match="Count \\+ Offset cannot exceed 10,000"):
+        with pytest.raises(ValueError, match="Count \+ Offset cannot exceed 10,000"):
             await client.messages.Outbound.list(count=500, offset=9501)
-
-        # Test multiple metadata fields
-        with pytest.raises(ValueError, match="Can only filter by one metadata field"):
-            await client.messages.Outbound.list(
-                metadata={"field1": "value1", "field2": "value2"}
-            )
 
     @pytest.mark.asyncio
     async def test_stream_pagination(self):

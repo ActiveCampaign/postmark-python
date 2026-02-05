@@ -11,7 +11,59 @@ The official Python SDK for [Postmark](https://postmarkapp.com) - The email deli
 
 (pip install coming soon)
 
-**Requirements:** Python 3.9 or higher
+### Prerequisites
+- Python 3.9+
+- Poetry (for dependency management)
+
+# Get Started
+
+## Clone the repository
+```bash
+$ git clone [https://github.com/ActiveCampaign/postmark-python.git](https://github.com/ActiveCampaign/postmark-python.git)
+$ cd postmark-python
+```
+## Install dependencies
+`$ poetry install`
+
+## Populate .env file
+[Get your Postmark account and server tokens here](https://account.postmarkapp.com/api_tokens)
+
+Create an `.env` file, and populate it with:
+```bash
+POSTMARK_SERVER_TOKEN={PostmarkServerToken}
+POSTMARK_ACCOUNT_TOKEN={PostmarkAccountToken}
+POSTMARK_SENDER_EMAIL=test@example.com
+POSTMARK_TEST_MODE=false
+POSTMARK_TRACK_OPENS=true
+POSTMARK_LOG_LEVEL=1
+```
+
+## Running examples:
+- Get messages example: `$ poetry run python examples/get_messages.py`
+- Send messages example: `$ poetry run python examples/send_messages.py`
+
+
+## Developing
+
+### Running Tests
+
+```bash
+# Run all tests
+poetry run pytest
+
+# Run with coverage report
+poetry run pytest --cov=postmark --cov-report=term-missing
+
+# Run specific test file
+poetry run pytest postmark/tests/test_messages.py
+
+# Run with verbose output
+poetry run pytest -v
+
+# See HTML coverage report
+poetry run pytest --cov=postmark --cov-report=html
+open htmlcov/index.html
+```
 
 ## Quick Start
 
@@ -31,7 +83,7 @@ async def get_messages():
     
     print(f"Found {total} messages")
     for msg in messages[:5]:
-        print(f"  - {msg.subject} (from: {msg.from_})")
+        print(f"  - {msg.subject} (from: {msg.sender})")
 
 asyncio.run(get_messages())
 ```
@@ -40,11 +92,7 @@ asyncio.run(get_messages())
 
 The SDK requires a Postmark Server Token for API authentication. You can find your token in the [Postmark dashboard](https://account.postmarkapp.com/servers).
 
-```python
-server_token = "your-postmark-server-token"
-```
-
-For security, we recommend storing your token in environment variables:
+We recommend using environment variables:
 
 ```python
 import os
@@ -79,7 +127,7 @@ async def send_email():
 
     # Method 2: Using the Email model (Recommended for type safety)
     email = Email(
-        from_="sender@example.com",
+        sender="sender@example.com",
         to="receiver@example.com",
         subject="Hello via Model",
         text_body="This is a test using the model."
@@ -114,7 +162,7 @@ async def search_messages():
 asyncio.run(search_messages())
 ```
 
-### Get Message Details
+### Get a single Message Details by Message ID
 
 ```python
 async def get_message_details():
@@ -125,7 +173,7 @@ async def get_message_details():
     message = await server.messages.Outbound.get(message_id=message_id)
     
     print(f"Subject: {message.subject}")
-    print(f"From: {message.from_}")
+    print(f"From: {message.sender}")
     print(f"HTML Body: {message.html_body}")
 
 asyncio.run(get_message_details())
@@ -191,7 +239,6 @@ async def safe_message_search():
 asyncio.run(safe_message_search())
 
 ```
-
 ### Exception Types
 
 - **`InvalidAPIKeyException`**: Invalid or missing API key (401)
@@ -275,50 +322,6 @@ Async generator that lazily retrieves messages matching filters, handling pagina
 **Returns:** AsyncGenerator yielding `Outbound` objects
 
 ## Development
-
-### Prerequisites
-- Python 3.9+
-- Poetry (for dependency management)
-
-### Setup
-
-```bash
-# Clone the repository
-git clone [https://github.com/ActiveCampaign/postmark-python.git](https://github.com/ActiveCampaign/postmark-python.git)
-cd postmark-python
-
-# Install dependencies
-poetry install
-
-# Run tests
-poetry run pytest
-
-# Run with coverage
-poetry run pytest --cov=postmark --cov-report=term-missing
-
-# Run examples
-poetry run python examples/get_messages.py
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-poetry run pytest
-
-# Run with coverage report
-poetry run pytest --cov=postmark --cov-report=term-missing
-
-# Run specific test file
-poetry run pytest postmark/tests/test_messages.py
-
-# Run with verbose output
-poetry run pytest -v
-
-# See HTML coverage report
-poetry run pytest --cov=postmark --cov-report=html
-open htmlcov/index.html
-```
 
 ### Code Formatting
 
