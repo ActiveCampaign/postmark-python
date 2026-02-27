@@ -1,111 +1,67 @@
-import os
+"""
+Examples for sending outbound messages.
+
+    python examples/send_messages.py
+"""
+
 import asyncio
-from dotenv import load_dotenv
+import os
+
 import postmark
 from postmark import Email
+from dotenv import load_dotenv
 
-# Load the variables from the .env file into os.environ
 load_dotenv()
+client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
+SENDER = os.environ["POSTMARK_SENDER_EMAIL"]
 
 
-async def send_single_email_using_json():
-    """
-    Example: Sending a single email using a raw dictionary.
-    """
-    server_token = os.getenv("POSTMARK_SERVER_TOKEN")
-    server = postmark.ServerClient(server_token=server_token)
-    send_email = os.getenv("POSTMARK_SENDER_EMAIL")
+async def main():
+    # --- Send via dict ---
+    response = await client.outbound.send(
+        {
+            "sender": SENDER,
+            "to": "receiver@example.com",
+            "subject": "Hello from Postmark Python SDK",
+            "text_body": "This is a test email sent using the Python SDK.",
+            "html_body": "<html><body><strong>Hello</strong> from Postmark Python SDK.</body></html>",
+            "message_stream": "outbound",
+        }
+    )
+    print(f"Sent (dict):  {response.message_id}")
 
-    print("--- Sending Single Email (JSON) ---")
-    try:
-        # You can pass a dictionary matching the API fields
-        response = await server.outbound.send(
-            {
-                "From": send_email,
-                "To": "receiver@example.com",
-                "Subject": "Hello from Postmark Python SDK",
-                "TextBody": "This is a test email sent using the Python SDK.",
-                "HtmlBody": "<html><body><strong>Hello</strong> from Postmark Python SDK.</body></html>",
-                "MessageStream": "outbound",
-            }
-        )
-
-        print(f"Email sent! Message ID: {response.message_id}")
-        print(f"Status: {response.message}")
-
-    except Exception as e:
-        print(f"Error sending email: {e}")
-
-
-async def send_single_email_using_model():
-    """
-    Example: Sending an email using the Pydantic Email model for better type safety.
-    """
-    server_token = os.getenv("POSTMARK_SERVER_TOKEN")
-    server = postmark.ServerClient(server_token=server_token)
-    send_email = os.getenv("POSTMARK_SENDER_EMAIL")
-
-    print("\n--- Sending Email (Model) ---")
-    try:
-        # Create the email object first
-        email = Email(
-            sender=send_email,
+    # --- Send via Email model (recommended, offering better type safety) ---
+    response = await client.outbound.send(
+        Email(
+            sender=SENDER,
             to="receiver@example.com",
             subject="Hello via Model",
             text_body="This email was built using the Pydantic model.",
             metadata={"user_id": "12345"},
         )
+    )
+    print(f"Sent (model): {response.message_id}")
 
-        response = await server.outbound.send(email)
-
-        print(f"Email sent! Message ID: {response.message_id}")
-
-    except Exception as e:
-        print(f"Error sending email: {e}")
-
-
-async def send_batch_emails():
-    """
-    Example: Sending a batch of emails (up to 500).
-    """
-    server_token = os.getenv("POSTMARK_SERVER_TOKEN")
-    server = postmark.ServerClient(server_token=server_token)
-    send_email = os.getenv("POSTMARK_SENDER_EMAIL")
-
-    print("\n--- Sending Batch Emails (JSON) ---")
-    try:
-        messages = [
+    # --- Send batch ---
+    responses = await client.outbound.send_batch(
+        [
             {
-                "From": send_email,
-                "To": "receiver1@example.com",
-                "Subject": "Batch Email 1",
-                "TextBody": "Hello Receiver 1",
+                "sender": SENDER,
+                "to": "receiver1@example.com",
+                "subject": "Batch 1",
+                "text_body": "Hello Receiver 1",
             },
             {
-                "From": send_email,
-                "To": "receiver2@example.com",
-                "Subject": "Batch Email 2",
-                "TextBody": "Hello Receiver 2",
+                "sender": SENDER,
+                "to": "receiver2@example.com",
+                "subject": "Batch 2",
+                "text_body": "Hello Receiver 2",
             },
         ]
-
-        responses = await server.outbound.send_batch(messages)
-
-        print(f"Batch processed. Sent {len(responses)} emails.")
-        for i, resp in enumerate(responses):
-            print(
-                f"  Email {i+1}: ID {resp.message_id} (Error Code: {resp.error_code})"
-            )
-
-    except Exception as e:
-        print(f"Error sending batch: {e}")
+    )
+    print(f"Batch: {len(responses)} sent")
+    for i, resp in enumerate(responses, start=1):
+        print(f"  {i}: {resp.message_id}")
 
 
-if __name__ == "__main__":
-
-    async def main():
-        await send_single_email_using_json()
-        await send_single_email_using_model()
-        await send_batch_emails()
-
-    asyncio.run(main())
+asyncio.run(main())

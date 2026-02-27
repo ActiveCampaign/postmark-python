@@ -14,13 +14,14 @@ logger = logging.getLogger(__name__)
 
 def _parse_email(message: Union[Email, Dict[str, Any]]) -> Email:
     """
-    Coerce a dict to an Email model, raising InvalidEmailPayloadException
-    on validation failure. Passes through an Email instance unchanged.
+    Coerce a dict to an Email model using snake_case field names,
+    raising InvalidEmailPayloadException on validation failure.
+    Passes through an Email instance unchanged.
     """
     if isinstance(message, Email):
         return message
     try:
-        return Email(**message)
+        return Email.model_validate(message)
     except ValidationError as e:
         raise InvalidEmailPayloadException(e.errors()) from e
 
