@@ -1,42 +1,67 @@
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING, AsyncGenerator
+from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 
-from .schemas import Email, SendResponse, Outbound, OutboundMessageDetails
+from pydantic import ValidationError
 
-if TYPE_CHECKING:
-    from ..server_client import ServerClient
+from postmark.exceptions import InvalidEmailPayloadException
+from postmark.utils.types import HTTPClient
+
+from .schemas import Email, Outbound, OutboundMessageDetails, SendResponse
 
 logger = logging.getLogger(__name__)
 
 
+def _parse_email(message: Union[Email, Dict[str, Any]]) -> Email:
+    """
+    Coerce a dict to an Email model, raising InvalidEmailPayloadException
+    on validation failure. Passes through an Email instance unchanged.
+    """
+    if isinstance(message, Email):
+        return message
+    try:
+        return Email(**message)
+    except ValidationError as e:
+        raise InvalidEmailPayloadException(e.errors()) from e
+
+
 class OutboundManager:
-    def __init__(self, client: "ServerClient"):
+    def __init__(self, client: HTTPClient):
         self.client = client
 
     async def send(self, message: Union[Email, Dict[str, Any]]) -> SendResponse:
         """Send a single email."""
-        if isinstance(message, dict):
-            email_payload = Email(**message)
-        else:
-            email_payload = message
+        email_payload = _parse_email(message)
 
         logger.debug(f"Sending email to {email_payload.to}")
         response = await self.client.post(
-            "/email", json=email_payload.model_dump(by_alias=True, exclude_none=True)
+            "/email",
+            json=email_payload.model_dump(by_alias=True, exclude_none=True),
         )
         return SendResponse(**response.json())
 
     async def send_batch(
         self, messages: List[Union[Email, Dict[str, Any]]]
     ) -> List[SendResponse]:
-        """Send multiple emails in a single batch (max 500)."""
+        """Send different emails in a single batch (max 500)."""
         if len(messages) > 500:
             raise ValueError("Batch size cannot exceed 500 messages")
 
+        # Validate all messages up front so we fail before making any HTTP call
         payload = []
-        for msg in messages:
-            email_obj = Email(**msg) if isinstance(msg, dict) else msg
+        for i, msg in enumerate(messages):
+            try:
+                email_obj = _parse_email(msg)
+            except InvalidEmailPayloadException as e:
+                raise InvalidEmailPayloadException(
+                    [
+                        {
+                            "loc": (f"messages[{i}]", *err["loc"]),
+                            **{k: v for k, v in err.items() if k != "loc"},
+                        }
+                        for err in e.errors
+                    ]
+                ) from e
             payload.append(email_obj.model_dump(by_alias=True, exclude_none=True))
 
         response = await self.client.post("/email/batch", json=payload)
@@ -49,41 +74,34 @@ class OutboundManager:
         metadata: Optional[Dict[str, str]] = None,
         **filters,
     ) -> tuple[List[Outbound], int]:
-        """List outbound messages with specific validation for tests."""
-
-        # 1. Validate count and offset with descriptive messages for tests
+        """List outbound messages."""
         if count > 500:
             raise ValueError("Count cannot exceed 500 messages per request")
         if count + offset > 10000:
             raise ValueError("Count + Offset cannot exceed 10,000 messages")
 
-        # 2. Metadata validation (Fixes the 3rd assertion failure)
         if metadata:
             if len(metadata) > 1:
                 raise ValueError("Can only filter by one metadata field at a time")
-
-            # Map metadata dictionary to the format expected by Postmark API (metadata_key=value)
             for key, value in metadata.items():
                 filters[f"metadata_{key}"] = value
 
         params = {"count": count, "offset": offset}
-
-        # Process other filters (dates, tags, etc.)
         for key, value in filters.items():
             if value is not None:
-                if isinstance(value, datetime):
-                    params[key] = value.strftime("%Y-%m-%dT%H:%M:%S")
-                else:
-                    params[key] = value
+                params[key] = (
+                    value.strftime("%Y-%m-%dT%H:%M:%S")
+                    if isinstance(value, datetime)
+                    else value
+                )
 
         response = await self.client.get("/messages/outbound", params=params)
         response.raise_for_status()
         data = response.json()
 
-        total_count = data.get("TotalCount", 0)
-        messages = [Outbound(**msg) for msg in data.get("Messages", [])]
-
-        return messages, total_count
+        return [Outbound(**msg) for msg in data.get("Messages", [])], data.get(
+            "TotalCount", 0
+        )
 
     async def stream(
         self, batch_size: int = 500, max_messages: int = 1000, **filters
@@ -125,8 +143,3 @@ class OutboundManager:
         """Get detailed information for a specific message."""
         response = await self.client.get(f"/messages/outbound/{message_id}/details")
         return OutboundMessageDetails(**response.json())
-
-
-class MessageService:
-    def __init__(self, client: "ServerClient"):
-        self.Outbound = OutboundManager(client)

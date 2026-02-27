@@ -19,7 +19,7 @@ async def send_single_email_using_json():
     print("--- Sending Single Email (JSON) ---")
     try:
         # You can pass a dictionary matching the API fields
-        response = await server.messages.Outbound.send(
+        response = await server.outbound.send(
             {
                 "From": send_email,
                 "To": "receiver@example.com",
@@ -56,7 +56,7 @@ async def send_single_email_using_model():
             metadata={"user_id": "12345"},
         )
 
-        response = await server.messages.Outbound.send(email)
+        response = await server.outbound.send(email)
 
         print(f"Email sent! Message ID: {response.message_id}")
 
@@ -89,7 +89,7 @@ async def send_batch_emails():
             },
         ]
 
-        responses = await server.messages.Outbound.send_batch(messages)
+        responses = await server.outbound.send_batch(messages)
 
         print(f"Batch processed. Sent {len(responses)} emails.")
         for i, resp in enumerate(responses):

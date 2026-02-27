@@ -1,7 +1,8 @@
 import json
 import logging
 import os
-from typing import Optional, Dict, Any, TYPE_CHECKING
+from typing import Optional, Dict, Any
+from postmark.models.messages import OutboundManager
 
 import httpx
 
@@ -13,8 +14,6 @@ from ..exceptions import (
     get_exception_class,
 )
 
-if TYPE_CHECKING:
-    from postmark.models.messages import MessageService
 
 logger = logging.getLogger(__name__)
 
@@ -41,11 +40,8 @@ class ServerClient:
         if not self.verify_ssl:
             logger.warning("SSL verification is disabled. Do not use in production!")
 
-        # Initializing the import here, inside __init__ to avoid potential circular import issues at the module level
-        # if messages.py ends up importing this file (but like...don't).
-        from postmark.models.messages import MessageService
-
-        self.messages = MessageService(self)
+        self.outbound = OutboundManager(self)
+        # self.inbound = InboundManager(self)
 
     async def request(self, method: str, endpoint: str, **kwargs) -> httpx.Response:
         """
@@ -108,3 +104,8 @@ class ServerClient:
         self, endpoint: str, json: Optional[Dict[str, Any]] = None
     ) -> httpx.Response:
         return await self.request("PUT", endpoint, json=json)
+
+    async def delete(
+        self, endpoint: str, params: Optional[Dict[str, Any]] = None
+    ) -> httpx.Response:
+        return await self.request("DELETE", endpoint, params=params)

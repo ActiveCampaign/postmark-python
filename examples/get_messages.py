@@ -16,7 +16,7 @@ async def list_example():
     server = postmark.ServerClient(server_token=server_token)
 
     try:
-        messages, total = await server.messages.Outbound.list(count=10)
+        messages, total = await server.outbound.list(count=10)
 
         print(f"Total matches on server: {total}")
         print(f"Retrieved in this page: {len(messages)}")
@@ -48,7 +48,7 @@ async def stream_example():
         count = 0
 
         # Get 20 messages
-        async for msg in server.messages.Outbound.stream(max_messages=20):
+        async for msg in server.outbound.stream(max_messages=20):
             count += 1
 
             # Print details for the first 3...
@@ -76,7 +76,7 @@ async def get_details_example(message_id: str):
 
     try:
         # Get message details
-        message = await server.messages.Outbound.get(message_id)
+        message = await server.outbound.get(message_id)
 
         print("\n--- Message Details ---")
         print(f"Message ID:     {message.message_id}")

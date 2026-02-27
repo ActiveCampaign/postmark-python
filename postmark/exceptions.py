@@ -1,6 +1,6 @@
 """Postmark API exceptions."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 
 class PostmarkException(Exception):
@@ -15,11 +15,35 @@ class PostmarkException(Exception):
         super().__init__(message)
         self.error_code = error_code
         self.http_status = http_status
-        self.message = message
+
+    @property
+    def message(self) -> str:
+        """The error message. Alias for self.args[0]."""
+        return self.args[0]
+
+
+class InvalidEmailPayloadException(PostmarkException):
+    """
+    Raised when an email dict or model fails Pydantic validation
+    before it is ever sent to the API.
+
+    Distinct from ValidationException, which maps to HTTP 422 responses
+    from the Postmark API after a request was made.
+    """
+
+    def __init__(self, errors: list[dict[str, Any]]):
+        self.errors = errors
+        summary = " | ".join(
+            f"{' -> '.join(str(loc) for loc in e['loc'])}: {e['msg']}" for e in errors
+        )
+        super().__init__(f"Invalid email payload: {summary}")
 
 
 class PostmarkAPIException(PostmarkException):
-    """API errors with error codes from Postmark."""
+    """
+    Raised for errors returned by the Postmark API.
+    Always carries both a Postmark error_code and an http_status.
+    """
 
     def __init__(self, message: str, error_code: int, http_status: int):
         super().__init__(message, error_code, http_status)
@@ -28,7 +52,6 @@ class PostmarkAPIException(PostmarkException):
         return f"[{self.error_code}] {self.message} (HTTP {self.http_status})"
 
 
-# Specific exception types for common errors
 class InvalidAPIKeyException(PostmarkAPIException):
     """401 - Invalid or missing API key."""
 
@@ -42,7 +65,7 @@ class InactiveRecipientException(PostmarkAPIException):
 
 
 class ValidationException(PostmarkAPIException):
-    """422 - Invalid request parameters."""
+    """422 - Invalid request parameters (rejected by Postmark API)."""
 
     pass
 
@@ -54,46 +77,47 @@ class RateLimitException(PostmarkAPIException):
 
 
 class ServerException(PostmarkAPIException):
-    """500/503 - Server errors."""
+    """500 / 503 - Server-side error."""
 
     pass
 
 
 class TimeoutException(PostmarkException):
-    """Request timeout."""
+    """Raised when a request to the Postmark API times out."""
 
     pass
 
 
-# Error code mapping
-ERROR_CODE_MAPPING = {
+# Postmark API error codes (from response body), not HTTP status codes.
+# See: https://postmarkapp.com/developer/api/overview#error-codes
+_ERROR_CODE_MAP: dict[int, type[PostmarkAPIException]] = {
     10: InvalidAPIKeyException,
-    406: InactiveRecipientException,
     300: ValidationException,
     405: ValidationException,  # Not allowed to send
+    406: InactiveRecipientException,
     701: ValidationException,  # Illegal attachment type
-    429: RateLimitException,
-    500: ServerException,
-    503: ServerException,
 }
 
 
 def get_exception_class(
     error_code: int, http_status: int
 ) -> type[PostmarkAPIException]:
-    """Get the appropriate exception class for an error code."""
-    # Check specific error codes first
-    if error_code in ERROR_CODE_MAPPING:
-        return ERROR_CODE_MAPPING[error_code]
+    """
+    Resolve the most specific exception class for a failed API response.
 
-    # Fall back to HTTP status
+    Checks Postmark error codes first (more specific), then falls back
+    to HTTP status codes, and finally to the generic PostmarkAPIException.
+    """
+    if error_code in _ERROR_CODE_MAP:
+        return _ERROR_CODE_MAP[error_code]
+
     if http_status == 401:
         return InvalidAPIKeyException
-    elif http_status == 422:
+    if http_status == 422:
         return ValidationException
-    elif http_status == 429:
+    if http_status == 429:
         return RateLimitException
-    elif http_status in (500, 503):
+    if http_status in (500, 503):
         return ServerException
 
     return PostmarkAPIException

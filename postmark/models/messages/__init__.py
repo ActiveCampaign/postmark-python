@@ -8,16 +8,23 @@ from .schemas import (
     Header,
     EmailAddress,
 )
-from .manager import MessageService, OutboundManager
+from .manager import OutboundManager  # InboundManager
 
 __all__ = [
+    # Schemas
     "Email",
     "SendResponse",
     "Outbound",
     "OutboundMessageDetails",
-    "MessageStatus",
     "Attachment",
     "Header",
-    "MessageService",
+    "EmailAddress",
+    # Enums
+    "MessageStatus",
+    "TrackLinksOption",
+    "MessageEventType",
+    "Platform",
+    # Managers
     "OutboundManager",
+    # "InboundManager,",
 ]
