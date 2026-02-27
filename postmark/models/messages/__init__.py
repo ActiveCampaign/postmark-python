@@ -1,5 +1,6 @@
 from .enums import MessageStatus, TrackLinksOption, MessageEventType, Platform
 from .schemas import (
+    # Single / batch
     Email,
     SendResponse,
     Outbound,
@@ -7,11 +8,16 @@ from .schemas import (
     Attachment,
     Header,
     EmailAddress,
+    # Bulk
+    BulkEmail,
+    BulkRecipient,
+    BulkSendResponse,
+    BulkSendStatus,
 )
-from .manager import OutboundManager  # InboundManager
+from .manager import OutboundManager
 
 __all__ = [
-    # Schemas
+    # Schemas — single / batch
     "Email",
     "SendResponse",
     "Outbound",
@@ -19,6 +25,11 @@ __all__ = [
     "Attachment",
     "Header",
     "EmailAddress",
+    # Schemas — bulk
+    "BulkEmail",
+    "BulkRecipient",
+    "BulkSendResponse",
+    "BulkSendStatus",
     # Enums
     "MessageStatus",
     "TrackLinksOption",
@@ -26,5 +37,4 @@ __all__ = [
     "Platform",
     # Managers
     "OutboundManager",
-    # "InboundManager,",
 ]

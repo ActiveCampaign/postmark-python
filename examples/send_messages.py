@@ -42,26 +42,5 @@ async def main():
     )
     print(f"Sent (model): {response.message_id}")
 
-    # --- Send batch ---
-    responses = await client.outbound.send_batch(
-        [
-            {
-                "sender": SENDER,
-                "to": "receiver1@example.com",
-                "subject": "Batch 1",
-                "text_body": "Hello Receiver 1",
-            },
-            {
-                "sender": SENDER,
-                "to": "receiver2@example.com",
-                "subject": "Batch 2",
-                "text_body": "Hello Receiver 2",
-            },
-        ]
-    )
-    print(f"Batch: {len(responses)} sent")
-    for i, resp in enumerate(responses, start=1):
-        print(f"  {i}: {resp.message_id}")
-
 
 asyncio.run(main())

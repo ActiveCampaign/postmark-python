@@ -19,6 +19,11 @@ FormattedEmailStr = Annotated[str, BeforeValidator(validate_formatted_email)]
 EmailList = Annotated[List[str], BeforeValidator(validate_email_list)]
 
 
+# ---------------------------------------------------------------------------
+# Shared primitives
+# ---------------------------------------------------------------------------
+
+
 class EmailAddress(BaseModel):
     email: EmailStr = Field(alias="Email")
     name: Optional[str] = Field(None, alias="Name")
@@ -62,6 +67,11 @@ class GeoInfo(BaseModel):
     zip: Optional[str] = Field(None, alias="Zip")
     coords: Optional[str] = Field(None, alias="Coords")
     ip: Optional[str] = Field(None, alias="IP")
+
+
+# ---------------------------------------------------------------------------
+# Single / batch send
+# ---------------------------------------------------------------------------
 
 
 class MessageEventDetails(BaseModel):
@@ -143,3 +153,75 @@ class OutboundMessageDetails(Outbound):
     message_events: List[MessageEvent] = Field(
         default_factory=list, alias="MessageEvents"
     )
+
+
+# ---------------------------------------------------------------------------
+# Bulk send
+# ---------------------------------------------------------------------------
+
+
+class BulkRecipient(BaseModel):
+    """
+    Per-recipient entry in a bulk send request.
+    """
+
+    to: str = Field(alias="To")
+    cc: Optional[str] = Field(None, alias="Cc")
+    bcc: Optional[str] = Field(None, alias="Bcc")
+    template_model: Optional[Dict[str, Any]] = Field(None, alias="TemplateModel")
+    metadata: Optional[Dict[str, str]] = Field(None, alias="Metadata")
+    headers: List[Header] = Field(default_factory=list, alias="Headers")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class BulkEmail(BaseModel):
+    """
+    Request body for POST /email/bulk.
+    """
+
+    sender: str = Field(alias="From")
+    messages: List[BulkRecipient] = Field(alias="Messages")
+    reply_to: Optional[str] = Field(None, alias="ReplyTo")
+    subject: Optional[str] = Field(None, alias="Subject")
+    html_body: Optional[str] = Field(None, alias="HtmlBody")
+    text_body: Optional[str] = Field(None, alias="TextBody")
+    template_id: Optional[int] = Field(None, alias="TemplateId")
+    template_alias: Optional[str] = Field(None, alias="TemplateAlias")
+    inline_css: Optional[bool] = Field(None, alias="InlineCss")
+    tag: Optional[str] = Field(None, alias="Tag")
+    metadata: Optional[Dict[str, str]] = Field(None, alias="Metadata")
+    message_stream: Optional[str] = Field(None, alias="MessageStream")
+    track_opens: Optional[bool] = Field(None, alias="TrackOpens")
+    track_links: Optional[TrackLinksOption] = Field(None, alias="TrackLinks")
+    attachments: List[Attachment] = Field(default_factory=list, alias="Attachments")
+    headers: List[Header] = Field(default_factory=list, alias="Headers")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class BulkSendResponse(BaseModel):
+    """
+    Response from POST /email/bulk.
+    """
+
+    id: str = Field(alias="ID")
+    status: str = Field(alias="Status")  # "Accepted" | "Failed"
+    submitted_at: datetime = Field(alias="SubmittedAt")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class BulkSendStatus(BaseModel):
+    """
+    Response from GET /email/bulk/{bulk-request-id}.
+    """
+
+    id: str = Field(alias="Id")  # Note: Postmark uses "Id" here, not "ID"
+    submitted_at: datetime = Field(alias="SubmittedAt")
+    total_messages: int = Field(alias="TotalMessages")
+    percentage_completed: float = Field(alias="PercentageCompleted")
+    status: str = Field(alias="Status")  # "Accepted" | "Processing" | "Completed"
+    subject: Optional[str] = Field(None, alias="Subject")
+
+    model_config = ConfigDict(populate_by_name=True)

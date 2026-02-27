@@ -7,7 +7,15 @@ from pydantic import ValidationError
 from postmark.exceptions import InvalidEmailPayloadException
 from postmark.utils.types import HTTPClient
 
-from .schemas import Email, Outbound, OutboundMessageDetails, SendResponse
+from .schemas import (
+    BulkEmail,
+    BulkSendResponse,
+    BulkSendStatus,
+    Email,
+    Outbound,
+    OutboundMessageDetails,
+    SendResponse,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +23,7 @@ logger = logging.getLogger(__name__)
 def _parse_email(message: Union[Email, Dict[str, Any]]) -> Email:
     """
     Coerce a dict to an Email model using snake_case field names,
-    raising InvalidEmailPayloadException on validation failure.
-    Passes through an Email instance unchanged.
+    or raise InvalidEmailPayloadException
     """
     if isinstance(message, Email):
         return message
@@ -26,9 +33,26 @@ def _parse_email(message: Union[Email, Dict[str, Any]]) -> Email:
         raise InvalidEmailPayloadException(e.errors()) from e
 
 
+def _parse_bulk_email(message: Union[BulkEmail, Dict[str, Any]]) -> BulkEmail:
+    """
+    Coerce a dict to a BulkEmail model, raising InvalidEmailPayloadException
+    on validation failure. Passes through a BulkEmail instance unchanged.
+    """
+    if isinstance(message, BulkEmail):
+        return message
+    try:
+        return BulkEmail.model_validate(message)
+    except ValidationError as e:
+        raise InvalidEmailPayloadException(e.errors()) from e
+
+
 class OutboundManager:
     def __init__(self, client: HTTPClient):
         self.client = client
+
+    # -------------------------------------------------------------------------
+    # Single send
+    # -------------------------------------------------------------------------
 
     async def send(self, message: Union[Email, Dict[str, Any]]) -> SendResponse:
         """Send a single email."""
@@ -41,14 +65,21 @@ class OutboundManager:
         )
         return SendResponse(**response.json())
 
+    # -------------------------------------------------------------------------
+    # Batch send — different messages, one request (max 500)
+    # -------------------------------------------------------------------------
+
     async def send_batch(
         self, messages: List[Union[Email, Dict[str, Any]]]
     ) -> List[SendResponse]:
-        """Send different emails in a single batch (max 500)."""
+        """
+        Send up to 500 different emails in a single request.
+        Use this when each recipient needs a **completely different** message.
+        For sending the **same message** to many recipients, use send_bulk().
+        """
         if len(messages) > 500:
             raise ValueError("Batch size cannot exceed 500 messages")
 
-        # Validate all messages up front so we fail before making any HTTP call
         payload = []
         for i, msg in enumerate(messages):
             try:
@@ -67,6 +98,41 @@ class OutboundManager:
 
         response = await self.client.post("/email/batch", json=payload)
         return [SendResponse(**item) for item in response.json()]
+
+    # -------------------------------------------------------------------------
+    # Bulk send — same message, many recipients, one request
+    # -------------------------------------------------------------------------
+
+    async def send_bulk(
+        self, message: Union[BulkEmail, Dict[str, Any]]
+    ) -> BulkSendResponse:
+        """
+        Send the **same message** to multiple recipients in a single request.
+        """
+        bulk_payload = _parse_bulk_email(message)
+
+        if not bulk_payload.messages:
+            raise ValueError(
+                "Bulk email must include at least one recipient in messages"
+            )
+
+        logger.debug(f"Sending bulk email to {len(bulk_payload.messages)} recipients")
+        response = await self.client.post(
+            "/email/bulk",
+            json=bulk_payload.model_dump(by_alias=True, exclude_none=True),
+        )
+        return BulkSendResponse(**response.json())
+
+    async def get_bulk_status(self, bulk_id: str) -> BulkSendStatus:
+        """
+        Poll the status of a bulk send request.
+        """
+        response = await self.client.get(f"/email/bulk/{bulk_id}")
+        return BulkSendStatus(**response.json())
+
+    # -------------------------------------------------------------------------
+    # List / stream / get
+    # -------------------------------------------------------------------------
 
     async def list(
         self,
