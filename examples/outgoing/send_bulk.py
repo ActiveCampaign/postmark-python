@@ -37,7 +37,7 @@ async def main():
     )
     print(f"Bulk request accepted — ID: {response.id}  Status: {response.status}")
 
-    # --- ...or send bulk via dict ---
+    # --- ...or send bulk using dict(s) ---
     response = await client.outbound.send_bulk(
         {
             "sender": SENDER,
