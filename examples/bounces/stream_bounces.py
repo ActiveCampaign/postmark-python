@@ -12,7 +12,7 @@ async def main():
     # stream() paginates automatically; adjust max_bounces as needed (max 10,000).
     count = 0
     async for b in client.bounces.stream(max_bounces=200):
-        print(f"  [{b.id}] {b.email}  type={b.type}")
+        print(f"[{b.id}] {b.email}  type={b.type}")
         count += 1
     print(f"Streamed {count} bounce(s)")
 
