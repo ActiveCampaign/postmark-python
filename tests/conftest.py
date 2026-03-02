@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from httpx import Response
 from postmark.models.messages import OutboundManager
+from postmark.models.bounces import BounceManager
 
 
 def make_response(data: dict | list) -> Mock:
@@ -23,12 +24,16 @@ class FakeClient:
     def __init__(self):
         self.get = AsyncMock()
         self.post = AsyncMock()
+        self.put = AsyncMock()
 
     def mock_get_response(self, data: dict | list) -> None:
         self.get.return_value = make_response(data)
 
     def mock_post_response(self, data: dict | list) -> None:
         self.post.return_value = make_response(data)
+
+    def mock_put_response(self, data: dict | list) -> None:
+        self.put.return_value = make_response(data)
 
     def mock_get_responses(self, *data_list: dict | list) -> None:
         """Set multiple sequential responses for paginated calls."""
@@ -42,5 +47,9 @@ def fake_client():
 
 @pytest.fixture
 def outbound(fake_client):
-    """Returns (OutboundManager, FakeClient) for use in tests."""
     return OutboundManager(fake_client), fake_client
+
+
+@pytest.fixture
+def bounces(fake_client):
+    return BounceManager(fake_client), fake_client

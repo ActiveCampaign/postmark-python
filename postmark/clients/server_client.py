@@ -3,6 +3,7 @@ import logging
 import os
 from typing import Optional, Dict, Any
 from postmark.models.messages import OutboundManager
+from postmark.models.bounces import BounceManager
 
 import httpx
 
@@ -41,7 +42,7 @@ class ServerClient:
             logger.warning("SSL verification is disabled. Do not use in production!")
 
         self.outbound = OutboundManager(self)
-        # self.inbound = InboundManager(self)
+        self.bounces = BounceManager(self)
 
     async def request(self, method: str, endpoint: str, **kwargs) -> httpx.Response:
         """
