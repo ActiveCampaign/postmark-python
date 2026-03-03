@@ -11,7 +11,6 @@ from postmark.models.templates import (
     ValidateTemplateRequest,
 )
 
-
 # ---------------------------------------------------------------------------
 # Shared fixture data
 # ---------------------------------------------------------------------------
@@ -214,7 +213,12 @@ class TestListTemplates:
             "TotalCount": 2,
             "Templates": [
                 TEMPLATE_SUMMARY,
-                {**TEMPLATE_SUMMARY, "TemplateId": 2, "Name": "Goodbye", "Alias": "goodbye"},
+                {
+                    **TEMPLATE_SUMMARY,
+                    "TemplateId": 2,
+                    "Name": "Goodbye",
+                    "Alias": "goodbye",
+                },
             ],
         }
 

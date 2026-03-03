@@ -1,6 +1,7 @@
 """Tests for email message sending."""
 
 import pytest
+
 from postmark.exceptions import InvalidEmailException
 from postmark.models.messages import Email
 from postmark.models.templates import TemplateEmail

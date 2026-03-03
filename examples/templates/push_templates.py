@@ -1,17 +1,18 @@
 import asyncio
 import os
 
+from dotenv import load_dotenv
+
 import postmark
 from postmark.models.templates import PushTemplatesRequest
-from dotenv import load_dotenv
 
 load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
 
 """
-This is an example of pushing all templates with changes to another server. 
+This is an example of pushing all templates with changes to another server.
 If the template already exists on the destination server, the template will
-be updated. If the template does not exist on the destination server, it will be 
+be updated. If the template does not exist on the destination server, it will be
 created and assigned the alias of the template on the source server.
 """
 

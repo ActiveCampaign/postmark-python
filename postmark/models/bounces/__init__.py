@@ -1,13 +1,13 @@
 from .enums import BounceType
+from .manager import BounceManager
 from .schemas import (
     ActivateBounceResponse,
     Bounce,
     BounceDump,
-    BounceTypeCount,
     BouncesListResponse,
+    BounceTypeCount,
     DeliveryStats,
 )
-from .manager import BounceManager
 
 __all__ = [
     # Enums

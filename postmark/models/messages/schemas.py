@@ -10,8 +10,8 @@ from pydantic import (
     Field,
 )
 
-from .enums import MessageStatus, TrackLinksOption, MessageEventType, Platform
-from ...utils.message_utils import validate_formatted_email, validate_email_list
+from ...utils.message_utils import validate_email_list, validate_formatted_email
+from .enums import MessageEventType, MessageStatus, TrackLinksOption
 
 logger = logging.getLogger(__name__)
 

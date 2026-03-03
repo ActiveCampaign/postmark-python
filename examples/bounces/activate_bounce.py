@@ -1,14 +1,15 @@
 import asyncio
 import os
 
-import postmark
 from dotenv import load_dotenv
+
+import postmark
 
 load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
 
 
-# Bounce ID's that can be actived show "can_activate" -> True.
+# Bounce ID's that can be activated show "can_activate" -> True.
 bounce_id = 692560173
 
 

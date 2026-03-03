@@ -1,8 +1,8 @@
 """Tests for email message retrieval."""
 
 from datetime import datetime
+
 import pytest
-from conftest import make_response
 
 
 class TestEmailMessages:

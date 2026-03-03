@@ -1,5 +1,7 @@
-import httpx, json
-from typing import Optional, Dict, Any
+import json
+from typing import Optional
+
+import httpx
 
 
 def parse_error_response(response: httpx.Response) -> tuple[str, Optional[int]]:

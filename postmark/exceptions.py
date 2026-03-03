@@ -32,7 +32,7 @@ class InvalidEmailException(PostmarkException):
     from the Postmark API after a request was made.
     """
 
-    def __init__(self, errors: list[dict[str, Any]]):
+    def __init__(self, errors: list[Any]):
         self.errors = errors
         summary = " | ".join(
             f"{' -> '.join(str(loc) for loc in e['loc'])}: {e['msg']}" for e in errors

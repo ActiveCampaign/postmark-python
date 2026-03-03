@@ -32,11 +32,26 @@ pytest = "^8.1.1"             # Testing framework
 pytest-asyncio = "^0.23.6"    # To run async tests with pytest
 respx = "^0.21.0"             # Mocking HTTP requests for testing
 pytest-cov = "^7.0.0"         # For coverage reports
-black = "^25.12.0"
 mypy = "^1.8.0"
+ruff = "^0.9.0"
+pre-commit = "^4.0.0"
 
 
 
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N"]
+ignore = ["N818"]  # allow "Exception" suffix on exception classes
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.bandit]
+skips = ["B101"]  # assert statements are fine in tests
+exclude_dirs = ["tests"]
 
 [build-system]
 requires = ["poetry-core"]

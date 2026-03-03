@@ -2,8 +2,9 @@ import asyncio
 import os
 from datetime import datetime
 
-import postmark
 from dotenv import load_dotenv
+
+import postmark
 
 load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])

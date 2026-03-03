@@ -7,8 +7,9 @@ Examples for retrieving sent messages.
 import asyncio
 import os
 
-import postmark
 from dotenv import load_dotenv
+
+import postmark
 
 load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])

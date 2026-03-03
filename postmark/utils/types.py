@@ -1,5 +1,6 @@
 # postmark/utils/types.py
-from typing import Any, Dict, Optional, Protocol
+from typing import Any, Dict, List, Optional, Protocol, Union
+
 import httpx
 
 
@@ -9,7 +10,9 @@ class HTTPClient(Protocol):
     ) -> httpx.Response: ...
 
     async def post(
-        self, endpoint: str, json: Optional[Dict[str, Any]] = None
+        self,
+        endpoint: str,
+        json: Union[Dict[str, Any], List[Dict[str, Any]], None] = None,
     ) -> httpx.Response: ...
 
     async def put(

@@ -1,21 +1,20 @@
-import json
 import logging
 import os
-from typing import Optional, Dict, Any
-from postmark.models.messages import EmailManager
-from postmark.models.bounces import BounceManager
-from postmark.models.templates import TemplateManager
+from typing import Any, Dict, List, Optional, Union
 
 import httpx
 
-from ..utils.server_utils import parse_error_response
+from postmark.models.bounces import BounceManager
+from postmark.models.messages import EmailManager
+from postmark.models.servers import ServerManager
+from postmark.models.templates import TemplateManager
+
 from ..exceptions import (
-    InvalidAPIKeyException,
     PostmarkException,
     TimeoutException,
     get_exception_class,
 )
-
+from ..utils.server_utils import parse_error_response
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +44,7 @@ class ServerClient:
         self.email = EmailManager(self)
         self.bounces = BounceManager(self)
         self.templates = TemplateManager(self)
+        self.server = ServerManager(self)
 
     async def request(self, method: str, endpoint: str, **kwargs) -> httpx.Response:
         """
@@ -72,7 +72,7 @@ class ServerClient:
 
             except httpx.TimeoutException as e:
                 logger.error(f"Request timeout for {method} {endpoint}")
-                raise TimeoutException(f"Request timed out after 30 seconds") from e
+                raise TimeoutException("Request timed out after 30 seconds") from e
 
             except httpx.HTTPStatusError as e:
                 # Parse Postmark error response
@@ -99,7 +99,9 @@ class ServerClient:
         return await self.request("GET", endpoint, params=params)
 
     async def post(
-        self, endpoint: str, json: Optional[Dict[str, Any]] = None
+        self,
+        endpoint: str,
+        json: Union[Dict[str, Any], List[Dict[str, Any]], None] = None,
     ) -> httpx.Response:
         return await self.request("POST", endpoint, json=json)
 

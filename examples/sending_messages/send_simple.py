@@ -7,9 +7,10 @@ Examples for sending messages.
 import asyncio
 import os
 
+from dotenv import load_dotenv
+
 import postmark
 from postmark import Email
-from dotenv import load_dotenv
 
 load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
@@ -24,7 +25,10 @@ async def main():
             "to": "receiver@adjkshfjkadshfjkash.com",
             "subject": "Hello from Postmark Python SDK",
             "text_body": "This is a test email sent using the Python SDK.",
-            "html_body": "<html><body><strong>Hello</strong> from Postmark Python SDK.</body></html>",
+            "html_body": (
+                "<html><body><strong>Hello</strong>"
+                " from Postmark Python SDK.</body></html>"
+            ),
             "message_stream": "outbound",
         }
     )

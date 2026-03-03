@@ -1,6 +1,7 @@
 """Tests for bulk email sending."""
 
 import pytest
+
 from postmark.exceptions import InvalidEmailException
 from postmark.models.messages import BulkEmail, BulkRecipient
 
@@ -152,9 +153,7 @@ class TestBulkSend:
     # -------------------------------------------------------------------------
 
     @pytest.mark.asyncio
-    async def test_send_bulk_empty_messages_raises(
-        self, email, bulk_accepted_response
-    ):
+    async def test_send_bulk_empty_messages_raises(self, email, bulk_accepted_response):
         """A bulk request with no recipients should raise before any API call."""
         manager, fake = email
 
@@ -216,7 +215,7 @@ class TestBulkSend:
     async def test_send_bulk_with_per_recipient_metadata(
         self, email, bulk_accepted_response
     ):
-        """Per-recipient metadata should be serialised independently of shared metadata."""
+        """Per-recipient metadata is serialised independently of shared metadata."""
         manager, fake = email
         fake.mock_post_response(bulk_accepted_response)
 

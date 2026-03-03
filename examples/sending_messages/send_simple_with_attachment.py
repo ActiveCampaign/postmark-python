@@ -11,9 +11,10 @@ import asyncio
 import base64
 import os
 
+from dotenv import load_dotenv
+
 import postmark
 from postmark.models.messages import Attachment, Email
-from dotenv import load_dotenv
 
 load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
@@ -42,7 +43,7 @@ async def main():
             name="logo.png",
             content=base64.b64encode(f.read()).decode("utf-8"),
             content_type="image/png",
-            content_id="cid:logo",  # reference this in html_body as <img src="cid:logo">
+            content_id="cid:logo",  # reference in html_body as <img src="cid:logo">
         )
 
     # --- Send ---

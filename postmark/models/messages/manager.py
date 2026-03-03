@@ -5,6 +5,7 @@ from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 from pydantic import ValidationError
 
 from postmark.exceptions import InvalidEmailException
+from postmark.models.templates.schemas import TemplateEmail
 from postmark.utils.types import HTTPClient
 
 from .schemas import (
@@ -16,7 +17,6 @@ from .schemas import (
     MessageDetails,
     SendResponse,
 )
-from postmark.models.templates.schemas import TemplateEmail
 
 logger = logging.getLogger(__name__)
 
@@ -207,14 +207,13 @@ class EmailManager:
             for key, value in metadata.items():
                 filters[f"metadata_{key}"] = value
 
-        params = {"count": count, "offset": offset}
+        params: Dict[str, Any] = {"count": count, "offset": offset}
         for key, value in filters.items():
             if value is not None:
-                params[key] = (
-                    value.strftime("%Y-%m-%dT%H:%M:%S")
-                    if isinstance(value, datetime)
-                    else value
-                )
+                if isinstance(value, datetime):
+                    params[key] = value.strftime("%Y-%m-%dT%H:%M:%S")
+                else:
+                    params[key] = value
 
         response = await self.client.get("/messages/outbound", params=params)
         response.raise_for_status()

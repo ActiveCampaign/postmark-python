@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import ValidationError
 
@@ -86,7 +86,9 @@ class TemplateManager:
         data = TemplateListResponse(**response.json())
         return data.templates, data.total_count
 
-    async def delete(self, template_id_or_alias: Union[int, str]) -> DeleteTemplateResponse:
+    async def delete(
+        self, template_id_or_alias: Union[int, str]
+    ) -> DeleteTemplateResponse:
         """Delete a template by ID or alias."""
         response = await self.client.delete(f"/templates/{template_id_or_alias}")
         return DeleteTemplateResponse(**response.json())

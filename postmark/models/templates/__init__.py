@@ -1,4 +1,5 @@
 from .enums import TemplateAction, TemplateType, TemplateTypeFilter
+from .manager import TemplateManager
 from .schemas import (
     CreateTemplateRequest,
     DeleteTemplateResponse,
@@ -16,7 +17,6 @@ from .schemas import (
     ValidateTemplateResponse,
     ValidationError,
 )
-from .manager import TemplateManager
 
 __all__ = [
     "TemplateAction",

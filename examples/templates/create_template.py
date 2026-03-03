@@ -1,9 +1,10 @@
 import asyncio
 import os
 
+from dotenv import load_dotenv
+
 import postmark
 from postmark.models.templates import CreateTemplateRequest
-from dotenv import load_dotenv
 
 load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
@@ -28,7 +29,9 @@ async def main():
             name="Password Reset",
             alias="password-reset",
             subject="Reset your password",
-            html_body="<p>Click <a href='{{reset_url}}'>here</a> to reset your password.</p>",
+            html_body=(
+                "<p>Click <a href='{{reset_url}}'>here</a> to reset your password.</p>"
+            ),
             text_body="Reset your password: {{reset_url}}",
         )
     )

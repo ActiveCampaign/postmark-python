@@ -1,10 +1,7 @@
 import logging
 
-# Base Logger
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
-
-# Export exceptions for easy access
+from .clients.account_client import AccountClient
+from .clients.server_client import ServerClient
 from .exceptions import (
     InactiveRecipientException,
     InvalidAPIKeyException,
@@ -15,17 +12,17 @@ from .exceptions import (
     TimeoutException,
     ValidationException,
 )
-
-# Import Client
-from .clients.server_client import ServerClient
-
 from .models import messages
-from .models.messages import Email, Message, SendResponse, Attachment, Header
-
+from .models.messages import Attachment, Email, Header, Message, SendResponse
 from .utils import server_utils
+
+# Base logger
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 __all__ = [
     "ServerClient",
+    "AccountClient",
     "Email",
     "Message",
     "SendResponse",

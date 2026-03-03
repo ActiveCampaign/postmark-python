@@ -1,10 +1,13 @@
 """Shared fixtures for Postmark test suite."""
 
 from unittest.mock import AsyncMock, Mock
+
 import pytest
 from httpx import Response
-from postmark.models.messages import EmailManager
+
 from postmark.models.bounces import BounceManager
+from postmark.models.messages import EmailManager
+from postmark.models.servers import AccountServerManager, ServerManager
 from postmark.models.templates import TemplateManager
 
 
@@ -63,3 +66,13 @@ def bounces(fake_client):
 @pytest.fixture
 def templates(fake_client):
     return TemplateManager(fake_client), fake_client
+
+
+@pytest.fixture
+def servers(fake_client):
+    return ServerManager(fake_client), fake_client
+
+
+@pytest.fixture
+def account_servers(fake_client):
+    return AccountServerManager(fake_client), fake_client

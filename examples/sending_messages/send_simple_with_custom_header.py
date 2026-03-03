@@ -11,9 +11,10 @@ Custom headers are useful for:
 import asyncio
 import os
 
+from dotenv import load_dotenv
+
 import postmark
 from postmark.models.messages import Email, Header
-from dotenv import load_dotenv
 
 load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])

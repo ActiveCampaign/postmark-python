@@ -1,9 +1,10 @@
 import asyncio
 import os
 
+from dotenv import load_dotenv
+
 import postmark
 from postmark.models.messages import BulkEmail, BulkRecipient
-from dotenv import load_dotenv
 
 load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
@@ -11,12 +12,15 @@ SENDER = os.environ["POSTMARK_SENDER_EMAIL"]
 
 
 async def main():
-    # --- It's recommended sending using BulkRecipient class models, for improved type safety. ---
+    # --- Recommended: use BulkRecipient models for improved type safety. ---
     response = await client.email.send_bulk(
         BulkEmail(
             sender=SENDER,
             subject="Hello {{FirstName}}, your order is ready",
-            html_body="<p>Hi {{FirstName}}, your order <strong>{{OrderId}}</strong> is ready.</p>",
+            html_body=(
+                "<p>Hi {{FirstName}}, your order"
+                " <strong>{{OrderId}}</strong> is ready.</p>"
+            ),
             text_body="Hi {{FirstName}}, your order {{OrderId}} is ready.",
             message_stream="broadcast",
             messages=[
@@ -42,7 +46,10 @@ async def main():
         {
             "sender": SENDER,
             "subject": "Hello {{FirstName}}, your order is ready",
-            "html_body": "<p>Hi {{FirstName}}, your order <strong>{{OrderId}}</strong> is ready.</p>",
+            "html_body": (
+                "<p>Hi {{FirstName}}, your order"
+                " <strong>{{OrderId}}</strong> is ready.</p>"
+            ),
             "text_body": "Hi {{FirstName}}, your order {{OrderId}} is ready.",
             "message_stream": "broadcast",
             "track_opens": True,
@@ -68,7 +75,9 @@ async def main():
     # --- Poll for completion ---
     status = await client.email.get_bulk_status(response.id)
     print(
-        f"Status: {status.status}  ({status.percentage_completed:.0f}% of {status.total_messages} messages sent)"
+        f"Status: {status.status}  ("
+        f"{status.percentage_completed:.0f}% of"
+        f" {status.total_messages} messages sent)"
     )
 
 

@@ -1,9 +1,9 @@
 import asyncio
 import os
 
-import postmark
-from postmark import Email
 from dotenv import load_dotenv
+
+import postmark
 
 load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])

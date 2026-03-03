@@ -1,20 +1,20 @@
-from .enums import MessageStatus, TrackLinksOption, MessageEventType, Platform
+from .enums import MessageEventType, MessageStatus, Platform, TrackLinksOption
+from .manager import EmailManager
 from .schemas import (
-    # Single / batch
-    Email,
-    SendResponse,
-    Message,
-    MessageDetails,
     Attachment,
-    Header,
-    EmailAddress,
     # Bulk
     BulkEmail,
     BulkRecipient,
     BulkSendResponse,
     BulkSendStatus,
+    # Single / batch
+    Email,
+    EmailAddress,
+    Header,
+    Message,
+    MessageDetails,
+    SendResponse,
 )
-from .manager import EmailManager
 
 __all__ = [
     # Schemas — single / batch

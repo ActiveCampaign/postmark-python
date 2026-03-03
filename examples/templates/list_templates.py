@@ -1,9 +1,10 @@
 import asyncio
 import os
 
+from dotenv import load_dotenv
+
 import postmark
 from postmark.models.templates import TemplateTypeFilter
-from dotenv import load_dotenv
 
 load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
@@ -14,7 +15,10 @@ async def main():
     templates, total = await client.templates.list()
     print(f"Total templates: {total}, showing {len(templates)}")
     for t in templates:
-        print(f"  [{t.template_id:>6}]  {t.name:<30}  type={t.template_type}  active={t.active}")
+        print(
+            f"  [{t.template_id:>6}]  {t.name:<30}"
+            f"  type={t.template_type}  active={t.active}"
+        )
 
     # --- List only Standard templates ---
     templates, total = await client.templates.list(

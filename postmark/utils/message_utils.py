@@ -1,18 +1,12 @@
 import logging
 import re
-from typing import Annotated, Any, Dict, List, Optional, Union
-
+from typing import List
 
 from pydantic import (
-    BaseModel,
-    BeforeValidator,
-    ConfigDict,
     EmailStr,
-    Field,
     TypeAdapter,
     ValidationError,
 )
-
 
 # Initialize TypeAdapter
 email_adapter = TypeAdapter(EmailStr)
@@ -23,7 +17,8 @@ logger = logging.getLogger(__name__)
 
 def validate_formatted_email(v: str) -> str:
     """
-    Validate email fields that may contain formatted strings like "Name" <email@example.com>
+    Validate email fields that may contain formatted strings like
+    "Name" <email@example.com>
     """
 
     if v is None:  # None
@@ -31,7 +26,8 @@ def validate_formatted_email(v: str) -> str:
     if not v:  # Empty string
         raise ValueError("Email cannot be empty")
 
-    # Extract email from formats like: "Name" <email@example.com> or just email@example.com
+    # Extract email from formats like: "Name" <email@example.com>
+    # or just email@example.com
     email_pattern = r'<([^>]+)>|([^\s<>"]+@[^\s<>"]+)'
     match = re.search(email_pattern, v)
     if not match:

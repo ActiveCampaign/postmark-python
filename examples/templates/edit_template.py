@@ -1,9 +1,10 @@
 import asyncio
 import os
 
+from dotenv import load_dotenv
+
 import postmark
 from postmark.models.templates import EditTemplateRequest
-from dotenv import load_dotenv
 
 load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
@@ -17,7 +18,10 @@ async def main():
         template_id,
         {
             "Subject": "Welcome back, {{name}}!",
-            "HtmlBody": "<p>Hi {{name}}, we updated our terms. <a href='{{url}}'>Read more</a>.</p>",
+            "HtmlBody": (
+                "<p>Hi {{name}}, we updated our terms."
+                " <a href='{{url}}'>Read more</a>.</p>"
+            ),
         },
     )
     print(f"Edited (ID):    {result.name}  active={result.active}")
