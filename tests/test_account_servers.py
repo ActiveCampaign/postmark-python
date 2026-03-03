@@ -142,6 +142,70 @@ class TestCreateServer:
         body = fake.post.call_args[1]["json"]
         assert body["TrackLinks"] == "HtmlOnly"
 
+    @pytest.mark.asyncio
+    async def test_create_with_smtp_and_raw_email(self, account_servers):
+        manager, fake = account_servers
+        fake.mock_post_response(SERVER)
+
+        await manager.create(
+            name="Test",
+            smtp_api_activated=True,
+            raw_email_enabled=False,
+        )
+
+        body = fake.post.call_args[1]["json"]
+        assert body["SmtpApiActivated"] is True
+        assert body["RawEmailEnabled"] is False
+
+    @pytest.mark.asyncio
+    async def test_create_with_more_webhook_urls(self, account_servers):
+        manager, fake = account_servers
+        fake.mock_post_response(SERVER)
+
+        await manager.create(
+            name="Test",
+            open_hook_url="https://example.com/open",
+            delivery_hook_url="https://example.com/delivery",
+            click_hook_url="https://example.com/click",
+        )
+
+        body = fake.post.call_args[1]["json"]
+        assert body["OpenHookUrl"] == "https://example.com/open"
+        assert body["DeliveryHookUrl"] == "https://example.com/delivery"
+        assert body["ClickHookUrl"] == "https://example.com/click"
+
+    @pytest.mark.asyncio
+    async def test_create_with_inbound_options(self, account_servers):
+        manager, fake = account_servers
+        fake.mock_post_response(SERVER)
+
+        await manager.create(
+            name="Test",
+            post_first_open_only=True,
+            inbound_domain="inbound.example.com",
+            inbound_spam_threshold=7,
+        )
+
+        body = fake.post.call_args[1]["json"]
+        assert body["PostFirstOpenOnly"] is True
+        assert body["InboundDomain"] == "inbound.example.com"
+        assert body["InboundSpamThreshold"] == 7
+
+    @pytest.mark.asyncio
+    async def test_create_with_hook_content_flags(self, account_servers):
+        manager, fake = account_servers
+        fake.mock_post_response(SERVER)
+
+        await manager.create(
+            name="Test",
+            include_bounce_content_in_hook=True,
+            enable_smtp_api_error_hooks=True,
+        )
+
+        body = fake.post.call_args[1]["json"]
+        assert body["IncludeBounceContentInHook"] is True
+        assert body["EnableSmtpApiErrorHooks"] is True
+
 
 # ---------------------------------------------------------------------------
 # Edit server
@@ -195,6 +259,70 @@ class TestEditServer:
             "TrackOpens": True,
             "InboundSpamThreshold": 10,
         }
+
+    @pytest.mark.asyncio
+    async def test_edit_smtp_and_raw_email(self, account_servers):
+        manager, fake = account_servers
+        fake.mock_put_response(SERVER)
+
+        await manager.edit(42, smtp_api_activated=False, raw_email_enabled=True)
+
+        body = fake.put.call_args[1]["json"]
+        assert body["SmtpApiActivated"] is False
+        assert body["RawEmailEnabled"] is True
+
+    @pytest.mark.asyncio
+    async def test_edit_webhook_urls(self, account_servers):
+        manager, fake = account_servers
+        fake.mock_put_response(SERVER)
+
+        await manager.edit(
+            42,
+            inbound_hook_url="https://example.com/inbound",
+            bounce_hook_url="https://example.com/bounce",
+            open_hook_url="https://example.com/open",
+            delivery_hook_url="https://example.com/delivery",
+            click_hook_url="https://example.com/click",
+        )
+
+        body = fake.put.call_args[1]["json"]
+        assert body["InboundHookUrl"] == "https://example.com/inbound"
+        assert body["BounceHookUrl"] == "https://example.com/bounce"
+        assert body["OpenHookUrl"] == "https://example.com/open"
+        assert body["DeliveryHookUrl"] == "https://example.com/delivery"
+        assert body["ClickHookUrl"] == "https://example.com/click"
+
+    @pytest.mark.asyncio
+    async def test_edit_inbound_and_open_options(self, account_servers):
+        manager, fake = account_servers
+        fake.mock_put_response(SERVER)
+
+        await manager.edit(
+            42,
+            post_first_open_only=True,
+            inbound_domain="inbound.example.com",
+        )
+
+        body = fake.put.call_args[1]["json"]
+        assert body["PostFirstOpenOnly"] is True
+        assert body["InboundDomain"] == "inbound.example.com"
+
+    @pytest.mark.asyncio
+    async def test_edit_track_links_and_hook_flags(self, account_servers):
+        manager, fake = account_servers
+        fake.mock_put_response(SERVER)
+
+        await manager.edit(
+            42,
+            track_links=TrackLinks.NONE,
+            include_bounce_content_in_hook=False,
+            enable_smtp_api_error_hooks=True,
+        )
+
+        body = fake.put.call_args[1]["json"]
+        assert body["TrackLinks"] == "None"
+        assert body["IncludeBounceContentInHook"] is False
+        assert body["EnableSmtpApiErrorHooks"] is True
 
 
 # ---------------------------------------------------------------------------
