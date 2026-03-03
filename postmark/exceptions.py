@@ -1,5 +1,6 @@
 """Postmark API exceptions."""
 
+import re
 from typing import Any, Optional
 
 
@@ -22,7 +23,7 @@ class PostmarkException(Exception):
         return self.args[0]
 
 
-class InvalidEmailPayloadException(PostmarkException):
+class InvalidEmailException(PostmarkException):
     """
     Raised when an email dict or model fails Pydantic validation
     before it is ever sent to the API.
@@ -36,7 +37,7 @@ class InvalidEmailPayloadException(PostmarkException):
         summary = " | ".join(
             f"{' -> '.join(str(loc) for loc in e['loc'])}: {e['msg']}" for e in errors
         )
-        super().__init__(f"Invalid email payload: {summary}")
+        super().__init__(f"Invalid email: {summary}")
 
 
 class PostmarkAPIException(PostmarkException):
@@ -61,7 +62,12 @@ class InvalidAPIKeyException(PostmarkAPIException):
 class InactiveRecipientException(PostmarkAPIException):
     """406 - Inactive recipient."""
 
-    pass
+    def __init__(self, message: str, error_code: int, http_status: int):
+        super().__init__(message, error_code, http_status)
+        match = re.search(r"Found inactive addresses: ([^.]+)", message)
+        self.inactive_recipients: list[str] = (
+            [addr.strip() for addr in match.group(1).split(",")] if match else []
+        )
 
 
 class ValidationException(PostmarkAPIException):

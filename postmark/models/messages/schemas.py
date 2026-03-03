@@ -123,7 +123,7 @@ class Email(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class Outbound(BaseModel):
+class Message(BaseModel):
     tag: Optional[str] = Field(None, alias="Tag")
     message_id: str = Field(alias="MessageID")
     message_stream: str = Field(alias="MessageStream")
@@ -146,7 +146,7 @@ class Outbound(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
 
-class OutboundMessageDetails(Outbound):
+class MessageDetails(Message):
     text_body: Optional[str] = Field(None, alias="TextBody")
     html_body: Optional[str] = Field(None, alias="HtmlBody")
     body: Optional[str] = Field(None, alias="Body")

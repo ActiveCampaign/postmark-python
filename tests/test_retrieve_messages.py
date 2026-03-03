@@ -1,12 +1,12 @@
-"""Tests for outbound message retrieval."""
+"""Tests for email message retrieval."""
 
 from datetime import datetime
 import pytest
 from conftest import make_response
 
 
-class TestOutboundMessages:
-    """Tests for Outbound message operations."""
+class TestEmailMessages:
+    """Tests for email message operations."""
 
     @pytest.fixture
     def mock_response_data(self):
@@ -73,9 +73,9 @@ class TestOutboundMessages:
         }
 
     @pytest.mark.asyncio
-    async def test_list_messages_success(self, outbound, mock_response_data):
+    async def test_list_messages_success(self, email, mock_response_data):
         """Test successful message listing with tag filter."""
-        manager, fake = outbound
+        manager, fake = email
         fake.mock_get_response(mock_response_data)
 
         messages_list, total = await manager.list(count=50, tag="welcome")
@@ -91,9 +91,9 @@ class TestOutboundMessages:
         )
 
     @pytest.mark.asyncio
-    async def test_list_messages_with_filters(self, outbound):
+    async def test_list_messages_with_filters(self, email):
         """Test that filters and datetime values are formatted correctly."""
-        manager, fake = outbound
+        manager, fake = email
         fake.mock_get_response({"TotalCount": 0, "Messages": []})
 
         await manager.list(
@@ -110,9 +110,9 @@ class TestOutboundMessages:
         assert params["status"] == "sent"
 
     @pytest.mark.asyncio
-    async def test_list_messages_validation_errors(self, outbound):
+    async def test_list_messages_validation_errors(self, email):
         """Test that out-of-range count/offset values raise before any API call."""
-        manager, fake = outbound
+        manager, fake = email
 
         with pytest.raises(ValueError, match="Count cannot exceed 500"):
             await manager.list(count=501)
@@ -124,9 +124,9 @@ class TestOutboundMessages:
         fake.get.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_stream_pagination(self, outbound, base_message):
+    async def test_stream_pagination(self, email, base_message):
         """Test that .stream() paginates correctly across multiple pages."""
-        manager, fake = outbound
+        manager, fake = email
 
         page1 = {
             "TotalCount": 750,
@@ -155,9 +155,9 @@ class TestOutboundMessages:
         assert fake.get.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_get_by_id(self, outbound):
+    async def test_get_by_id(self, email):
         """Test fetching full message details by ID."""
-        manager, fake = outbound
+        manager, fake = email
         fake.mock_get_response(
             {
                 "MessageID": "msg-123",

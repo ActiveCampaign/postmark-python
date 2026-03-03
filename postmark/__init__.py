@@ -20,13 +20,14 @@ from .exceptions import (
 from .clients.server_client import ServerClient
 
 from .models import messages
-from .models.messages import Email, SendResponse, Attachment, Header
+from .models.messages import Email, Message, SendResponse, Attachment, Header
 
 from .utils import server_utils
 
 __all__ = [
     "ServerClient",
     "Email",
+    "Message",
     "SendResponse",
     "Attachment",
     "Header",

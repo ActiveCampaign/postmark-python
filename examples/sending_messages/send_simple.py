@@ -1,5 +1,5 @@
 """
-Examples for sending outbound messages.
+Examples for sending messages.
 
     python examples/send_messages.py
 """
@@ -18,20 +18,21 @@ SENDER = os.environ["POSTMARK_SENDER_EMAIL"]
 
 async def main():
     # --- Send via dict ---
-    response = await client.outbound.send(
+    response = await client.email.send(
         {
             "sender": SENDER,
-            "to": "receiver@example.com",
+            "to": "receiver@adjkshfjkadshfjkash.com",
             "subject": "Hello from Postmark Python SDK",
             "text_body": "This is a test email sent using the Python SDK.",
             "html_body": "<html><body><strong>Hello</strong> from Postmark Python SDK.</body></html>",
             "message_stream": "outbound",
         }
     )
-    print(f"Sent (dict):  {response.message_id}")
+    # print(f"Sent (using dict):  {response.message_id}")
+    print(f"\nFull Response: {response}")
 
     # --- Send via Email model (recommended, offering better type safety) ---
-    response = await client.outbound.send(
+    response = await client.email.send(
         Email(
             sender=SENDER,
             to="receiver@example.com",

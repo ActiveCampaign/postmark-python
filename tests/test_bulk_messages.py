@@ -1,12 +1,12 @@
 """Tests for bulk email sending."""
 
 import pytest
-from postmark.exceptions import InvalidEmailPayloadException
+from postmark.exceptions import InvalidEmailException
 from postmark.models.messages import BulkEmail, BulkRecipient
 
 
 class TestBulkSend:
-    """Tests for OutboundManager.send_bulk() and get_bulk_status()."""
+    """Tests for EmailManager.send_bulk() and get_bulk_status()."""
 
     @pytest.fixture
     def bulk_accepted_response(self):
@@ -47,10 +47,10 @@ class TestBulkSend:
 
     @pytest.mark.asyncio
     async def test_send_bulk_from_dict(
-        self, outbound, bulk_accepted_response, minimal_bulk_dict
+        self, email, bulk_accepted_response, minimal_bulk_dict
     ):
         """Test sending a bulk email using a snake_case dict."""
-        manager, fake = outbound
+        manager, fake = email
         fake.mock_post_response(bulk_accepted_response)
 
         response = await manager.send_bulk(minimal_bulk_dict)
@@ -73,9 +73,9 @@ class TestBulkSend:
     # -------------------------------------------------------------------------
 
     @pytest.mark.asyncio
-    async def test_send_bulk_from_model(self, outbound, bulk_accepted_response):
+    async def test_send_bulk_from_model(self, email, bulk_accepted_response):
         """Test sending a bulk email using the BulkEmail model."""
-        manager, fake = outbound
+        manager, fake = email
         fake.mock_post_response(bulk_accepted_response)
 
         bulk = BulkEmail(
@@ -117,10 +117,10 @@ class TestBulkSend:
 
     @pytest.mark.asyncio
     async def test_send_bulk_dict_and_model_identical_payloads(
-        self, outbound, bulk_accepted_response
+        self, email, bulk_accepted_response
     ):
         """Dict and model paths should produce the exact same API payload."""
-        manager, fake = outbound
+        manager, fake = email
 
         fake.mock_post_response(bulk_accepted_response)
         await manager.send_bulk(
@@ -153,10 +153,10 @@ class TestBulkSend:
 
     @pytest.mark.asyncio
     async def test_send_bulk_empty_messages_raises(
-        self, outbound, bulk_accepted_response
+        self, email, bulk_accepted_response
     ):
         """A bulk request with no recipients should raise before any API call."""
-        manager, fake = outbound
+        manager, fake = email
 
         with pytest.raises(ValueError, match="at least one recipient"):
             await manager.send_bulk(
@@ -170,11 +170,11 @@ class TestBulkSend:
         fake.post.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_send_bulk_missing_sender_raises(self, outbound):
-        """Missing required sender field raises InvalidEmailPayloadException."""
-        manager, fake = outbound
+    async def test_send_bulk_missing_sender_raises(self, email):
+        """Missing required sender field raises InvalidEmailException."""
+        manager, fake = email
 
-        with pytest.raises(InvalidEmailPayloadException) as exc_info:
+        with pytest.raises(InvalidEmailException) as exc_info:
             await manager.send_bulk(
                 {
                     "subject": "Hello",
@@ -186,9 +186,9 @@ class TestBulkSend:
         fake.post.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_send_bulk_with_attachments(self, outbound, bulk_accepted_response):
+    async def test_send_bulk_with_attachments(self, email, bulk_accepted_response):
         """Shared attachments should appear in the serialised payload."""
-        manager, fake = outbound
+        manager, fake = email
         fake.mock_post_response(bulk_accepted_response)
 
         await manager.send_bulk(
@@ -214,10 +214,10 @@ class TestBulkSend:
 
     @pytest.mark.asyncio
     async def test_send_bulk_with_per_recipient_metadata(
-        self, outbound, bulk_accepted_response
+        self, email, bulk_accepted_response
     ):
         """Per-recipient metadata should be serialised independently of shared metadata."""
-        manager, fake = outbound
+        manager, fake = email
         fake.mock_post_response(bulk_accepted_response)
 
         await manager.send_bulk(
@@ -243,9 +243,9 @@ class TestBulkSend:
     # -------------------------------------------------------------------------
 
     @pytest.mark.asyncio
-    async def test_get_bulk_status(self, outbound, bulk_status_response):
+    async def test_get_bulk_status(self, email, bulk_status_response):
         """Test polling the status of a submitted bulk request."""
-        manager, fake = outbound
+        manager, fake = email
         fake.mock_get_response(bulk_status_response)
 
         status = await manager.get_bulk_status("f24af63c-533d-4b7a-ad65-4a7b3202d3a7")
@@ -261,9 +261,9 @@ class TestBulkSend:
         )
 
     @pytest.mark.asyncio
-    async def test_get_bulk_status_processing(self, outbound):
+    async def test_get_bulk_status_processing(self, email):
         """Test an in-progress bulk request returns partial completion."""
-        manager, fake = outbound
+        manager, fake = email
         fake.mock_get_response(
             {
                 "Id": "abc-123",

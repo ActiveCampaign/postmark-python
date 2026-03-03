@@ -12,7 +12,7 @@ SENDER = os.environ["POSTMARK_SENDER_EMAIL"]
 
 async def main():
     # --- Send batch ---
-    responses = await client.outbound.send_batch(
+    responses = await client.email.send_batch(
         [
             {
                 "sender": SENDER,

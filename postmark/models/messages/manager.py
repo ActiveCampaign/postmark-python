@@ -4,7 +4,7 @@ from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 
 from pydantic import ValidationError
 
-from postmark.exceptions import InvalidEmailPayloadException
+from postmark.exceptions import InvalidEmailException
 from postmark.utils.types import HTTPClient
 
 from .schemas import (
@@ -12,10 +12,11 @@ from .schemas import (
     BulkSendResponse,
     BulkSendStatus,
     Email,
-    Outbound,
-    OutboundMessageDetails,
+    Message,
+    MessageDetails,
     SendResponse,
 )
+from postmark.models.templates.schemas import TemplateEmail
 
 logger = logging.getLogger(__name__)
 
@@ -23,19 +24,28 @@ logger = logging.getLogger(__name__)
 def _parse_email(message: Union[Email, Dict[str, Any]]) -> Email:
     """
     Coerce a dict to an Email model using snake_case field names,
-    or raise InvalidEmailPayloadException
+    or raise InvalidEmailException
     """
     if isinstance(message, Email):
         return message
     try:
         return Email.model_validate(message)
     except ValidationError as e:
-        raise InvalidEmailPayloadException(e.errors()) from e
+        raise InvalidEmailException(e.errors()) from e
+
+
+def _parse_template_email(msg: Union[TemplateEmail, Dict[str, Any]]) -> TemplateEmail:
+    if isinstance(msg, TemplateEmail):
+        return msg
+    try:
+        return TemplateEmail.model_validate(msg)
+    except ValidationError as e:
+        raise InvalidEmailException(e.errors()) from e
 
 
 def _parse_bulk_email(message: Union[BulkEmail, Dict[str, Any]]) -> BulkEmail:
     """
-    Coerce a dict to a BulkEmail model, raising InvalidEmailPayloadException
+    Coerce a dict to a BulkEmail model, raising InvalidEmailException
     on validation failure. Passes through a BulkEmail instance unchanged.
     """
     if isinstance(message, BulkEmail):
@@ -43,10 +53,10 @@ def _parse_bulk_email(message: Union[BulkEmail, Dict[str, Any]]) -> BulkEmail:
     try:
         return BulkEmail.model_validate(message)
     except ValidationError as e:
-        raise InvalidEmailPayloadException(e.errors()) from e
+        raise InvalidEmailException(e.errors()) from e
 
 
-class OutboundManager:
+class EmailManager:
     def __init__(self, client: HTTPClient):
         self.client = client
 
@@ -84,8 +94,8 @@ class OutboundManager:
         for i, msg in enumerate(messages):
             try:
                 email_obj = _parse_email(msg)
-            except InvalidEmailPayloadException as e:
-                raise InvalidEmailPayloadException(
+            except InvalidEmailException as e:
+                raise InvalidEmailException(
                     [
                         {
                             "loc": (f"messages[{i}]", *err["loc"]),
@@ -131,6 +141,50 @@ class OutboundManager:
         return BulkSendStatus(**response.json())
 
     # -------------------------------------------------------------------------
+    # Template sends
+    # -------------------------------------------------------------------------
+
+    async def send_with_template(
+        self, message: Union[TemplateEmail, Dict[str, Any]]
+    ) -> SendResponse:
+        """Send an email using a template."""
+        email = _parse_template_email(message)
+        logger.debug(f"Sending template email to {email.to}")
+        response = await self.client.post(
+            "/email/withTemplate",
+            json=email.model_dump(by_alias=True, exclude_none=True),
+        )
+        return SendResponse(**response.json())
+
+    async def send_batch_with_template(
+        self, messages: List[Union[TemplateEmail, Dict[str, Any]]]
+    ) -> List[SendResponse]:
+        """Send up to 500 template emails in a single batch request."""
+        if len(messages) > 500:
+            raise ValueError("Batch size cannot exceed 500 messages")
+
+        payload = []
+        for i, msg in enumerate(messages):
+            try:
+                email = _parse_template_email(msg)
+            except InvalidEmailException as e:
+                raise InvalidEmailException(
+                    [
+                        {
+                            "loc": (f"messages[{i}]", *err["loc"]),
+                            **{k: v for k, v in err.items() if k != "loc"},
+                        }
+                        for err in e.errors
+                    ]
+                ) from e
+            payload.append(email.model_dump(by_alias=True, exclude_none=True))
+
+        response = await self.client.post(
+            "/email/batchWithTemplates", json={"Messages": payload}
+        )
+        return [SendResponse(**item) for item in response.json()]
+
+    # -------------------------------------------------------------------------
     # List / stream / get
     # -------------------------------------------------------------------------
 
@@ -140,8 +194,8 @@ class OutboundManager:
         offset: int = 0,
         metadata: Optional[Dict[str, str]] = None,
         **filters,
-    ) -> tuple[List[Outbound], int]:
-        """List outbound messages."""
+    ) -> tuple[List[Message], int]:
+        """List sent messages."""
         if count > 500:
             raise ValueError("Count cannot exceed 500 messages per request")
         if count + offset > 10000:
@@ -166,13 +220,13 @@ class OutboundManager:
         response.raise_for_status()
         data = response.json()
 
-        return [Outbound(**msg) for msg in data.get("Messages", [])], data.get(
+        return [Message(**msg) for msg in data.get("Messages", [])], data.get(
             "TotalCount", 0
         )
 
     async def stream(
         self, batch_size: int = 500, max_messages: int = 1000, **filters
-    ) -> AsyncGenerator[Outbound, None]:
+    ) -> AsyncGenerator[Message, None]:
         """Stream messages with automatic pagination."""
         if max_messages > 10000:
             raise ValueError("Cannot retrieve more than 10,000 messages")
@@ -206,7 +260,7 @@ class OutboundManager:
             if offset >= total:
                 break
 
-    async def get(self, message_id: str) -> OutboundMessageDetails:
+    async def get(self, message_id: str) -> MessageDetails:
         """Get detailed information for a specific message."""
         response = await self.client.get(f"/messages/outbound/{message_id}/details")
-        return OutboundMessageDetails(**response.json())
+        return MessageDetails(**response.json())

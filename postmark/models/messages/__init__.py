@@ -3,8 +3,8 @@ from .schemas import (
     # Single / batch
     Email,
     SendResponse,
-    Outbound,
-    OutboundMessageDetails,
+    Message,
+    MessageDetails,
     Attachment,
     Header,
     EmailAddress,
@@ -14,14 +14,14 @@ from .schemas import (
     BulkSendResponse,
     BulkSendStatus,
 )
-from .manager import OutboundManager
+from .manager import EmailManager
 
 __all__ = [
     # Schemas — single / batch
     "Email",
     "SendResponse",
-    "Outbound",
-    "OutboundMessageDetails",
+    "Message",
+    "MessageDetails",
     "Attachment",
     "Header",
     "EmailAddress",
@@ -36,5 +36,5 @@ __all__ = [
     "MessageEventType",
     "Platform",
     # Managers
-    "OutboundManager",
+    "EmailManager",
 ]

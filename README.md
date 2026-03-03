@@ -76,7 +76,7 @@ async def get_messages():
     server = postmark.ServerClient(server_token="your-server-token")
     
     # List messages (paginated)
-    messages, total = await server.messages.Outbound.list(
+    messages, total = await server.email.list(
         recipient="user@example.com",
         fromdate="2024-01-01"
     )
@@ -118,7 +118,7 @@ async def send_email():
     server = postmark.ServerClient(server_token="your-server-token")
 
     # Method 1: Using a dictionary
-    await server.messages.Outbound.send({
+    await server.email.send({
         "From": "sender@example.com",
         "To": "receiver@example.com",
         "Subject": "Hello from Postmark!",
@@ -132,12 +132,12 @@ async def send_email():
         subject="Hello via Model",
         text_body="This is a test using the model."
     )
-    await server.messages.Outbound.send(email)
+    await server.email.send(email)
 
 asyncio.run(send_email())
 ```
 
-### Search Outbound Messages
+### Search Sent Messages
 
 ```python
 import asyncio
@@ -147,7 +147,7 @@ async def search_messages():
     server = postmark.ServerClient(server_token="your-server-token")
     
     # List a specific page of messages
-    messages, total = await server.messages.Outbound.list(
+    messages, total = await server.email.list(
         count=50,
         recipient="user@example.com",
         tag="onboarding",
@@ -170,7 +170,7 @@ async def get_message_details():
     message_id = "your-message-id"
     
     # Get full details (including body and events)
-    message = await server.messages.Outbound.get(message_id=message_id)
+    message = await server.email.get(message_id=message_id)
     
     print(f"Subject: {message.subject}")
     print(f"From: {message.sender}")
@@ -188,7 +188,7 @@ async def stream_all_messages():
     server = postmark.ServerClient(server_token="your-server-token")
     
     # Lazily yields messages one by one
-    async for message in server.messages.Outbound.stream(
+    async for message in server.email.stream(
         max_messages=1000,
         tag="onboarding"
     ):
@@ -215,7 +215,7 @@ async def safe_message_search():
     server = postmark.ServerClient(server_token="your-server-token")
 
     try:
-        messages, total = await server.messages.Outbound.list(
+        messages, total = await server.email.list(
             recipient="user@example.com"
         )
         print(f"Found {total} messages")
@@ -276,10 +276,10 @@ logging.getLogger('postmark').setLevel(logging.DEBUG)
 
 ## API Reference
 
-### Outbound Messages API
-Access via `server.messages.Outbound`
+### Email API
+Access via `server.email`
 
-#### `Outbound.send()`
+#### `email.send()`
 Send a single email.
 
 **Parameters:**
@@ -287,8 +287,8 @@ Send a single email.
 
 **Returns:** `SendResponse` object
 
-#### `Outbound.list()`
-Search for outbound messages with various filters. Returns a specific page of results.
+#### `email.list()`
+Search for sent messages with various filters. Returns a specific page of results.
 
 **Parameters:**
 - `count` (int): Number of messages to return (max 500, default 100)
@@ -302,24 +302,24 @@ Search for outbound messages with various filters. Returns a specific page of re
 - `subject` (str): Filter by subject
 - `messagestream` (str): Filter by message stream
 
-**Returns:** Tuple of `(List[Outbound], int)` where int is the total count.
+**Returns:** Tuple of `(List[Email], int)` where int is the total count.
 
-#### `Outbound.get()`
+#### `email.get()`
 Get detailed information about a specific message.
 
 **Parameters:**
 - `message_id` (str): The message ID to retrieve
 
-**Returns:** `OutboundMessageDetails` object with full message content
+**Returns:** `MessageDetails` object with full message content
 
-#### `Outbound.stream()`
+#### `email.stream()`
 Async generator that lazily retrieves messages matching filters, handling pagination automatically.
 
 **Parameters:**
 - `max_messages` (int): Maximum messages to retrieve (up to 10,000, default 1000)
 - `**filters`: Same filter parameters as `list()` method
 
-**Returns:** AsyncGenerator yielding `Outbound` objects
+**Returns:** AsyncGenerator yielding `Email` objects
 
 ## Development
 
