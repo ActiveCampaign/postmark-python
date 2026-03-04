@@ -6,6 +6,7 @@ import httpx
 
 from postmark.models.bounces import BounceManager
 from postmark.models.inbound import InboundManager
+from postmark.models.inbound_rules import InboundRuleManager
 from postmark.models.messages import OutboundManager
 from postmark.models.servers import ServerManager
 from postmark.models.stats import StatsManager
@@ -46,6 +47,7 @@ class ServerClient:
 
         self.outbound = OutboundManager(self)
         self.inbound = InboundManager(self)
+        self.inbound_rules = InboundRuleManager(self)
         self.bounces = BounceManager(self)
         self.templates = TemplateManager(self)
         self.server = ServerManager(self)

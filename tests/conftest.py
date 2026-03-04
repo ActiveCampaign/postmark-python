@@ -8,6 +8,7 @@ from httpx import Response
 from postmark.models.bounces import BounceManager
 from postmark.models.domains import DomainManager
 from postmark.models.inbound import InboundManager
+from postmark.models.inbound_rules import InboundRuleManager
 from postmark.models.messages import OutboundManager
 from postmark.models.servers import AccountServerManager, ServerManager
 from postmark.models.signatures import SenderSignatureManager
@@ -110,3 +111,8 @@ def signatures(fake_client):
 @pytest.fixture
 def stats(fake_client):
     return StatsManager(fake_client), fake_client
+
+
+@pytest.fixture
+def inbound_rules(fake_client):
+    return InboundRuleManager(fake_client), fake_client
