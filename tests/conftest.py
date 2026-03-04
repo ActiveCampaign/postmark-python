@@ -6,6 +6,7 @@ import pytest
 from httpx import Response
 
 from postmark.models.bounces import BounceManager
+from postmark.models.data_removals import DataRemovalManager
 from postmark.models.domains import DomainManager
 from postmark.models.inbound import InboundManager
 from postmark.models.inbound_rules import InboundRuleManager
@@ -128,3 +129,8 @@ def webhooks(fake_client):
 @pytest.fixture
 def suppressions(fake_client):
     return SuppressionManager(fake_client), fake_client
+
+
+@pytest.fixture
+def data_removals(fake_client):
+    return DataRemovalManager(fake_client), fake_client

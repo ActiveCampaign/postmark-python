@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import httpx
 
+from postmark.models.data_removals import DataRemovalManager
 from postmark.models.domains import DomainManager
 from postmark.models.servers import AccountServerManager
 from postmark.models.signatures import SenderSignatureManager
@@ -42,6 +43,7 @@ class AccountClient:
         self.server = AccountServerManager(self)
         self.domain = DomainManager(self)
         self.signature = SenderSignatureManager(self)
+        self.data_removals = DataRemovalManager(self)
 
     async def request(self, method: str, endpoint: str, **kwargs) -> httpx.Response:
         """
