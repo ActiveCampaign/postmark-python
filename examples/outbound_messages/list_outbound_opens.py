@@ -11,12 +11,12 @@ client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
 
 async def main():
     # All opens across messages
-    opens, total = await client.outbound.list_opens(count=10)
+    result = await client.outbound.list_opens(count=10)
 
-    print(f"Total opens: {total}")
+    print(f"Total opens: {result.total}")
     print()
 
-    for event in opens:
+    for event in result.items:
         print(f"  [{event.message_id}] {event.recipient}")
         print(f"       Platform: {event.platform}")
         print(f"       Client:   {event.client.name}")
@@ -25,10 +25,10 @@ async def main():
     print()
 
     # Opens for a specific message
-    if opens:
-        msg_id = opens[0].message_id
-        msg_opens, msg_total = await client.outbound.list_message_opens(msg_id)
-        print(f"Opens for {msg_id}: {msg_total}")
+    if result.items:
+        msg_id = result.items[0].message_id
+        msg_result = await client.outbound.list_message_opens(msg_id)
+        print(f"Opens for {msg_id}: {msg_result.total}")
 
 
 asyncio.run(main())

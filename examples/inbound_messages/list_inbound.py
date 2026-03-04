@@ -10,12 +10,12 @@ client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
 
 
 async def main():
-    messages, total = await client.inbound.list(count=10)
+    result = await client.inbound.list(count=10)
 
-    print(f"Total inbound messages: {total}")
+    print(f"Total inbound messages: {result.total}")
     print()
 
-    for msg in messages:
+    for msg in result.items:
         print(f"  [{msg.message_id}] {msg.subject}")
         print(f"       From:   {msg.from_email}")
         print(f"       Status: {msg.status}")

@@ -10,12 +10,12 @@ account = postmark.AccountClient(os.environ["POSTMARK_ACCOUNT_TOKEN"])
 
 
 async def main():
-    servers, total = await account.server.list()
+    result = await account.server.list()
 
-    print(f"Total servers: {total}")
+    print(f"Total servers: {result.total}")
     print()
 
-    for server in servers:
+    for server in result.items:
         print(f"  [{server.id}] {server.name}")
         print(f"       Color:         {server.color.value}")
         print(f"       Delivery type: {server.delivery_type.value}")

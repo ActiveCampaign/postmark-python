@@ -10,12 +10,12 @@ client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
 
 
 async def main():
-    streams, total = await client.stream.list()
+    result = await client.stream.list()
 
-    print(f"Total streams: {total}")
+    print(f"Total streams: {result.total}")
     print()
 
-    for stream in streams:
+    for stream in result.items:
         print(f"  [{stream.id}] {stream.name}")
         print(f"       Type:        {stream.message_stream_type.value}")
         print(f"       Created at:  {stream.created_at}")

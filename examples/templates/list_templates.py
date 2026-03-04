@@ -12,30 +12,30 @@ client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
 
 async def main():
     # --- List all templates (default: count=100, offset=0) ---
-    templates, total = await client.templates.list()
-    print(f"Total templates: {total}, showing {len(templates)}")
-    for t in templates:
+    result = await client.templates.list()
+    print(f"Total templates: {result.total}, showing {len(result.items)}")
+    for t in result.items:
         print(
             f"  [{t.template_id:>6}]  {t.name:<30}"
             f"  type={t.template_type}  active={t.active}"
         )
 
     # --- List only Standard templates ---
-    templates, total = await client.templates.list(
+    result = await client.templates.list(
         count=50,
         template_type=TemplateTypeFilter.STANDARD,
     )
-    print(f"\nStandard templates: {total} total, showing {len(templates)}")
+    print(f"\nStandard templates: {result.total} total, showing {len(result.items)}")
 
     # --- List only Layout templates ---
-    templates, total = await client.templates.list(
+    result = await client.templates.list(
         template_type=TemplateTypeFilter.LAYOUT,
     )
-    print(f"Layout templates:   {total} total, showing {len(templates)}")
+    print(f"Layout templates:   {result.total} total, showing {len(result.items)}")
 
-    # --- Paginate: second page of 10 ---
-    templates, total = await client.templates.list(count=10, offset=10)
-    print(f"\nPage 2 (offset=10): {len(templates)} template(s)")
+    # --- Paginate: second result of 10 ---
+    result = await client.templates.list(count=10, offset=10)
+    print(f"\nresult 2 (offset=10): {len(result.items)} template(s)")
 
 
 asyncio.run(main())

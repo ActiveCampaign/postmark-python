@@ -16,10 +16,10 @@ client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
 
 
 async def main():
-    # --- List (one page) ---
-    messages, total = await client.outbound.list(count=10)
-    print(f"List: {total} total on server, showing {len(messages)}")
-    for msg in messages:
+    # --- List ---
+    result = await client.outbound.list(count=10)
+    print(f"List: {result.total} total on server, showing {len(result.items)}")
+    for msg in result.items:
         print(f"  {msg.received_at:%Y-%m-%d}  {msg.subject}  → {msg.recipients}")
 
     # --- Stream (auto-paginated) ---
@@ -28,9 +28,9 @@ async def main():
         print(f"  {msg.message_id}  {msg.subject}")
 
     # --- Get full detail for the first message from the list ---
-    if messages:
-        print(f"\nDetail for message: {messages[0].message_id}")
-        detail = await client.outbound.get(messages[0].message_id)
+    if result.items:
+        print(f"\nDetail for message: {result.items[0].message_id}")
+        detail = await client.outbound.get(result.items[0].message_id)
         print(f"  Status: {detail.status}")
         print(f"  Events: {[e.type for e in detail.message_events]}")
     else:
