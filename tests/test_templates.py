@@ -392,8 +392,8 @@ class TestValidateTemplate:
 
 class TestPushTemplates:
     @pytest.mark.asyncio
-    async def test_push_dict_input(self, templates):
-        manager, fake = templates
+    async def test_push_dict_input(self, account_templates):
+        manager, fake = account_templates
         fake.mock_put_response(PUSH_RESPONSE)
 
         result = await manager.push(
@@ -410,8 +410,8 @@ class TestPushTemplates:
         assert fake.put.call_args[0][0] == "/templates/push"
 
     @pytest.mark.asyncio
-    async def test_push_model_input(self, templates):
-        manager, fake = templates
+    async def test_push_model_input(self, account_templates):
+        manager, fake = account_templates
         fake.mock_put_response(PUSH_RESPONSE)
 
         req = PushTemplatesRequest(
@@ -426,8 +426,8 @@ class TestPushTemplates:
         assert result.templates[0].name == "Welcome"
 
     @pytest.mark.asyncio
-    async def test_push_response_parsed(self, templates):
-        manager, fake = templates
+    async def test_push_response_parsed(self, account_templates):
+        manager, fake = account_templates
         fake.mock_put_response(PUSH_RESPONSE)
 
         result = await manager.push(

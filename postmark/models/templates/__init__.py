@@ -1,3 +1,4 @@
+from .account_manager import AccountTemplateManager
 from .enums import TemplateAction, TemplateType, TemplateTypeFilter
 from .manager import TemplateManager
 from .schemas import (
@@ -37,5 +38,6 @@ __all__ = [
     "ValidateTemplateRequest",
     "ValidateTemplateResponse",
     "ValidationError",
+    "AccountTemplateManager",
     "TemplateManager",
 ]

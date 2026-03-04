@@ -16,7 +16,7 @@ from postmark.models.signatures import SenderSignatureManager
 from postmark.models.stats import StatsManager
 from postmark.models.streams import StreamManager
 from postmark.models.suppressions import SuppressionManager
-from postmark.models.templates import TemplateManager
+from postmark.models.templates import AccountTemplateManager, TemplateManager
 from postmark.models.webhooks import WebhookManager
 
 
@@ -134,3 +134,8 @@ def suppressions(fake_client):
 @pytest.fixture
 def data_removals(fake_client):
     return DataRemovalManager(fake_client), fake_client
+
+
+@pytest.fixture
+def account_templates(fake_client):
+    return AccountTemplateManager(fake_client), fake_client

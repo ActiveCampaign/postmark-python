@@ -8,6 +8,7 @@ from postmark.models.data_removals import DataRemovalManager
 from postmark.models.domains import DomainManager
 from postmark.models.servers import AccountServerManager
 from postmark.models.signatures import SenderSignatureManager
+from postmark.models.templates import AccountTemplateManager
 
 from ..exceptions import (
     PostmarkException,
@@ -44,6 +45,7 @@ class AccountClient:
         self.domain = DomainManager(self)
         self.signature = SenderSignatureManager(self)
         self.data_removals = DataRemovalManager(self)
+        self.templates = AccountTemplateManager(self)
 
     async def request(self, method: str, endpoint: str, **kwargs) -> httpx.Response:
         """

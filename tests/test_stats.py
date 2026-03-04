@@ -286,6 +286,13 @@ class TestEndpoints:
         await manager.click_location()
         fake.get.assert_called_once_with("/stats/outbound/clicks/location", params={})
 
+    @pytest.mark.asyncio
+    async def test_read_times(self, stats):
+        manager, fake = stats
+        fake.mock_get_response({"Days": [], "read_2s": 0})
+        await manager.read_times()
+        fake.get.assert_called_once_with("/stats/outbound/opens/readTimes", params={})
+
 
 # ---------------------------------------------------------------------------
 # Response parsing

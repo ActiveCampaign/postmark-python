@@ -1,13 +1,17 @@
+from __future__ import annotations
+
 import logging
 from datetime import datetime
-from typing import Any, AsyncGenerator, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional, Union
 
 from pydantic import ValidationError
 
 from postmark.exceptions import InvalidEmailException
 from postmark.models.page import Page
-from postmark.models.templates.schemas import TemplateEmail
 from postmark.utils.types import HTTPClient
+
+if TYPE_CHECKING:
+    from postmark.models.templates.schemas import TemplateEmail
 
 from .schemas import (
     BulkEmail,
@@ -38,7 +42,9 @@ def _parse_email(message: Union[Email, Dict[str, Any]]) -> Email:
         raise InvalidEmailException(e.errors()) from e
 
 
-def _parse_template_email(msg: Union[TemplateEmail, Dict[str, Any]]) -> TemplateEmail:
+def _parse_template_email(msg):
+    from postmark.models.templates.schemas import TemplateEmail
+
     if isinstance(msg, TemplateEmail):
         return msg
     try:

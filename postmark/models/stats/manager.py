@@ -13,6 +13,7 @@ from .schemas import (
     OpenCounts,
     OutboundOverview,
     PlatformUsage,
+    ReadTimes,
     SentCounts,
     SpamComplaints,
     TrackedCounts,
@@ -208,3 +209,17 @@ class StatsManager:
             params=self._params(tag, from_date, to_date, message_stream),
         )
         return ClickLocation(**response.json())
+
+    async def read_times(
+        self,
+        tag: Optional[str] = None,
+        from_date: Optional[date] = None,
+        to_date: Optional[date] = None,
+        message_stream: Optional[str] = None,
+    ) -> ReadTimes:
+        """Return email open read-time distribution."""
+        response = await self.client.get(
+            "/stats/outbound/opens/readTimes",
+            params=self._params(tag, from_date, to_date, message_stream),
+        )
+        return ReadTimes(**response.json())

@@ -7,7 +7,7 @@ import postmark
 from postmark.models.templates import PushTemplatesRequest
 
 load_dotenv()
-client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
+client = postmark.AccountClient(os.environ["POSTMARK_ACCOUNT_TOKEN"])
 
 """
 This is an example of pushing all templates with changes to another server.

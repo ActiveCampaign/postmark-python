@@ -12,8 +12,6 @@ from .schemas import (
     CreateTemplateRequest,
     DeleteTemplateResponse,
     EditTemplateRequest,
-    PushTemplatesRequest,
-    PushTemplatesResponse,
     Template,
     TemplateListResponse,
     TemplateSummary,
@@ -104,14 +102,3 @@ class TemplateManager:
             json=req.model_dump(by_alias=True, exclude_none=True),
         )
         return ValidateTemplateResponse(**response.json())
-
-    async def push(
-        self, request: Union[PushTemplatesRequest, Dict[str, Any]]
-    ) -> PushTemplatesResponse:
-        """Push templates from one server to another."""
-        req = _parse_request(PushTemplatesRequest, request)
-        response = await self.client.put(
-            "/templates/push",
-            json=req.model_dump(by_alias=True, exclude_none=True),
-        )
-        return PushTemplatesResponse(**response.json())

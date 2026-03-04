@@ -215,3 +215,15 @@ class ClickLocation(BaseModel):
     text: int = Field(0, alias="Text")
 
     model_config = ConfigDict(populate_by_name=True)
+
+
+class ReadTimes(BaseModel):
+    """Response from ``GET /stats/outbound/opens/readTimes``.
+
+    Read-time bucket names appear as dynamic top-level keys and within each
+    day object alongside ``Date``.  Access totals via ``model_extra``.
+    """
+
+    days: List[Dict[str, Any]] = Field(alias="Days")
+
+    model_config = ConfigDict(populate_by_name=True, extra="allow")
