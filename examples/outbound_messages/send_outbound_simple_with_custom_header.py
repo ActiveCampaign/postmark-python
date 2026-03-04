@@ -22,7 +22,7 @@ SENDER = os.environ["POSTMARK_SENDER_EMAIL"]
 
 
 async def main():
-    response = await client.email.send(
+    response = await client.outbound.send(
         Email(
             sender=SENDER,
             to="receiver@example.com",

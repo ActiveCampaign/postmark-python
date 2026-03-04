@@ -6,7 +6,8 @@ import pytest
 from httpx import Response
 
 from postmark.models.bounces import BounceManager
-from postmark.models.messages import EmailManager
+from postmark.models.inbound import InboundManager
+from postmark.models.messages import OutboundManager
 from postmark.models.servers import AccountServerManager, ServerManager
 from postmark.models.streams import StreamManager
 from postmark.models.templates import TemplateManager
@@ -59,8 +60,8 @@ def fake_client():
 
 
 @pytest.fixture
-def email(fake_client):
-    return EmailManager(fake_client), fake_client
+def outbound(fake_client):
+    return OutboundManager(fake_client), fake_client
 
 
 @pytest.fixture
@@ -86,3 +87,8 @@ def account_servers(fake_client):
 @pytest.fixture
 def streams(fake_client):
     return StreamManager(fake_client), fake_client
+
+
+@pytest.fixture
+def inbound(fake_client):
+    return InboundManager(fake_client), fake_client

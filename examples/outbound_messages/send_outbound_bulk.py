@@ -13,7 +13,7 @@ SENDER = os.environ["POSTMARK_SENDER_EMAIL"]
 
 async def main():
     # --- Recommended: use BulkRecipient models for improved type safety. ---
-    response = await client.email.send_bulk(
+    response = await client.outbound.send_bulk(
         BulkEmail(
             sender=SENDER,
             subject="Hello {{FirstName}}, your order is ready",
@@ -42,7 +42,7 @@ async def main():
     print(f"Bulk request accepted — ID: {response.id}  Status: {response.status}")
 
     # --- ...or send bulk using dict(s) ---
-    response = await client.email.send_bulk(
+    response = await client.outbound.send_bulk(
         {
             "sender": SENDER,
             "subject": "Hello {{FirstName}}, your order is ready",
@@ -73,7 +73,7 @@ async def main():
     print(f"Bulk request accepted — ID: {response.id}  Status: {response.status}")
 
     # --- Poll for completion ---
-    status = await client.email.get_bulk_status(response.id)
+    status = await client.outbound.get_bulk_status(response.id)
     print(
         f"Status: {status.status}  ("
         f"{status.percentage_completed:.0f}% of"

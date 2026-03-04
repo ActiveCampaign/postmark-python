@@ -12,9 +12,12 @@ from .schemas import (
     BulkEmail,
     BulkSendResponse,
     BulkSendStatus,
+    ClickEvent,
     Email,
     Message,
     MessageDetails,
+    OpenEvent,
+    OutboundMessageDump,
     SendResponse,
 )
 
@@ -56,7 +59,7 @@ def _parse_bulk_email(message: Union[BulkEmail, Dict[str, Any]]) -> BulkEmail:
         raise InvalidEmailException(e.errors()) from e
 
 
-class EmailManager:
+class OutboundManager:
     def __init__(self, client: HTTPClient):
         self.client = client
 
@@ -263,3 +266,126 @@ class EmailManager:
         """Get detailed information for a specific message."""
         response = await self.client.get(f"/messages/outbound/{message_id}/details")
         return MessageDetails(**response.json())
+
+    async def get_dump(self, message_id: str) -> OutboundMessageDump:
+        """Get the raw SMTP source for a specific message."""
+        response = await self.client.get(f"/messages/outbound/{message_id}/dump")
+        return OutboundMessageDump(**response.json())
+
+    # -------------------------------------------------------------------------
+    # Opens
+    # -------------------------------------------------------------------------
+
+    async def list_opens(
+        self, count: int = 100, offset: int = 0, **filters
+    ) -> tuple[List[OpenEvent], int]:
+        """
+        List open tracking events across all messages.
+
+        Args:
+            count: Number of events to return (max 500).
+            offset: Number of records to skip.
+            **filters: recipient, tag, client_name, client_company, client_family,
+                os_name, os_family, os_company, platform, country, region, city,
+                messagestream, fromdate, todate.
+
+        Returns:
+            A ``(opens, total_count)`` tuple.
+        """
+        if count > 500:
+            raise ValueError("Count cannot exceed 500 per request")
+        if count + offset > 10000:
+            raise ValueError("Count + Offset cannot exceed 10,000")
+
+        params: Dict[str, Any] = {"count": count, "offset": offset}
+        for key, value in filters.items():
+            if value is not None:
+                params[key] = value
+
+        response = await self.client.get("/messages/outbound/opens", params=params)
+        data = response.json()
+        return [OpenEvent(**o) for o in data.get("Opens", [])], data.get(
+            "TotalCount", 0
+        )
+
+    async def list_message_opens(
+        self, message_id: str, count: int = 100, offset: int = 0
+    ) -> tuple[List[OpenEvent], int]:
+        """
+        List open tracking events for a specific message.
+
+        Returns:
+            A ``(opens, total_count)`` tuple.
+        """
+        if count > 500:
+            raise ValueError("Count cannot exceed 500 per request")
+        if count + offset > 10000:
+            raise ValueError("Count + Offset cannot exceed 10,000")
+
+        params: Dict[str, Any] = {"count": count, "offset": offset}
+        response = await self.client.get(
+            f"/messages/outbound/opens/{message_id}", params=params
+        )
+        data = response.json()
+        return [OpenEvent(**o) for o in data.get("Opens", [])], data.get(
+            "TotalCount", 0
+        )
+
+    # -------------------------------------------------------------------------
+    # Clicks
+    # -------------------------------------------------------------------------
+
+    async def list_clicks(
+        self, count: int = 100, offset: int = 0, **filters
+    ) -> tuple[List[ClickEvent], int]:
+        """
+        List click tracking events across all messages.
+
+        Args:
+            count: Number of events to return (max 500).
+            offset: Number of records to skip.
+            **filters: recipient, tag, client_name, client_company, client_family,
+                os_name, os_family, os_company, platform, country, region, city,
+                messagestream, fromdate, todate.
+
+        Returns:
+            A ``(clicks, total_count)`` tuple.
+        """
+        if count > 500:
+            raise ValueError("Count cannot exceed 500 per request")
+        if count + offset > 10000:
+            raise ValueError("Count + Offset cannot exceed 10,000")
+
+        params: Dict[str, Any] = {"count": count, "offset": offset}
+        for key, value in filters.items():
+            if value is not None:
+                params[key] = value
+
+        response = await self.client.get("/messages/outbound/clicks", params=params)
+        data = response.json()
+        return [ClickEvent(**c) for c in data.get("Clicks", [])], data.get(
+            "TotalCount", 0
+        )
+
+    async def list_message_clicks(
+        self, message_id: str, count: int = 100, offset: int = 0
+    ) -> tuple[List[ClickEvent], int]:
+        """
+        List click tracking events for a specific message.
+
+        Returns:
+            A ``(clicks, total_count)`` tuple.
+        """
+        if count > 500:
+            raise ValueError("Count cannot exceed 500 per request")
+        if count + offset > 10000:
+            raise ValueError("Count + Offset cannot exceed 10,000")
+
+        params: Dict[str, Any] = {"count": count, "offset": offset}
+        response = await self.client.get(
+            f"/messages/outbound/clicks/{message_id}", params=params
+        )
+        data = response.json()
+        return [ClickEvent(**c) for c in data.get("Clicks", [])], data.get(
+            "TotalCount", 0
+        )

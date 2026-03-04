@@ -73,9 +73,9 @@ class TestEmailMessages:
         }
 
     @pytest.mark.asyncio
-    async def test_list_messages_success(self, email, mock_response_data):
+    async def test_list_messages_success(self, outbound, mock_response_data):
         """Test successful message listing with tag filter."""
-        manager, fake = email
+        manager, fake = outbound
         fake.mock_get_response(mock_response_data)
 
         messages_list, total = await manager.list(count=50, tag="welcome")
@@ -91,9 +91,9 @@ class TestEmailMessages:
         )
 
     @pytest.mark.asyncio
-    async def test_list_messages_with_filters(self, email):
+    async def test_list_messages_with_filters(self, outbound):
         """Test that filters and datetime values are formatted correctly."""
-        manager, fake = email
+        manager, fake = outbound
         fake.mock_get_response({"TotalCount": 0, "Messages": []})
 
         await manager.list(
@@ -110,9 +110,9 @@ class TestEmailMessages:
         assert params["status"] == "sent"
 
     @pytest.mark.asyncio
-    async def test_list_messages_validation_errors(self, email):
+    async def test_list_messages_validation_errors(self, outbound):
         """Test that out-of-range count/offset values raise before any API call."""
-        manager, fake = email
+        manager, fake = outbound
 
         with pytest.raises(ValueError, match="Count cannot exceed 500"):
             await manager.list(count=501)
@@ -124,9 +124,9 @@ class TestEmailMessages:
         fake.get.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_stream_pagination(self, email, base_message):
+    async def test_stream_pagination(self, outbound, base_message):
         """Test that .stream() paginates correctly across multiple pages."""
-        manager, fake = email
+        manager, fake = outbound
 
         page1 = {
             "TotalCount": 750,
@@ -155,9 +155,9 @@ class TestEmailMessages:
         assert fake.get.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_get_by_id(self, email):
+    async def test_get_by_id(self, outbound):
         """Test fetching full message details by ID."""
-        manager, fake = email
+        manager, fake = outbound
         fake.mock_get_response(
             {
                 "MessageID": "msg-123",
@@ -188,3 +188,193 @@ class TestEmailMessages:
         assert message.text_body == "Plain text content"
         assert message.html_body == "<p>HTML content</p>"
         fake.get.assert_called_once_with("/messages/outbound/msg-123/details")
+
+
+# ---------------------------------------------------------------------------
+# Shared fixture data for tracking events
+# ---------------------------------------------------------------------------
+
+TRACKING_GEO = {
+    "CountryISOCode": "US",
+    "Country": "United States",
+    "RegionISOCode": "CA",
+    "Region": "California",
+    "City": "San Francisco",
+    "Zip": "94107",
+    "Coords": "37.7,-122.4",
+    "IP": "1.2.3.4",
+}
+TRACKING_CLIENT = {"Name": "Chrome", "Company": "Google", "Family": "Chrome"}
+TRACKING_OS = {"Name": "macOS", "Company": "Apple", "Family": "OS X"}
+
+OPEN_EVENT = {
+    "RecordType": "Open",
+    "UserAgent": "Mozilla/5.0",
+    "MessageID": "msg-123",
+    "MessageStream": "outbound",
+    "ReceivedAt": "2024-01-15T10:30:00Z",
+    "Tag": "welcome",
+    "Recipient": "user@example.com",
+    "Client": TRACKING_CLIENT,
+    "OS": TRACKING_OS,
+    "Platform": "Desktop",
+    "Geo": TRACKING_GEO,
+}
+
+CLICK_EVENT = {
+    **OPEN_EVENT,
+    "RecordType": "Click",
+    "ClickLocation": "HTML",
+    "OriginalLink": "https://example.com",
+}
+
+
+class TestGetDump:
+    @pytest.mark.asyncio
+    async def test_get_dump_success(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"Body": "raw smtp source"})
+
+        dump = await manager.get_dump("msg-123")
+
+        assert dump.body == "raw smtp source"
+
+    @pytest.mark.asyncio
+    async def test_get_dump_calls_correct_endpoint(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"Body": ""})
+
+        await manager.get_dump("msg-123")
+
+        fake.get.assert_called_once_with("/messages/outbound/msg-123/dump")
+
+
+class TestListOpens:
+    @pytest.mark.asyncio
+    async def test_list_opens_success(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 1, "Opens": [OPEN_EVENT]})
+
+        opens, total = await manager.list_opens()
+
+        assert total == 1
+        assert opens[0].message_id == "msg-123"
+        assert opens[0].recipient == "user@example.com"
+        assert opens[0].platform == "Desktop"
+        assert opens[0].geo.country == "United States"
+
+    @pytest.mark.asyncio
+    async def test_list_opens_default_params(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 0, "Opens": []})
+
+        await manager.list_opens()
+
+        params = fake.get.call_args[1]["params"]
+        assert params["count"] == 100
+        assert params["offset"] == 0
+
+    @pytest.mark.asyncio
+    async def test_list_opens_with_filters(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 0, "Opens": []})
+
+        await manager.list_opens(tag="welcome", recipient="user@example.com")
+
+        params = fake.get.call_args[1]["params"]
+        assert params["tag"] == "welcome"
+        assert params["recipient"] == "user@example.com"
+
+    @pytest.mark.asyncio
+    async def test_list_opens_count_validation(self, outbound):
+        manager, fake = outbound
+
+        with pytest.raises(ValueError, match="Count cannot exceed 500"):
+            await manager.list_opens(count=501)
+
+    @pytest.mark.asyncio
+    async def test_list_message_opens_calls_correct_endpoint(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 0, "Opens": []})
+
+        await manager.list_message_opens("msg-123")
+
+        fake.get.assert_called_once_with(
+            "/messages/outbound/opens/msg-123",
+            params={"count": 100, "offset": 0},
+        )
+
+    @pytest.mark.asyncio
+    async def test_list_message_opens_success(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 1, "Opens": [OPEN_EVENT]})
+
+        opens, total = await manager.list_message_opens("msg-123")
+
+        assert total == 1
+        assert opens[0].message_id == "msg-123"
+
+
+class TestListClicks:
+    @pytest.mark.asyncio
+    async def test_list_clicks_success(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 1, "Clicks": [CLICK_EVENT]})
+
+        clicks, total = await manager.list_clicks()
+
+        assert total == 1
+        assert clicks[0].message_id == "msg-123"
+        assert clicks[0].original_link == "https://example.com"
+        assert clicks[0].click_location == "HTML"
+
+    @pytest.mark.asyncio
+    async def test_list_clicks_default_params(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 0, "Clicks": []})
+
+        await manager.list_clicks()
+
+        params = fake.get.call_args[1]["params"]
+        assert params["count"] == 100
+        assert params["offset"] == 0
+
+    @pytest.mark.asyncio
+    async def test_list_clicks_with_filters(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 0, "Clicks": []})
+
+        await manager.list_clicks(tag="promo", recipient="user@example.com")
+
+        params = fake.get.call_args[1]["params"]
+        assert params["tag"] == "promo"
+        assert params["recipient"] == "user@example.com"
+
+    @pytest.mark.asyncio
+    async def test_list_clicks_count_validation(self, outbound):
+        manager, fake = outbound
+
+        with pytest.raises(ValueError, match="Count cannot exceed 500"):
+            await manager.list_clicks(count=501)
+
+    @pytest.mark.asyncio
+    async def test_list_message_clicks_calls_correct_endpoint(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 0, "Clicks": []})
+
+        await manager.list_message_clicks("msg-123")
+
+        fake.get.assert_called_once_with(
+            "/messages/outbound/clicks/msg-123",
+            params={"count": 100, "offset": 0},
+        )
+
+    @pytest.mark.asyncio
+    async def test_list_message_clicks_success(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 1, "Clicks": [CLICK_EVENT]})
+
+        clicks, total = await manager.list_message_clicks("msg-123")
+
+        assert total == 1
+        assert clicks[0].original_link == "https://example.com"

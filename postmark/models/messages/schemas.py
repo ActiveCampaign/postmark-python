@@ -156,6 +156,57 @@ class MessageDetails(Message):
 
 
 # ---------------------------------------------------------------------------
+# Outbound retrieval — dump / opens / clicks
+# ---------------------------------------------------------------------------
+
+
+class OutboundMessageDump(BaseModel):
+    """Response from ``GET /messages/outbound/{messageid}/dump``."""
+
+    body: str = Field(alias="Body")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class OpenEvent(BaseModel):
+    """Single record from ``GET /messages/outbound/opens`` endpoints."""
+
+    record_type: str = Field(alias="RecordType")
+    user_agent: Optional[str] = Field(None, alias="UserAgent")
+    message_id: str = Field(alias="MessageID")
+    message_stream: str = Field(alias="MessageStream")
+    received_at: datetime = Field(alias="ReceivedAt")
+    tag: Optional[str] = Field(None, alias="Tag")
+    recipient: str = Field(alias="Recipient")
+    client: ClientInfo = Field(alias="Client")
+    os: OSInfo = Field(alias="OS")
+    platform: str = Field(alias="Platform")
+    geo: GeoInfo = Field(alias="Geo")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class ClickEvent(BaseModel):
+    """Single record from ``GET /messages/outbound/clicks`` endpoints."""
+
+    record_type: str = Field(alias="RecordType")
+    user_agent: Optional[str] = Field(None, alias="UserAgent")
+    message_id: str = Field(alias="MessageID")
+    message_stream: str = Field(alias="MessageStream")
+    received_at: datetime = Field(alias="ReceivedAt")
+    tag: Optional[str] = Field(None, alias="Tag")
+    recipient: str = Field(alias="Recipient")
+    click_location: Optional[str] = Field(None, alias="ClickLocation")
+    original_link: str = Field(alias="OriginalLink")
+    client: ClientInfo = Field(alias="Client")
+    os: OSInfo = Field(alias="OS")
+    platform: str = Field(alias="Platform")
+    geo: GeoInfo = Field(alias="Geo")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+# ---------------------------------------------------------------------------
 # Bulk send
 # ---------------------------------------------------------------------------
 

@@ -19,7 +19,7 @@ SENDER = os.environ["POSTMARK_SENDER_EMAIL"]
 
 async def main():
     # --- Send via dict ---
-    response = await client.email.send(
+    response = await client.outbound.send(
         {
             "sender": SENDER,
             "to": "receiver@adjkshfjkadshfjkash.com",
@@ -36,7 +36,7 @@ async def main():
     print(f"\nFull Response: {response}")
 
     # --- Send via Email model (recommended, offering better type safety) ---
-    response = await client.email.send(
+    response = await client.outbound.send(
         Email(
             sender=SENDER,
             to="receiver@example.com",

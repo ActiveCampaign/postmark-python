@@ -28,7 +28,7 @@ async def main():
         for r in RECIPIENTS
     ]
 
-    responses = await client.email.send_batch_with_template(messages)
+    responses = await client.outbound.send_batch_with_template(messages)
 
     print(f"Batch: {len(responses)} sent")
     for resp, r in zip(responses, RECIPIENTS):

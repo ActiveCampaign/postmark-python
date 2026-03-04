@@ -5,7 +5,8 @@ from typing import Any, Dict, List, Optional, Union
 import httpx
 
 from postmark.models.bounces import BounceManager
-from postmark.models.messages import EmailManager
+from postmark.models.inbound import InboundManager
+from postmark.models.messages import OutboundManager
 from postmark.models.servers import ServerManager
 from postmark.models.streams import StreamManager
 from postmark.models.templates import TemplateManager
@@ -42,7 +43,8 @@ class ServerClient:
         if not self.verify_ssl:
             logger.warning("SSL verification is disabled. Do not use in production!")
 
-        self.email = EmailManager(self)
+        self.outbound = OutboundManager(self)
+        self.inbound = InboundManager(self)
         self.bounces = BounceManager(self)
         self.templates = TemplateManager(self)
         self.server = ServerManager(self)

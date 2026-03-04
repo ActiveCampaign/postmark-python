@@ -13,7 +13,7 @@ SENDER = os.environ["POSTMARK_SENDER_EMAIL"]
 
 async def main():
     # --- Send via model(using template ID) ---
-    response = await client.email.send_with_template(
+    response = await client.outbound.send_with_template(
         TemplateEmail(
             sender=SENDER,
             to="recipient@example.com",
@@ -27,7 +27,7 @@ async def main():
     print(f"Sent (dict, ID):    {response.message_id}")
 
     # --- Send via dict (using template alias) ---
-    response = await client.email.send_with_template(
+    response = await client.outbound.send_with_template(
         {
             "From": SENDER,
             "To": "recipient@example.com",
@@ -41,7 +41,7 @@ async def main():
     print(f"Sent (dict, alias): {response.message_id}")
 
     # --- Send via TemplateEmail model (recommended, offering better type safety) ---
-    response = await client.email.send_with_template(
+    response = await client.outbound.send_with_template(
         TemplateEmail(
             sender=SENDER,
             to="recipient@example.com",

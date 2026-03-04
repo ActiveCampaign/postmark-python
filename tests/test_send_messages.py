@@ -22,9 +22,9 @@ class TestEmailSending:
         }
 
     @pytest.mark.asyncio
-    async def test_send_email_from_dict(self, email, send_response):
+    async def test_send_email_from_dict(self, outbound, send_response):
         """Test sending a single email using a snake_case dict."""
-        manager, fake = email
+        manager, fake = outbound
         fake.mock_post_response(send_response)
 
         response = await manager.send(
@@ -65,9 +65,9 @@ class TestEmailSending:
         assert payload["Attachments"][0]["Name"] == "readme.txt"
 
     @pytest.mark.asyncio
-    async def test_send_email_from_model(self, email, send_response):
+    async def test_send_email_from_model(self, outbound, send_response):
         """Test that Email model fields are correctly serialised to API aliases."""
-        manager, fake = email
+        manager, fake = outbound
         fake.mock_post_response({**send_response, "MessageID": "test-model-123"})
 
         response = await manager.send(
@@ -88,10 +88,10 @@ class TestEmailSending:
 
     @pytest.mark.asyncio
     async def test_send_dict_and_model_produce_identical_payloads(
-        self, email, send_response
+        self, outbound, send_response
     ):
         """Dict and model paths should produce the exact same API payload."""
-        manager, fake = email
+        manager, fake = outbound
         fake.mock_post_response(send_response)
 
         await manager.send(
@@ -120,9 +120,9 @@ class TestEmailSending:
         assert dict_payload == model_payload
 
     @pytest.mark.asyncio
-    async def test_send_dict_invalid_payload_raises(self, email):
+    async def test_send_dict_invalid_payload_raises(self, outbound):
         """Invalid dict raises InvalidEmailException before any API call."""
-        manager, fake = email
+        manager, fake = outbound
 
         with pytest.raises(InvalidEmailException) as exc_info:
             await manager.send({"to": "receiver@example.com"})  # missing sender
@@ -131,9 +131,9 @@ class TestEmailSending:
         fake.post.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_send_batch(self, email):
+    async def test_send_batch(self, outbound):
         """Test sending a batch of emails."""
-        manager, fake = email
+        manager, fake = outbound
         fake.mock_post_response(
             [
                 {
@@ -175,9 +175,9 @@ class TestEmailSending:
         assert len(fake.post.call_args[1]["json"]) == 2
 
     @pytest.mark.asyncio
-    async def test_send_batch_limit(self, email):
+    async def test_send_batch_limit(self, outbound):
         """Test that batches over 500 are rejected before any API call."""
-        manager, fake = email
+        manager, fake = outbound
 
         with pytest.raises(ValueError, match="Batch size cannot exceed 500"):
             await manager.send_batch([{"to": "user@example.com"}] * 501)
@@ -185,9 +185,9 @@ class TestEmailSending:
         fake.post.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_send_batch_invalid_message_includes_index(self, email):
+    async def test_send_batch_invalid_message_includes_index(self, outbound):
         """Validation error in a batch message should identify which index failed."""
-        manager, fake = email
+        manager, fake = outbound
 
         with pytest.raises(InvalidEmailException) as exc_info:
             await manager.send_batch(
@@ -225,8 +225,8 @@ class TestSendWithTemplate:
         }
 
     @pytest.mark.asyncio
-    async def test_dict_input(self, email, msg_dict):
-        manager, fake = email
+    async def test_dict_input(self, outbound, msg_dict):
+        manager, fake = outbound
         fake.mock_post_response(SEND_RESPONSE)
 
         result = await manager.send_with_template(msg_dict)
@@ -237,8 +237,8 @@ class TestSendWithTemplate:
         assert endpoint == "/email/withTemplate"
 
     @pytest.mark.asyncio
-    async def test_model_input(self, email):
-        manager, fake = email
+    async def test_model_input(self, outbound):
+        manager, fake = outbound
         fake.mock_post_response(SEND_RESPONSE)
 
         tmpl_email = TemplateEmail(
@@ -254,8 +254,8 @@ class TestSendWithTemplate:
         assert result.error_code == 0
 
     @pytest.mark.asyncio
-    async def test_missing_sender_raises(self, email):
-        manager, fake = email
+    async def test_missing_sender_raises(self, outbound):
+        manager, fake = outbound
 
         with pytest.raises(InvalidEmailException):
             await manager.send_with_template(
@@ -265,8 +265,8 @@ class TestSendWithTemplate:
         fake.post.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_alias_used_instead_of_id(self, email):
-        manager, fake = email
+    async def test_alias_used_instead_of_id(self, outbound):
+        manager, fake = outbound
         fake.mock_post_response(SEND_RESPONSE)
 
         await manager.send_with_template(
@@ -301,8 +301,8 @@ class TestSendBatchWithTemplates:
         ]
 
     @pytest.mark.asyncio
-    async def test_multiple_messages(self, email, two_messages):
-        manager, fake = email
+    async def test_multiple_messages(self, outbound, two_messages):
+        manager, fake = outbound
         fake.mock_post_response([SEND_RESPONSE, SEND_RESPONSE])
 
         results = await manager.send_batch_with_template(two_messages)
@@ -312,8 +312,8 @@ class TestSendBatchWithTemplates:
         assert endpoint == "/email/batchWithTemplates"
 
     @pytest.mark.asyncio
-    async def test_wraps_in_messages_key(self, email, two_messages):
-        manager, fake = email
+    async def test_wraps_in_messages_key(self, outbound, two_messages):
+        manager, fake = outbound
         fake.mock_post_response([SEND_RESPONSE, SEND_RESPONSE])
 
         await manager.send_batch_with_template(two_messages)
@@ -323,8 +323,8 @@ class TestSendBatchWithTemplates:
         assert len(payload["Messages"]) == 2
 
     @pytest.mark.asyncio
-    async def test_batch_over_500_raises(self, email):
-        manager, fake = email
+    async def test_batch_over_500_raises(self, outbound):
+        manager, fake = outbound
         messages = [
             {
                 "From": "sender@example.com",

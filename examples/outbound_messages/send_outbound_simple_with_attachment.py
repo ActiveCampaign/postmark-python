@@ -47,7 +47,7 @@ async def main():
         )
 
     # --- Send ---
-    response = await client.email.send(
+    response = await client.outbound.send(
         Email(
             sender=SENDER,
             to="receiver@example.com",

@@ -28,7 +28,7 @@ load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
 
 async def main():
-    response = await client.email.send({
+    response = await client.outbound.send({
         "sender": "sender@example.com",
         "to": "recipient@example.com",
         "subject": "Hello from Postmark",
@@ -79,7 +79,7 @@ account = postmark.AccountClient(os.environ["POSTMARK_ACCOUNT_TOKEN"])
 from postmark import Email
 
 # Using a dict
-await client.email.send({
+await client.outbound.send({
     "sender": "sender@example.com",
     "to": "recipient@example.com",
     "subject": "Hello",
@@ -87,7 +87,7 @@ await client.email.send({
 })
 
 # Using the Email model (recommended — type-safe)
-await client.email.send(
+await client.outbound.send(
     Email(
         sender="sender@example.com",
         to="recipient@example.com",
@@ -103,7 +103,7 @@ await client.email.send(
 from postmark.models.messages import BulkEmail, BulkRecipient
 
 # Same message, many recipients
-await client.email.send_bulk(
+await client.outbound.send_bulk(
     BulkEmail(
         sender="sender@example.com",
         subject="Your order is ready, {{FirstName}}!",
@@ -121,15 +121,18 @@ await client.email.send_bulk(
     )
 )
 
+# Poll the status of a bulk send
+status = await client.outbound.get_bulk_status(bulk_id)
+
 # Different messages, one request (up to 500)
-await client.email.send_batch([email1, email2, email3])
+await client.outbound.send_batch([email1, email2, email3])
 ```
 
-### List & Stream Sent Messages
+### Retrieve Outbound Messages
 
 ```python
 # Paginated list
-messages, total = await client.email.list(
+messages, total = await client.outbound.list(
     count=50,
     recipient="user@example.com",
     tag="onboarding",
@@ -137,8 +140,52 @@ messages, total = await client.email.list(
 print(f"Found {total} messages")
 
 # Auto-paginating stream
-async for message in client.email.stream(max_messages=5000, tag="onboarding"):
+async for message in client.outbound.stream(max_messages=5000, tag="onboarding"):
     print(message.subject)
+
+# Single message details
+details = await client.outbound.get(message_id)
+
+# Raw SMTP dump
+dump = await client.outbound.get_dump(message_id)
+print(dump.body)
+```
+
+### Opens & Clicks
+
+```python
+# List open events across all messages
+opens, total = await client.outbound.list_opens(count=50, tag="onboarding")
+
+# List open events for a specific message
+opens, total = await client.outbound.list_message_opens(message_id)
+
+# List click events across all messages
+clicks, total = await client.outbound.list_clicks(count=50, tag="onboarding")
+
+# List click events for a specific message
+clicks, total = await client.outbound.list_message_clicks(message_id)
+```
+
+### Inbound Messages
+
+```python
+# List inbound messages (with optional filters)
+messages, total = await client.inbound.list(
+    count=50,
+    status="processed",
+    tag="support",
+)
+print(f"Found {total} inbound messages")
+
+# Get full details for a single inbound message
+details = await client.inbound.get(message_id)
+
+# Bypass inbound rules and force processing of a blocked message
+result = await client.inbound.bypass(message_id)
+
+# Retry a failed inbound message
+result = await client.inbound.retry(message_id)
 ```
 
 ### Bounces
@@ -182,12 +229,18 @@ await client.templates.edit(template_id, {"Subject": "Updated subject"})
 await client.templates.delete(template_id)
 
 # Send with a template
-await client.email.send_with_template({
+await client.outbound.send_with_template({
     "template_id": template_id,
     "sender": "sender@example.com",
     "to": "recipient@example.com",
     "template_model": {"name": "Alice"},
 })
+
+# Send a batch of template emails (up to 500)
+await client.outbound.send_batch_with_template([
+    {"template_id": template_id, "sender": "sender@example.com", "to": "alice@example.com", "template_model": {"name": "Alice"}},
+    {"template_id": template_id, "sender": "sender@example.com", "to": "bob@example.com", "template_model": {"name": "Bob"}},
+])
 ```
 
 ### Server Settings (server token)
@@ -249,7 +302,7 @@ from postmark import (
 )
 
 try:
-    await client.email.send(...)
+    await client.outbound.send(...)
 
 except InvalidAPIKeyException:
     print("Check your POSTMARK_SERVER_TOKEN")
@@ -358,4 +411,4 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-Made with ❤️ by [ActiveCampaign](https://www.activecampaign.com/)
+Made with ❤️ by [Greg](https://www.github.com/gregsvo) at [ActiveCampaign](https://www.activecampaign.com/)
