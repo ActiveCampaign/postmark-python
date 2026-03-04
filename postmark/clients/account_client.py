@@ -6,6 +6,7 @@ import httpx
 
 from postmark.models.domains import DomainManager
 from postmark.models.servers import AccountServerManager
+from postmark.models.signatures import SenderSignatureManager
 
 from ..exceptions import (
     PostmarkException,
@@ -40,6 +41,7 @@ class AccountClient:
 
         self.server = AccountServerManager(self)
         self.domain = DomainManager(self)
+        self.signature = SenderSignatureManager(self)
 
     async def request(self, method: str, endpoint: str, **kwargs) -> httpx.Response:
         """
