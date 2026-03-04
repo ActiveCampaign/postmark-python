@@ -11,7 +11,9 @@ from postmark.models.messages import OutboundManager
 from postmark.models.servers import ServerManager
 from postmark.models.stats import StatsManager
 from postmark.models.streams import StreamManager
+from postmark.models.suppressions import SuppressionManager
 from postmark.models.templates import TemplateManager
+from postmark.models.webhooks import WebhookManager
 
 from ..exceptions import (
     PostmarkException,
@@ -53,6 +55,8 @@ class ServerClient:
         self.server = ServerManager(self)
         self.stream = StreamManager(self)
         self.stats = StatsManager(self)
+        self.webhooks = WebhookManager(self)
+        self.suppressions = SuppressionManager(self)
 
     async def request(self, method: str, endpoint: str, **kwargs) -> httpx.Response:
         """

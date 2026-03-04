@@ -14,7 +14,9 @@ from postmark.models.servers import AccountServerManager, ServerManager
 from postmark.models.signatures import SenderSignatureManager
 from postmark.models.stats import StatsManager
 from postmark.models.streams import StreamManager
+from postmark.models.suppressions import SuppressionManager
 from postmark.models.templates import TemplateManager
+from postmark.models.webhooks import WebhookManager
 
 
 def make_response(data: dict | list) -> Mock:
@@ -116,3 +118,13 @@ def stats(fake_client):
 @pytest.fixture
 def inbound_rules(fake_client):
     return InboundRuleManager(fake_client), fake_client
+
+
+@pytest.fixture
+def webhooks(fake_client):
+    return WebhookManager(fake_client), fake_client
+
+
+@pytest.fixture
+def suppressions(fake_client):
+    return SuppressionManager(fake_client), fake_client
