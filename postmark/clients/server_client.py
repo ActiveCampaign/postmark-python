@@ -8,6 +8,7 @@ from postmark.models.bounces import BounceManager
 from postmark.models.inbound import InboundManager
 from postmark.models.messages import OutboundManager
 from postmark.models.servers import ServerManager
+from postmark.models.stats import StatsManager
 from postmark.models.streams import StreamManager
 from postmark.models.templates import TemplateManager
 
@@ -49,6 +50,7 @@ class ServerClient:
         self.templates = TemplateManager(self)
         self.server = ServerManager(self)
         self.stream = StreamManager(self)
+        self.stats = StatsManager(self)
 
     async def request(self, method: str, endpoint: str, **kwargs) -> httpx.Response:
         """

@@ -11,6 +11,7 @@ from postmark.models.inbound import InboundManager
 from postmark.models.messages import OutboundManager
 from postmark.models.servers import AccountServerManager, ServerManager
 from postmark.models.signatures import SenderSignatureManager
+from postmark.models.stats import StatsManager
 from postmark.models.streams import StreamManager
 from postmark.models.templates import TemplateManager
 
@@ -104,3 +105,8 @@ def domains(fake_client):
 @pytest.fixture
 def signatures(fake_client):
     return SenderSignatureManager(fake_client), fake_client
+
+
+@pytest.fixture
+def stats(fake_client):
+    return StatsManager(fake_client), fake_client
