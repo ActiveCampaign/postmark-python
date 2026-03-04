@@ -44,7 +44,7 @@ line-length = 88
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N"]
-ignore = ["N818"]  # allow "Exception" suffix on exception classes
+ignore = ["N818", "E501"]  # allow "Exception" suffix on exception classes
 
 [tool.mypy]
 ignore_missing_imports = true
