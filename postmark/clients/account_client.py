@@ -99,6 +99,11 @@ class AccountClient:
     ) -> httpx.Response:
         return await self.request("PUT", endpoint, json=json)
 
+    async def patch(
+        self, endpoint: str, json: Optional[Dict[str, Any]] = None
+    ) -> httpx.Response:
+        return await self.request("PATCH", endpoint, json=json)
+
     async def delete(
         self, endpoint: str, params: Optional[Dict[str, Any]] = None
     ) -> httpx.Response:

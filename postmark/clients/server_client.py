@@ -7,6 +7,7 @@ import httpx
 from postmark.models.bounces import BounceManager
 from postmark.models.messages import EmailManager
 from postmark.models.servers import ServerManager
+from postmark.models.streams import StreamManager
 from postmark.models.templates import TemplateManager
 
 from ..exceptions import (
@@ -45,6 +46,7 @@ class ServerClient:
         self.bounces = BounceManager(self)
         self.templates = TemplateManager(self)
         self.server = ServerManager(self)
+        self.stream = StreamManager(self)
 
     async def request(self, method: str, endpoint: str, **kwargs) -> httpx.Response:
         """
@@ -109,6 +111,11 @@ class ServerClient:
         self, endpoint: str, json: Optional[Dict[str, Any]] = None
     ) -> httpx.Response:
         return await self.request("PUT", endpoint, json=json)
+
+    async def patch(
+        self, endpoint: str, json: Optional[Dict[str, Any]] = None
+    ) -> httpx.Response:
+        return await self.request("PATCH", endpoint, json=json)
 
     async def delete(
         self, endpoint: str, params: Optional[Dict[str, Any]] = None

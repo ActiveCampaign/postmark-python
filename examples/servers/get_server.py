@@ -8,6 +8,9 @@ import postmark
 load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
 
+# Note that this call is on the ServerClient, which returns information about itself.
+# To retrieve information about other servers, use AccountClient and POSTMARK_ACCOUNT_TOKEN.
+
 
 async def main():
     server = await client.server.get()
