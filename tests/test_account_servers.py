@@ -346,12 +346,12 @@ class TestListServers:
         manager, fake = account_servers
         fake.mock_get_response(list_response)
 
-        servers, total = await manager.list()
+        result = await manager.list()
 
-        assert total == 2
-        assert len(servers) == 2
-        assert servers[0].name == "Alpha"
-        assert servers[1].name == "Beta"
+        assert result.total == 2
+        assert len(result.items) == 2
+        assert result.items[0].name == "Alpha"
+        assert result.items[1].name == "Beta"
 
     @pytest.mark.asyncio
     async def test_list_default_params(self, account_servers):
@@ -388,10 +388,10 @@ class TestListServers:
         manager, fake = account_servers
         fake.mock_get_response({"TotalCount": 0, "Servers": []})
 
-        servers, total = await manager.list()
+        result = await manager.list()
 
-        assert total == 0
-        assert servers == []
+        assert result.total == 0
+        assert result.items == []
 
 
 # ---------------------------------------------------------------------------

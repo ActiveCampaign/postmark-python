@@ -5,6 +5,7 @@ from typing import Any, AsyncGenerator, Dict, List, Optional, Union
 from pydantic import ValidationError
 
 from postmark.exceptions import InvalidEmailException
+from postmark.models.page import Page
 from postmark.models.templates.schemas import TemplateEmail
 from postmark.utils.types import HTTPClient
 
@@ -197,7 +198,7 @@ class OutboundManager:
         offset: int = 0,
         metadata: Optional[Dict[str, str]] = None,
         **filters,
-    ) -> tuple[List[Message], int]:
+    ) -> Page[Message]:
         """List sent messages."""
         if count > 500:
             raise ValueError("Count cannot exceed 500 messages per request")
@@ -222,8 +223,9 @@ class OutboundManager:
         response.raise_for_status()
         data = response.json()
 
-        return [Message(**msg) for msg in data.get("Messages", [])], data.get(
-            "TotalCount", 0
+        return Page(
+            items=[Message(**msg) for msg in data.get("Messages", [])],
+            total=data.get("TotalCount", 0),
         )
 
     async def stream(
@@ -246,20 +248,18 @@ class OutboundManager:
                 if current_limit <= 0:
                     break
 
-            messages, total = await self.list(
-                count=current_limit, offset=offset, **filters
-            )
-            if not messages:
+            page = await self.list(count=current_limit, offset=offset, **filters)
+            if not page.items:
                 break
 
-            for msg in messages:
+            for msg in page.items:
                 yield msg
                 yielded += 1
                 if yielded >= max_messages:
                     return
 
-            offset += len(messages)
-            if offset >= total:
+            offset += len(page.items)
+            if offset >= page.total:
                 break
 
     async def get(self, message_id: str) -> MessageDetails:
@@ -278,7 +278,7 @@ class OutboundManager:
 
     async def list_opens(
         self, count: int = 100, offset: int = 0, **filters
-    ) -> tuple[List[OpenEvent], int]:
+    ) -> Page[OpenEvent]:
         """
         List open tracking events across all messages.
 
@@ -304,13 +304,14 @@ class OutboundManager:
 
         response = await self.client.get("/messages/outbound/opens", params=params)
         data = response.json()
-        return [OpenEvent(**o) for o in data.get("Opens", [])], data.get(
-            "TotalCount", 0
+        return Page(
+            items=[OpenEvent(**o) for o in data.get("Opens", [])],
+            total=data.get("TotalCount", 0),
         )
 
     async def list_message_opens(
         self, message_id: str, count: int = 100, offset: int = 0
-    ) -> tuple[List[OpenEvent], int]:
+    ) -> Page[OpenEvent]:
         """
         List open tracking events for a specific message.
 
@@ -327,8 +328,9 @@ class OutboundManager:
             f"/messages/outbound/opens/{message_id}", params=params
         )
         data = response.json()
-        return [OpenEvent(**o) for o in data.get("Opens", [])], data.get(
-            "TotalCount", 0
+        return Page(
+            items=[OpenEvent(**o) for o in data.get("Opens", [])],
+            total=data.get("TotalCount", 0),
         )
 
     # -------------------------------------------------------------------------
@@ -337,7 +339,7 @@ class OutboundManager:
 
     async def list_clicks(
         self, count: int = 100, offset: int = 0, **filters
-    ) -> tuple[List[ClickEvent], int]:
+    ) -> Page[ClickEvent]:
         """
         List click tracking events across all messages.
 
@@ -363,13 +365,14 @@ class OutboundManager:
 
         response = await self.client.get("/messages/outbound/clicks", params=params)
         data = response.json()
-        return [ClickEvent(**c) for c in data.get("Clicks", [])], data.get(
-            "TotalCount", 0
+        return Page(
+            items=[ClickEvent(**c) for c in data.get("Clicks", [])],
+            total=data.get("TotalCount", 0),
         )
 
     async def list_message_clicks(
         self, message_id: str, count: int = 100, offset: int = 0
-    ) -> tuple[List[ClickEvent], int]:
+    ) -> Page[ClickEvent]:
         """
         List click tracking events for a specific message.
 
@@ -386,6 +389,7 @@ class OutboundManager:
             f"/messages/outbound/clicks/{message_id}", params=params
         )
         data = response.json()
-        return [ClickEvent(**c) for c in data.get("Clicks", [])], data.get(
-            "TotalCount", 0
+        return Page(
+            items=[ClickEvent(**c) for c in data.get("Clicks", [])],
+            total=data.get("TotalCount", 0),
         )

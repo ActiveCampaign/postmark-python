@@ -14,6 +14,7 @@ from .exceptions import (
 )
 from .models import messages
 from .models.messages import Attachment, Email, Header, Message, SendResponse
+from .models.page import Page
 from .utils import server_utils
 
 # Base logger
@@ -38,4 +39,5 @@ __all__ = [
     "ServerException",
     "TimeoutException",
     "server_utils",
+    "Page",
 ]

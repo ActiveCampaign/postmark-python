@@ -51,12 +51,12 @@ class TestListStreams:
         manager, fake = streams
         fake.mock_get_response(list_response)
 
-        result, total = await manager.list()
+        result = await manager.list()
 
-        assert total == 2
-        assert len(result) == 2
-        assert result[0].id == "outbound"
-        assert result[1].id == "broadcasts"
+        assert result.total == 2
+        assert len(result.items) == 2
+        assert result.items[0].id == "outbound"
+        assert result.items[1].id == "broadcasts"
 
     @pytest.mark.asyncio
     async def test_list_default_params(self, streams):
@@ -94,19 +94,19 @@ class TestListStreams:
         manager, fake = streams
         fake.mock_get_response({"TotalCount": 0, "MessageStreams": []})
 
-        result, total = await manager.list()
+        result = await manager.list()
 
-        assert total == 0
-        assert result == []
+        assert result.total == 0
+        assert result.items == []
 
     @pytest.mark.asyncio
     async def test_list_stream_fields(self, streams):
         manager, fake = streams
         fake.mock_get_response({"TotalCount": 1, "MessageStreams": [STREAM]})
 
-        result, _ = await manager.list()
+        result = await manager.list()
 
-        stream = result[0]
+        stream = result.items[0]
         assert stream.id == "outbound"
         assert stream.server_id == 23
         assert stream.name == "Default Transactional Stream"

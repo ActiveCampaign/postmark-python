@@ -1,5 +1,6 @@
-from typing import List, Optional, Tuple
+from typing import Optional
 
+from postmark.models.page import Page
 from postmark.utils.types import HTTPClient
 
 from .enums import MessageStreamType, UnsubscribeHandlingType
@@ -18,16 +19,13 @@ class StreamManager:
         self,
         message_stream_type: Optional[MessageStreamType] = None,
         include_archived: bool = False,
-    ) -> Tuple[List[MessageStream], int]:
+    ) -> Page[MessageStream]:
         """
         List all message streams on the server.
 
         Args:
             message_stream_type: Filter by stream type (see :class:`MessageStreamType`).
             include_archived: Include archived streams in results.
-
-        Returns:
-            A ``(streams, total_count)`` tuple.
         """
         params: dict = {"IncludeArchivedStreams": include_archived}
         if message_stream_type is not None:
@@ -35,7 +33,7 @@ class StreamManager:
 
         response = await self.client.get("/message-streams", params=params)
         data = MessageStreamListResponse(**response.json())
-        return data.message_streams, data.total_count
+        return Page(items=data.message_streams, total=data.total_count)
 
     async def get(self, stream_id: str) -> MessageStream:
         """

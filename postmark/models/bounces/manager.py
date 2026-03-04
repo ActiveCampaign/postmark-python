@@ -1,7 +1,8 @@
 import logging
 from datetime import datetime
-from typing import AsyncGenerator, List, Optional, Tuple
+from typing import AsyncGenerator, Optional
 
+from postmark.models.page import Page
 from postmark.utils.types import HTTPClient
 
 from .enums import BounceType
@@ -39,7 +40,7 @@ class BounceManager:
         from_date: Optional[datetime] = None,
         to_date: Optional[datetime] = None,
         message_stream: Optional[str] = None,
-    ) -> Tuple[List[Bounce], int]:
+    ) -> Page[Bounce]:
         """
         List bounces for the server.
 
@@ -55,9 +56,6 @@ class BounceManager:
             from_date: Return bounces on or after this date (Eastern Time).
             to_date: Return bounces on or before this date (Eastern Time).
             message_stream: Filter by message stream ID.
-
-        Returns:
-            A ``(bounces, total_count)`` tuple.
         """
         if count > 500:
             raise ValueError("count cannot exceed 500")
@@ -85,7 +83,7 @@ class BounceManager:
 
         response = await self.client.get("/bounces", params=params)
         data = BouncesListResponse(**response.json())
-        return data.bounces, data.total_count
+        return Page(items=data.bounces, total=data.total_count)
 
     async def stream(
         self,
@@ -116,20 +114,18 @@ class BounceManager:
                 if current_limit <= 0:
                     break
 
-            bounces, total = await self.list(
-                count=current_limit, offset=offset, **filters
-            )
-            if not bounces:
+            page = await self.list(count=current_limit, offset=offset, **filters)
+            if not page.items:
                 break
 
-            for bounce in bounces:
+            for bounce in page.items:
                 yield bounce
                 yielded += 1
                 if yielded >= max_bounces:
                     return
 
-            offset += len(bounces)
-            if offset >= total:
+            offset += len(page.items)
+            if offset >= page.total:
                 break
 
     async def get(self, bounce_id: int) -> Bounce:

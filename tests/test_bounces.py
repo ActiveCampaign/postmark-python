@@ -108,12 +108,12 @@ class TestListBounces:
         manager, fake = bounces
         fake.mock_get_response(list_response)
 
-        results, total = await manager.list(count=50)
+        result = await manager.list(count=50)
 
-        assert total == 2
-        assert len(results) == 2
-        assert results[0].id == 1
-        assert results[1].email == "b@example.com"
+        assert result.total == 2
+        assert len(result.items) == 2
+        assert result.items[0].id == 1
+        assert result.items[1].email == "b@example.com"
 
     @pytest.mark.asyncio
     async def test_list_default_params(self, bounces):
@@ -187,9 +187,9 @@ class TestListBounces:
         manager, fake = bounces
         fake.mock_get_response({"TotalCount": 1, "Bounces": [BOUNCE]})
 
-        results, _ = await manager.list()
+        result = await manager.list()
 
-        assert results[0].type == BounceType.HARD_BOUNCE
+        assert result.items[0].type == BounceType.HARD_BOUNCE
 
 
 # ---------------------------------------------------------------------------

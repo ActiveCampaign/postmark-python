@@ -1,5 +1,6 @@
-from typing import List, Optional, Tuple
+from typing import Optional
 
+from postmark.models.page import Page
 from postmark.utils.types import HTTPClient
 
 from .enums import DeliveryType, ServerColor, TrackLinks
@@ -185,7 +186,7 @@ class AccountServerManager:
         count: int = 100,
         offset: int = 0,
         name: Optional[str] = None,
-    ) -> Tuple[List[Server], int]:
+    ) -> Page[Server]:
         """
         List servers on the account.
 
@@ -193,9 +194,6 @@ class AccountServerManager:
             count: Number of servers to return per request.
             offset: Number of records to skip.
             name: Filter by server name (partial match).
-
-        Returns:
-            A ``(servers, total_count)`` tuple.
         """
         params: dict = {"count": count, "offset": offset}
         if name is not None:
@@ -203,7 +201,7 @@ class AccountServerManager:
 
         response = await self.client.get("/servers", params=params)
         data = ServersListResponse(**response.json())
-        return data.servers, data.total_count
+        return Page(items=data.servers, total=data.total_count)
 
     async def delete(self, server_id: int) -> DeleteServerResponse:
         """

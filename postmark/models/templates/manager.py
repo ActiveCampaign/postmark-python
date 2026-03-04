@@ -1,9 +1,10 @@
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 from pydantic import ValidationError
 
 from postmark.exceptions import InvalidEmailException
+from postmark.models.page import Page
 from postmark.utils.types import HTTPClient
 
 from .enums import TemplateTypeFilter
@@ -71,7 +72,7 @@ class TemplateManager:
         count: int = 100,
         offset: int = 0,
         template_type: Optional[TemplateTypeFilter] = None,
-    ) -> tuple[List[TemplateSummary], int]:
+    ) -> Page[TemplateSummary]:
         """List templates with optional type filter."""
         if count > 500:
             raise ValueError("Count cannot exceed 500 templates per request")
@@ -84,7 +85,7 @@ class TemplateManager:
 
         response = await self.client.get("/templates", params=params)
         data = TemplateListResponse(**response.json())
-        return data.templates, data.total_count
+        return Page(items=data.templates, total=data.total_count)
 
     async def delete(
         self, template_id_or_alias: Union[int, str]

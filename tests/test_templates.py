@@ -234,16 +234,16 @@ class TestListTemplates:
         )
 
     @pytest.mark.asyncio
-    async def test_returns_tuple(self, templates, list_response):
+    async def test_returns_page(self, templates, list_response):
         manager, fake = templates
         fake.mock_get_response(list_response)
 
-        summaries, total = await manager.list()
+        result = await manager.list()
 
-        assert total == 2
-        assert len(summaries) == 2
-        assert summaries[0].template_id == 1
-        assert summaries[1].name == "Goodbye"
+        assert result.total == 2
+        assert len(result.items) == 2
+        assert result.items[0].template_id == 1
+        assert result.items[1].name == "Goodbye"
 
     @pytest.mark.asyncio
     async def test_with_template_type_filter(self, templates):

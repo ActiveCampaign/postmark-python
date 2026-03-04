@@ -61,12 +61,12 @@ class TestListInbound:
         manager, fake = inbound
         fake.mock_get_response(list_response)
 
-        messages, total = await manager.list()
+        result = await manager.list()
 
-        assert total == 2
-        assert len(messages) == 2
-        assert messages[0].message_id == "msg-1"
-        assert messages[1].message_id == "msg-2"
+        assert result.total == 2
+        assert len(result.items) == 2
+        assert result.items[0].message_id == "msg-1"
+        assert result.items[1].message_id == "msg-2"
 
     @pytest.mark.asyncio
     async def test_list_default_params(self, inbound):
@@ -120,8 +120,8 @@ class TestListInbound:
         manager, fake = inbound
         fake.mock_get_response({"TotalCount": 1, "InboundMessages": [INBOUND_MSG]})
 
-        messages, _ = await manager.list()
-        msg = messages[0]
+        result = await manager.list()
+        msg = result.items[0]
 
         assert msg.message_id == "msg-in-123"
         assert msg.from_email == "sender@example.com"
@@ -136,10 +136,10 @@ class TestListInbound:
         manager, fake = inbound
         fake.mock_get_response({"TotalCount": 0, "InboundMessages": []})
 
-        messages, total = await manager.list()
+        result = await manager.list()
 
-        assert total == 0
-        assert messages == []
+        assert result.total == 0
+        assert result.items == []
 
 
 # ---------------------------------------------------------------------------

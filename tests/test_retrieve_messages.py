@@ -78,12 +78,12 @@ class TestEmailMessages:
         manager, fake = outbound
         fake.mock_get_response(mock_response_data)
 
-        messages_list, total = await manager.list(count=50, tag="welcome")
+        result = await manager.list(count=50, tag="welcome")
 
-        assert total == 2
-        assert len(messages_list) == 2
-        assert messages_list[0].message_id == "msg-123"
-        assert messages_list[0].subject == "Welcome!"
+        assert result.total == 2
+        assert len(result.items) == 2
+        assert result.items[0].message_id == "msg-123"
+        assert result.items[0].subject == "Welcome!"
 
         fake.get.assert_called_once_with(
             "/messages/outbound",
@@ -255,13 +255,13 @@ class TestListOpens:
         manager, fake = outbound
         fake.mock_get_response({"TotalCount": 1, "Opens": [OPEN_EVENT]})
 
-        opens, total = await manager.list_opens()
+        result = await manager.list_opens()
 
-        assert total == 1
-        assert opens[0].message_id == "msg-123"
-        assert opens[0].recipient == "user@example.com"
-        assert opens[0].platform == "Desktop"
-        assert opens[0].geo.country == "United States"
+        assert result.total == 1
+        assert result.items[0].message_id == "msg-123"
+        assert result.items[0].recipient == "user@example.com"
+        assert result.items[0].platform == "Desktop"
+        assert result.items[0].geo.country == "United States"
 
     @pytest.mark.asyncio
     async def test_list_opens_default_params(self, outbound):
@@ -309,10 +309,10 @@ class TestListOpens:
         manager, fake = outbound
         fake.mock_get_response({"TotalCount": 1, "Opens": [OPEN_EVENT]})
 
-        opens, total = await manager.list_message_opens("msg-123")
+        result = await manager.list_message_opens("msg-123")
 
-        assert total == 1
-        assert opens[0].message_id == "msg-123"
+        assert result.total == 1
+        assert result.items[0].message_id == "msg-123"
 
 
 class TestListClicks:
@@ -321,12 +321,12 @@ class TestListClicks:
         manager, fake = outbound
         fake.mock_get_response({"TotalCount": 1, "Clicks": [CLICK_EVENT]})
 
-        clicks, total = await manager.list_clicks()
+        result = await manager.list_clicks()
 
-        assert total == 1
-        assert clicks[0].message_id == "msg-123"
-        assert clicks[0].original_link == "https://example.com"
-        assert clicks[0].click_location == "HTML"
+        assert result.total == 1
+        assert result.items[0].message_id == "msg-123"
+        assert result.items[0].original_link == "https://example.com"
+        assert result.items[0].click_location == "HTML"
 
     @pytest.mark.asyncio
     async def test_list_clicks_default_params(self, outbound):
@@ -374,7 +374,7 @@ class TestListClicks:
         manager, fake = outbound
         fake.mock_get_response({"TotalCount": 1, "Clicks": [CLICK_EVENT]})
 
-        clicks, total = await manager.list_message_clicks("msg-123")
+        result = await manager.list_message_clicks("msg-123")
 
-        assert total == 1
-        assert clicks[0].original_link == "https://example.com"
+        assert result.total == 1
+        assert result.items[0].original_link == "https://example.com"

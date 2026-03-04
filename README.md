@@ -132,12 +132,12 @@ await client.outbound.send_batch([email1, email2, email3])
 
 ```python
 # Paginated list
-messages, total = await client.outbound.list(
+page = await client.outbound.list(
     count=50,
     recipient="user@example.com",
     tag="onboarding",
 )
-print(f"Found {total} messages")
+print(f"Found {page.total} messages, got {len(page.items)} this page")
 
 # Auto-paginating stream
 async for message in client.outbound.stream(max_messages=5000, tag="onboarding"):
@@ -155,28 +155,29 @@ print(dump.body)
 
 ```python
 # List open events across all messages
-opens, total = await client.outbound.list_opens(count=50, tag="onboarding")
+page = await client.outbound.list_opens(count=50, tag="onboarding")
+print(f"{page.total} total opens, {len(page.items)} returned")
 
 # List open events for a specific message
-opens, total = await client.outbound.list_message_opens(message_id)
+page = await client.outbound.list_message_opens(message_id)
 
 # List click events across all messages
-clicks, total = await client.outbound.list_clicks(count=50, tag="onboarding")
+page = await client.outbound.list_clicks(count=50, tag="onboarding")
 
 # List click events for a specific message
-clicks, total = await client.outbound.list_message_clicks(message_id)
+page = await client.outbound.list_message_clicks(message_id)
 ```
 
 ### Inbound Messages
 
 ```python
 # List inbound messages (with optional filters)
-messages, total = await client.inbound.list(
+page = await client.inbound.list(
     count=50,
     status="processed",
     tag="support",
 )
-print(f"Found {total} inbound messages")
+print(f"Found {page.total} inbound messages")
 
 # Get full details for a single inbound message
 details = await client.inbound.get(message_id)
@@ -198,7 +199,7 @@ stats = await client.bounces.get_delivery_stats()
 print(f"Inactive addresses: {stats.inactive_mails}")
 
 # List bounces
-bounces, total = await client.bounces.list(
+page = await client.bounces.list(
     type=BounceType.HARD_BOUNCE,
     count=50,
 )
@@ -220,7 +221,7 @@ result = await client.bounces.activate(bounce_id)
 from postmark.models.templates import TemplateTypeFilter
 
 # List templates
-templates, total = await client.templates.list()
+page = await client.templates.list()
 
 # Get / create / edit / delete
 template = await client.templates.get(template_id)
@@ -241,6 +242,36 @@ await client.outbound.send_batch_with_template([
     {"template_id": template_id, "sender": "sender@example.com", "to": "alice@example.com", "template_model": {"name": "Alice"}},
     {"template_id": template_id, "sender": "sender@example.com", "to": "bob@example.com", "template_model": {"name": "Bob"}},
 ])
+```
+
+### Message Streams
+
+```python
+from postmark.models.streams import MessageStreamType
+
+# List all streams
+page = await client.streams.list()
+print(f"{page.total} streams")
+
+# Filter by type
+page = await client.streams.list(message_stream_type=MessageStreamType.TRANSACTIONAL)
+
+# Get a specific stream
+stream = await client.streams.get("outbound")
+
+# Create a stream
+stream = await client.streams.create(
+    id="my-broadcasts",
+    name="My Broadcasts",
+    message_stream_type=MessageStreamType.BROADCASTS,
+)
+
+# Edit a stream
+stream = await client.streams.edit("my-broadcasts", name="Renamed Stream")
+
+# Archive / unarchive
+await client.streams.archive("my-broadcasts")
+await client.streams.unarchive("my-broadcasts")
 ```
 
 ### Server Settings (server token)
@@ -270,7 +301,7 @@ Create, list, and manage all servers on your account:
 from postmark.models.servers import DeliveryType, ServerColor
 
 # List all servers
-servers, total = await account.server.list()
+page = await account.server.list()
 
 # Get a specific server
 server = await account.server.get(server_id)

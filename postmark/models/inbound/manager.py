@@ -1,5 +1,6 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict
 
+from postmark.models.page import Page
 from postmark.utils.types import HTTPClient
 
 from .schemas import InboundActionResponse, InboundMessage, InboundMessageDetails
@@ -14,7 +15,7 @@ class InboundManager:
         count: int = 100,
         offset: int = 0,
         **filters,
-    ) -> Tuple[List[InboundMessage], int]:
+    ) -> Page[InboundMessage]:
         """
         List inbound messages.
 
@@ -23,9 +24,6 @@ class InboundManager:
             offset: Number of records to skip.
             **filters: recipient, fromemail, tag, subject, mailboxhash, status,
                 todate, fromdate.
-
-        Returns:
-            A ``(messages, total_count)`` tuple.
         """
         if count > 500:
             raise ValueError("Count cannot exceed 500 per request")
@@ -39,9 +37,9 @@ class InboundManager:
 
         response = await self.client.get("/messages/inbound", params=params)
         data = response.json()
-        return (
-            [InboundMessage(**m) for m in data.get("InboundMessages", [])],
-            data.get("TotalCount", 0),
+        return Page(
+            items=[InboundMessage(**m) for m in data.get("InboundMessages", [])],
+            total=data.get("TotalCount", 0),
         )
 
     async def get(self, message_id: str) -> InboundMessageDetails:
