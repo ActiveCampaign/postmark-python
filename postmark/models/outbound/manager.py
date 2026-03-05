@@ -8,6 +8,7 @@ from pydantic import ValidationError
 
 from postmark.exceptions import InvalidEmailException
 from postmark.models.page import Page
+from postmark.utils.pagination import paginate
 from postmark.utils.types import HTTPClient
 
 if TYPE_CHECKING:
@@ -238,35 +239,8 @@ class OutboundManager:
         self, batch_size: int = 500, max_messages: int = 1000, **filters
     ) -> AsyncGenerator[Message, None]:
         """Stream messages with automatic pagination."""
-        if max_messages > 10000:
-            raise ValueError("Cannot retrieve more than 10,000 messages")
-
-        offset = 0
-        yielded = 0
-        batch_size = min(batch_size, 500)
-
-        while yielded < max_messages:
-            remaining = max_messages - yielded
-            current_limit = min(batch_size, remaining)
-
-            if offset + current_limit > 10000:
-                current_limit = 10000 - offset
-                if current_limit <= 0:
-                    break
-
-            page = await self.list(count=current_limit, offset=offset, **filters)
-            if not page.items:
-                break
-
-            for msg in page.items:
-                yield msg
-                yielded += 1
-                if yielded >= max_messages:
-                    return
-
-            offset += len(page.items)
-            if offset >= page.total:
-                break
+        async for msg in paginate(self.list, max_messages, batch_size, **filters):
+            yield msg
 
     async def get(self, message_id: str) -> MessageDetails:
         """Get detailed information for a specific message."""

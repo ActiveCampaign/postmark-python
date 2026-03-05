@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import AsyncGenerator, Optional
 
 from postmark.models.page import Page
+from postmark.utils.pagination import paginate
 from postmark.utils.types import HTTPClient
 
 from .enums import BounceType
@@ -91,42 +92,9 @@ class BounceManager:
         max_bounces: int = 1000,
         **filters,
     ) -> AsyncGenerator[Bounce, None]:
-        """
-        Yield bounces with automatic pagination.
-
-        Args:
-            batch_size: Records to fetch per API call (max 500).
-            max_bounces: Hard cap on total yielded records (max 10,000).
-        """
-        if max_bounces > 10_000:
-            raise ValueError("max_bounces cannot exceed 10,000")
-
-        batch_size = min(batch_size, 500)
-        offset = 0
-        yielded = 0
-
-        while yielded < max_bounces:
-            remaining = max_bounces - yielded
-            current_limit = min(batch_size, remaining)
-
-            if offset + current_limit > 10_000:
-                current_limit = 10_000 - offset
-                if current_limit <= 0:
-                    break
-
-            page = await self.list(count=current_limit, offset=offset, **filters)
-            if not page.items:
-                break
-
-            for bounce in page.items:
-                yield bounce
-                yielded += 1
-                if yielded >= max_bounces:
-                    return
-
-            offset += len(page.items)
-            if offset >= page.total:
-                break
+        """Yield bounces with automatic pagination."""
+        async for bounce in paginate(self.list, max_bounces, batch_size, **filters):
+            yield bounce
 
     async def get(self, bounce_id: int) -> Bounce:
         """
