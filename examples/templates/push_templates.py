@@ -17,10 +17,8 @@ created and assigned the alias of the template on the source server.
 """
 
 
-SOURCE_SERVER_ID = os.environ.get("POSTMARK_SOURCE_SERVER_ID", "src-server-id")
-DESTINATION_SERVER_ID = os.environ.get(
-    "POSTMARK_DESTINATION_SERVER_ID", "dst-server-id"
-)
+SOURCE_SERVER_ID = "id-of-the-source-server"
+DESTINATION_SERVER_ID = "id-of-the-destination-server"
 
 
 async def main():
