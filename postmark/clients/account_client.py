@@ -31,7 +31,13 @@ logger = logging.getLogger(__name__)
 class AccountClient:
     _base_url = "https://api.postmarkapp.com"
 
-    def __init__(self, account_token: str, retries: int = 3, timeout: float = 30.0):
+    def __init__(
+        self,
+        account_token: str,
+        retries: int = 3,
+        timeout: float = 30.0,
+        base_url: Optional[str] = None,
+    ):
         """
         Initialize the Postmark Account Client.
 
@@ -39,6 +45,7 @@ class AccountClient:
             account_token: The Postmark account token.
             retries: Number of times to retry on rate limit, server, or timeout errors.
             timeout: HTTP request timeout in seconds.
+            base_url: Override the API base URL (e.g. a local mock server for testing).
         """
         if not account_token:
             logger.error("A Postmark account token is required")
@@ -60,7 +67,7 @@ class AccountClient:
         self.templates = AccountTemplateManager(self)
 
         self._http_client = httpx.AsyncClient(
-            base_url=self._base_url,
+            base_url=base_url or self._base_url,
             headers={
                 "X-Postmark-Account-Token": self.account_token,
                 "Accept": "application/json",
