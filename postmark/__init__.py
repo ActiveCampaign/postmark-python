@@ -5,6 +5,7 @@ from .clients.server_client import ServerClient
 from .exceptions import (
     InactiveRecipientException,
     InvalidAPIKeyException,
+    InvalidEmailException,
     PostmarkAPIException,
     PostmarkException,
     RateLimitException,
@@ -33,6 +34,7 @@ __all__ = [
     "PostmarkException",
     "PostmarkAPIException",
     "InvalidAPIKeyException",
+    "InvalidEmailException",
     "InactiveRecipientException",
     "ValidationException",
     "RateLimitException",
