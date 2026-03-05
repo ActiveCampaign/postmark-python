@@ -43,7 +43,7 @@ def _parse_email(message: Union[Email, Dict[str, Any]]) -> Email:
         raise InvalidEmailException(e.errors()) from e
 
 
-def _parse_template_email(msg):
+def _parse_template_email(msg: Union[TemplateEmail, Dict[str, Any]]) -> TemplateEmail:
     from postmark.models.templates.schemas import TemplateEmail
 
     if isinstance(msg, TemplateEmail):
