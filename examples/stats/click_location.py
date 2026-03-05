@@ -2,27 +2,30 @@ import asyncio
 import os
 from datetime import date
 
-from dotenv import load_dotenv
-
 import postmark
 
-load_dotenv()
-server = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
 
 
 async def main():
-    result = await server.stats.click_location(
-        from_date=date(2024, 1, 1),
-        to_date=date(2024, 1, 31),
-    )
+    async with postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"]) as server:
+        result = await server.stats.click_location(
+            from_date=date(2024, 1, 1),
+            to_date=date(2024, 1, 31),
+        )
 
-    print("Click location totals:")
-    print(f"  HTML: {result.html}")
-    print(f"  Text: {result.text}")
-    print()
+        print("Click location totals:")
+        print(f"  HTML: {result.html}")
+        print(f"  Text: {result.text}")
+        print()
 
-    for day in result.days:
-        print(f"  {day.date}:  html={day.html}  text={day.text}")
+        for day in result.days:
+            print(f"  {day.date}:  html={day.html}  text={day.text}")
 
 
 asyncio.run(main())

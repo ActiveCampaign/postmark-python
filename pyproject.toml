@@ -24,7 +24,6 @@ httpx = "^0.27.0"             # Concurrency (async) and HTTP requests
 pydantic = "^2.6.0"           # Type safety and validation
 email-validator = "^2.1.1"    # REQUIRED by pydantic.EmailStr for email format validation
 tenacity = "^8.2.3"           # Resilience and retry logic
-python-dotenv = "^1.0.1"      # To load environment variables for testing
 certifi = "^2025.11.12"
 
 [tool.poetry.group.dev.dependencies]
@@ -35,6 +34,7 @@ pytest-cov = "^7.0.0"         # For coverage reports
 mypy = "^1.8.0"
 ruff = "^0.9.0"
 pre-commit = "^4.0.0"
+python-dotenv = "^1.2.2"
 
 
 

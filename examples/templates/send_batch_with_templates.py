@@ -1,12 +1,15 @@
 import asyncio
 import os
 
-from dotenv import load_dotenv
-
 import postmark
 
-load_dotenv()
-client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
+
 SENDER = os.environ["POSTMARK_SENDER_EMAIL"]
 
 # Each message can use a different template and model — up to 500 per batch.
@@ -18,21 +21,22 @@ RECIPIENTS = [
 
 
 async def main():
-    messages = [
-        {
-            "From": SENDER,
-            "To": r["email"],
-            "TemplateAlias": "welcome-email",
-            "TemplateModel": {"name": r["name"]},
-        }
-        for r in RECIPIENTS
-    ]
+    async with postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"]) as client:
+        messages = [
+            {
+                "From": SENDER,
+                "To": r["email"],
+                "TemplateAlias": "welcome-email",
+                "TemplateModel": {"name": r["name"]},
+            }
+            for r in RECIPIENTS
+        ]
 
-    responses = await client.outbound.send_batch_with_template(messages)
+        responses = await client.outbound.send_batch_with_template(messages)
 
-    print(f"Batch: {len(responses)} sent")
-    for resp, r in zip(responses, RECIPIENTS):
-        print(f"  {r['name']:10}  id={resp.message_id}  code={resp.error_code}")
+        print(f"Batch: {len(responses)} sent")
+        for resp, r in zip(responses, RECIPIENTS):
+            print(f"  {r['name']:10}  id={resp.message_id}  code={resp.error_code}")
 
 
 asyncio.run(main())

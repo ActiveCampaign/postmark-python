@@ -1,21 +1,24 @@
 import asyncio
 import os
 
-from dotenv import load_dotenv
-
 import postmark
 
-load_dotenv()
-client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
 
 
 async def main():
-    stats = await client.bounces.get_delivery_stats()
+    async with postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"]) as client:
+        stats = await client.bounces.get_delivery_stats()
 
-    print(f"Inactive addresses: {stats.inactive_mails}")
+        print(f"Inactive addresses: {stats.inactive_mails}")
 
-    for entry in stats.bounces:
-        print(f"  {entry.name}: {entry.count}")
+        for entry in stats.bounces:
+            print(f"  {entry.name}: {entry.count}")
 
 
 asyncio.run(main())

@@ -1,19 +1,22 @@
 import asyncio
 import os
 
-from dotenv import load_dotenv
-
 import postmark
 
-load_dotenv()
-client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
 
 MESSAGE_ID = "your-message-id-here"
 
 
 async def main():
-    dump = await client.outbound.get_dump(MESSAGE_ID)
-    print(dump.body)
+    async with postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"]) as client:
+        dump = await client.outbound.get_dump(MESSAGE_ID)
+        print(dump.body)
 
 
 asyncio.run(main())
