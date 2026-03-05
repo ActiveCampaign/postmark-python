@@ -10,6 +10,7 @@ from postmark import ServerClient
 from postmark.exceptions import (
     InvalidAPIKeyException,
     PostmarkException,
+    ServerException,
     ValidationException,
 )
 
@@ -23,7 +24,7 @@ class TestServerClient:
 
     @pytest.fixture
     def client(self):
-        return ServerClient(server_token="test-token")
+        return ServerClient(server_token="test-token", retries=0)
 
     @pytest.fixture
     def mock_ok_response(self):
@@ -153,3 +154,123 @@ class TestServerClient:
 
         assert exc_info.value.error_code == 300
         assert "Invalid 'From' address" in str(exc_info.value)
+
+    # -------------------------------------------------------------------------
+    # Retry behaviour
+    # -------------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_retries_on_rate_limit(self):
+        client = ServerClient(server_token="test-token", retries=2)
+
+        failing_resp = Mock(spec=Response)
+        failing_resp.status_code = 429
+        failing_resp.json.return_value = {"ErrorCode": 429, "Message": "Rate limit"}
+        failing_resp.raise_for_status.side_effect = HTTPStatusError(
+            "429", request=Mock(), response=failing_resp
+        )
+        ok_resp = Mock(spec=Response)
+        ok_resp.raise_for_status = Mock()
+        ok_resp.status_code = 200
+
+        with patch("asyncio.sleep", new_callable=AsyncMock):
+            with patch.object(
+                AsyncClient,
+                "request",
+                new_callable=AsyncMock,
+                side_effect=[failing_resp, failing_resp, ok_resp],
+            ) as mock_req:
+                response = await client.request("GET", "/test")
+
+        assert mock_req.call_count == 3
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_retries_on_server_error(self):
+        client = ServerClient(server_token="test-token", retries=1)
+
+        failing_resp = Mock(spec=Response)
+        failing_resp.status_code = 500
+        failing_resp.json.return_value = {"ErrorCode": 500, "Message": "Server error"}
+        failing_resp.raise_for_status.side_effect = HTTPStatusError(
+            "500", request=Mock(), response=failing_resp
+        )
+        ok_resp = Mock(spec=Response)
+        ok_resp.raise_for_status = Mock()
+        ok_resp.status_code = 200
+
+        with patch("asyncio.sleep", new_callable=AsyncMock):
+            with patch.object(
+                AsyncClient,
+                "request",
+                new_callable=AsyncMock,
+                side_effect=[failing_resp, ok_resp],
+            ) as mock_req:
+                response = await client.request("GET", "/test")
+
+        assert mock_req.call_count == 2
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    async def test_retries_exhausted_reraises(self):
+        client = ServerClient(server_token="test-token", retries=2)
+
+        mock_response = Mock(spec=Response)
+        mock_response.status_code = 500
+        mock_response.json.return_value = {"ErrorCode": 500, "Message": "Server error"}
+        mock_response.raise_for_status.side_effect = HTTPStatusError(
+            "500", request=Mock(), response=mock_response
+        )
+
+        with patch("asyncio.sleep", new_callable=AsyncMock):
+            with patch.object(
+                AsyncClient,
+                "request",
+                new_callable=AsyncMock,
+                return_value=mock_response,
+            ) as mock_req:
+                with pytest.raises(ServerException):
+                    await client.request("GET", "/test")
+
+        assert mock_req.call_count == 3  # 1 initial + 2 retries
+
+    @pytest.mark.asyncio
+    async def test_no_retry_on_validation_error(self):
+        client = ServerClient(server_token="test-token", retries=2)
+
+        mock_response = Mock(spec=Response)
+        mock_response.status_code = 422
+        mock_response.json.return_value = {
+            "ErrorCode": 300,
+            "Message": "Validation error",
+        }
+        mock_response.raise_for_status.side_effect = HTTPStatusError(
+            "422", request=Mock(), response=mock_response
+        )
+
+        with patch.object(
+            AsyncClient, "request", new_callable=AsyncMock, return_value=mock_response
+        ) as mock_req:
+            with pytest.raises(ValidationException):
+                await client.request("POST", "/test")
+
+        assert mock_req.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_retries_disabled_with_zero(self):
+        client = ServerClient(server_token="test-token", retries=0)
+
+        mock_response = Mock(spec=Response)
+        mock_response.status_code = 500
+        mock_response.json.return_value = {"ErrorCode": 500, "Message": "Server error"}
+        mock_response.raise_for_status.side_effect = HTTPStatusError(
+            "500", request=Mock(), response=mock_response
+        )
+
+        with patch.object(
+            AsyncClient, "request", new_callable=AsyncMock, return_value=mock_response
+        ) as mock_req:
+            with pytest.raises(ServerException):
+                await client.request("GET", "/test")
+
+        assert mock_req.call_count == 1

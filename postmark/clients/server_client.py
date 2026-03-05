@@ -3,6 +3,12 @@ import os
 from typing import Any, Dict, List, Optional, Union
 
 import httpx
+from tenacity import (
+    AsyncRetrying,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential_jitter,
+)
 
 from postmark.models.bounces import BounceManager
 from postmark.models.inbound import InboundManager
@@ -17,6 +23,8 @@ from postmark.models.webhooks import WebhookManager
 
 from ..exceptions import (
     PostmarkException,
+    RateLimitException,
+    ServerException,
     TimeoutException,
     get_exception_class,
 )
@@ -28,7 +36,7 @@ logger = logging.getLogger(__name__)
 class ServerClient:
     _base_url = "https://api.postmarkapp.com"
 
-    def __init__(self, server_token: str):
+    def __init__(self, server_token: str, retries: int = 3):
         """
         Initialize the Postmark Server Client.
 
@@ -40,6 +48,7 @@ class ServerClient:
             raise PostmarkException("A Postmark server token is required.")
 
         self.server_token = server_token
+        self.retries = retries
 
         # Allow SSL verification to be controlled via environment variable
         self.verify_ssl = os.getenv("POSTMARK_SSL_VERIFY", "true").lower() != "false"
@@ -84,34 +93,49 @@ class ServerClient:
         """
         logger.debug(f"Making {method} request to {endpoint}")
 
-        try:
-            response = await self._http_client.request(method, endpoint, **kwargs)
-            response.raise_for_status()
-            logger.debug(f"Request successful: {response.status_code}")
-            return response
+        async for attempt in AsyncRetrying(
+            retry=retry_if_exception_type(
+                (RateLimitException, ServerException, TimeoutException)
+            ),
+            wait=wait_exponential_jitter(initial=1, max=60),
+            stop=stop_after_attempt(self.retries + 1),
+            reraise=True,
+        ):
+            with attempt:
+                try:
+                    response = await self._http_client.request(
+                        method, endpoint, **kwargs
+                    )
+                    response.raise_for_status()
+                    logger.debug(f"Request successful: {response.status_code}")
+                    return response
 
-        except httpx.TimeoutException as e:
-            logger.error(f"Request timeout for {method} {endpoint}")
-            raise TimeoutException("Request timed out after 30 seconds") from e
+                except httpx.TimeoutException as e:
+                    logger.error(f"Request timeout for {method} {endpoint}")
+                    raise TimeoutException("Request timed out after 30 seconds") from e
 
-        except httpx.HTTPStatusError as e:
-            # Parse Postmark error response
-            message, error_code = parse_error_response(e.response)
-            http_status = e.response.status_code
+                except httpx.HTTPStatusError as e:
+                    # Parse Postmark error response
+                    message, error_code = parse_error_response(e.response)
+                    http_status = e.response.status_code
 
-            logger.error(f"API error {error_code or http_status}: {message}")
+                    logger.error(f"API error {error_code or http_status}: {message}")
 
-            # Get exception class
-            exception_class = get_exception_class(error_code or 0, http_status)
+                    # Get exception class
+                    exception_class = get_exception_class(error_code or 0, http_status)
 
-            # Raise exception
-            raise exception_class(
-                message=message, error_code=error_code or 0, http_status=http_status
-            ) from e
+                    # Raise exception
+                    raise exception_class(
+                        message=message,
+                        error_code=error_code or 0,
+                        http_status=http_status,
+                    ) from e
 
-        except httpx.RequestError as e:
-            logger.error(f"Request failed: {e}")
-            raise PostmarkException(f"Request failed: {str(e)}") from e
+                except httpx.RequestError as e:
+                    logger.error(f"Request failed: {e}")
+                    raise PostmarkException(f"Request failed: {str(e)}") from e
+
+        raise AssertionError("The Postmark API is unreachable.")
 
     async def get(
         self, endpoint: str, params: Optional[Dict[str, Any]] = None
