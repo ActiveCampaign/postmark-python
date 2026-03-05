@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from postmark.models.messages.schemas import EmailAddress, Header
+from postmark.models.outbound.schemas import EmailAddress, Header
 
 
 class InboundAttachment(BaseModel):

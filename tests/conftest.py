@@ -10,7 +10,7 @@ from postmark.models.data_removals import DataRemovalManager
 from postmark.models.domains import DomainManager
 from postmark.models.inbound import InboundManager
 from postmark.models.inbound_rules import InboundRuleManager
-from postmark.models.messages import OutboundManager
+from postmark.models.outbound import OutboundManager
 from postmark.models.servers import AccountServerManager, ServerManager
 from postmark.models.signatures import SenderSignatureManager
 from postmark.models.stats import StatsManager

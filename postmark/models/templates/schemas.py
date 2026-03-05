@@ -2,8 +2,8 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..messages.enums import TrackLinksOption
-from ..messages.schemas import Attachment, Header, SendResponse
+from ..outbound.enums import TrackLinksOption
+from ..outbound.schemas import Attachment, Header, SendResponse
 from .enums import TemplateAction, TemplateType
 
 __all__ = [

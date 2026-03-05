@@ -7,7 +7,7 @@ import httpx
 from postmark.models.bounces import BounceManager
 from postmark.models.inbound import InboundManager
 from postmark.models.inbound_rules import InboundRuleManager
-from postmark.models.messages import OutboundManager
+from postmark.models.outbound import OutboundManager
 from postmark.models.servers import ServerManager
 from postmark.models.stats import StatsManager
 from postmark.models.streams import StreamManager

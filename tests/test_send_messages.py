@@ -3,7 +3,7 @@
 import pytest
 
 from postmark.exceptions import InvalidEmailException
-from postmark.models.messages import Email
+from postmark.models.outbound import Email
 from postmark.models.templates import TemplateEmail
 
 

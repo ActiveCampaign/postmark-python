@@ -12,8 +12,8 @@ from .exceptions import (
     TimeoutException,
     ValidationException,
 )
-from .models import messages
-from .models.messages import Attachment, Email, Header, Message, SendResponse
+from .models import outbound
+from .models.outbound import Attachment, Email, Header, Message, SendResponse
 from .models.page import Page
 from .utils import server_utils
 
@@ -29,7 +29,7 @@ __all__ = [
     "SendResponse",
     "Attachment",
     "Header",
-    "messages",
+    "outbound",
     "PostmarkException",
     "PostmarkAPIException",
     "InvalidAPIKeyException",

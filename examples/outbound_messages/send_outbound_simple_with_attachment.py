@@ -14,7 +14,7 @@ import os
 from dotenv import load_dotenv
 
 import postmark
-from postmark.models.messages import Attachment, Email
+from postmark.models.outbound import Attachment, Email
 
 load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])

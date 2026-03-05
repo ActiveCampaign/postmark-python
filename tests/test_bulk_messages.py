@@ -3,7 +3,7 @@
 import pytest
 
 from postmark.exceptions import InvalidEmailException
-from postmark.models.messages import BulkEmail, BulkRecipient
+from postmark.models.outbound import BulkEmail, BulkRecipient
 
 
 class TestBulkSend:

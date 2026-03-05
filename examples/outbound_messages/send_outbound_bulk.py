@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 
 import postmark
-from postmark.models.messages import BulkEmail, BulkRecipient
+from postmark.models.outbound import BulkEmail, BulkRecipient
 
 load_dotenv()
 client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
