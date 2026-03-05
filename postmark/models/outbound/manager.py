@@ -366,12 +366,7 @@ class OutboundManager:
     async def list_message_opens(
         self, message_id: str, count: int = 100, offset: int = 0
     ) -> Page[OpenEvent]:
-        """
-        List open tracking events for a specific message.
-
-        Returns:
-            A ``(opens, total_count)`` tuple.
-        """
+        """List open tracking events for a specific message."""
         if count > 500:
             raise ValueError("Count cannot exceed 500 per request")
         if count + offset > 10000:
@@ -460,12 +455,7 @@ class OutboundManager:
     async def list_message_clicks(
         self, message_id: str, count: int = 100, offset: int = 0
     ) -> Page[ClickEvent]:
-        """
-        List click tracking events for a specific message.
-
-        Returns:
-            A ``(clicks, total_count)`` tuple.
-        """
+        """List click tracking events for a specific message."""
         if count > 500:
             raise ValueError("Count cannot exceed 500 per request")
         if count + offset > 10000:

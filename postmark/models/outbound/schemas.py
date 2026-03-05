@@ -11,7 +11,7 @@ from pydantic import (
 )
 
 from ...utils.message_utils import validate_email_list, validate_formatted_email
-from .enums import MessageEventType, MessageStatus, TrackLinksOption
+from .enums import BulkJobStatus, MessageEventType, MessageStatus, TrackLinksOption
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +101,11 @@ class SendResponse(BaseModel):
     message: str = Field(alias="Message")
 
     model_config = ConfigDict(populate_by_name=True)
+
+    @property
+    def success(self) -> bool:
+        """Return True if the message was accepted (error_code == 0)."""
+        return self.error_code == 0
 
 
 class Email(BaseModel):
@@ -257,7 +262,7 @@ class BulkSendResponse(BaseModel):
     """
 
     id: str = Field(alias="ID")
-    status: str = Field(alias="Status")  # "Accepted" | "Failed"
+    status: BulkJobStatus = Field(alias="Status")
     submitted_at: datetime = Field(alias="SubmittedAt")
 
     model_config = ConfigDict(populate_by_name=True)
@@ -272,7 +277,7 @@ class BulkSendStatus(BaseModel):
     submitted_at: datetime = Field(alias="SubmittedAt")
     total_messages: int = Field(alias="TotalMessages")
     percentage_completed: float = Field(alias="PercentageCompleted")
-    status: str = Field(alias="Status")  # "Accepted" | "Processing" | "Completed"
+    status: BulkJobStatus = Field(alias="Status")
     subject: Optional[str] = Field(None, alias="Subject")
 
     model_config = ConfigDict(populate_by_name=True)

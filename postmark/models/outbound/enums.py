@@ -31,3 +31,10 @@ class Platform(str, Enum):
     DESKTOP = "Desktop"
     MOBILE = "Mobile"
     UNKNOWN = "Unknown"
+
+
+class BulkJobStatus(str, Enum):
+    ACCEPTED = "Accepted"
+    PROCESSING = "Processing"
+    COMPLETED = "Completed"
+    FAILED = "Failed"

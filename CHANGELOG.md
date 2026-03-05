@@ -7,25 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.0.1] - 2026-01-06
+## [0.1.0] - 2026-03-05
 
 ### Added
-
-
-### Changed
-
-
-### Deprecated
-
-
-### Fixed
-
-
----
-
-## [0.0.1] - 2023-01-10
-
-### Added
-- Initial stable release of the SDK.
-- Core client with authentication, retries, and logging.
-- Pytest tests
+- Initial release of the SDK.
+- `ServerClient` and `AccountClient` with authentication, configurable retries, timeout, and optional `base_url` override for local mock servers.
+- Managers for outbound/inbound messages, bounces, templates, streams, suppressions, webhooks, stats, domains, sender signatures, and data removals.
+- Async pagination via `paginate()` utility; `stream()` methods on `OutboundManager` and `BounceManager`.
+- Typed request/response models backed by Pydantic v2.
+- Pytest test suite.
