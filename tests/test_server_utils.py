@@ -36,8 +36,6 @@ class TestParseErrorResponse:
         assert message == "Unknown error"
         assert code == 422
 
-    # --- Except branch (lines 14-16) ---
-
     def test_json_decode_error_falls_back_to_text(self):
         import json
 

@@ -102,16 +102,29 @@ class TestAccountClient:
         assert response == mock_ok_response
         mock_req.assert_called_once_with("GET", "/servers")
 
-    @pytest.mark.asyncio
-    async def test_ssl_verify_passed_to_httpx(self, mock_ok_response):
+    def test_ssl_verify_passed_to_httpx(self):
         with patch.dict(os.environ, {"POSTMARK_SSL_VERIFY": "false"}):
             client = AccountClient(account_token="test-account-token")
-
-        with patch.object(AsyncClient, "request", new_callable=AsyncMock) as mock_req:
-            mock_req.return_value = mock_ok_response
-            await client.request(method="GET", endpoint="/servers")
-
         assert client.verify_ssl is False
+
+    def test_account_token_header_on_persistent_client(self, client):
+        assert (
+            client._http_client.headers["x-postmark-account-token"]
+            == "test-account-token"
+        )
+
+    @pytest.mark.asyncio
+    async def test_close_calls_aclose(self, client):
+        with patch.object(
+            client._http_client, "aclose", new_callable=AsyncMock
+        ) as mock_aclose:
+            await client.close()
+            mock_aclose.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_async_context_manager(self):
+        async with AccountClient(account_token="test-account-token") as client:
+            assert isinstance(client, AccountClient)
 
     # -------------------------------------------------------------------------
     # Error mapping
@@ -175,23 +188,3 @@ class TestAccountClient:
 
             with pytest.raises(PostmarkException, match="Request failed"):
                 await client.request("GET", "/servers")
-
-    @pytest.mark.asyncio
-    async def test_uses_account_token_header(self, client, mock_ok_response):
-        async def capture_request(method, endpoint, **kwargs):
-            return mock_ok_response
-
-        with patch.object(
-            AsyncClient, "__aenter__", new_callable=AsyncMock
-        ) as mock_enter:
-            mock_inner = AsyncMock()
-            mock_inner.request = AsyncMock(return_value=mock_ok_response)
-            mock_enter.return_value = mock_inner
-
-            with patch.object(
-                AsyncClient, "__aexit__", new_callable=AsyncMock
-            ) as mock_exit:
-                mock_exit.return_value = False
-                await client.request("GET", "/servers")
-
-            assert client.account_token == "test-account-token"

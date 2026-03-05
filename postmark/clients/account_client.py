@@ -47,48 +47,56 @@ class AccountClient:
         self.data_removals = DataRemovalManager(self)
         self.templates = AccountTemplateManager(self)
 
+        self._http_client = httpx.AsyncClient(
+            base_url=self._base_url,
+            headers={
+                "X-Postmark-Account-Token": self.account_token,
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
+            verify=self.verify_ssl,
+            timeout=30.0,
+        )
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *_):
+        await self.close()
+
+    async def close(self):
+        await self._http_client.aclose()
+
     async def request(self, method: str, endpoint: str, **kwargs) -> httpx.Response:
         """
         Make a request to the Postmark API using the configured account token.
         """
-        headers = {
-            "X-Postmark-Account-Token": self.account_token,
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        }
-
         logger.debug(f"Making {method} request to {endpoint}")
 
-        async with httpx.AsyncClient(
-            base_url=self._base_url,
-            headers=headers,
-            verify=self.verify_ssl,
-            timeout=30.0,
-        ) as client:
-            try:
-                response = await client.request(method, endpoint, **kwargs)
-                response.raise_for_status()
-                logger.debug(f"Request successful: {response.status_code}")
-                return response
+        try:
+            response = await self._http_client.request(method, endpoint, **kwargs)
+            response.raise_for_status()
+            logger.debug(f"Request successful: {response.status_code}")
+            return response
 
-            except httpx.TimeoutException as e:
-                logger.error(f"Request timeout for {method} {endpoint}")
-                raise TimeoutException("Request timed out after 30 seconds") from e
+        except httpx.TimeoutException as e:
+            logger.error(f"Request timeout for {method} {endpoint}")
+            raise TimeoutException("Request timed out after 30 seconds") from e
 
-            except httpx.HTTPStatusError as e:
-                message, error_code = parse_error_response(e.response)
-                http_status = e.response.status_code
+        except httpx.HTTPStatusError as e:
+            message, error_code = parse_error_response(e.response)
+            http_status = e.response.status_code
 
-                logger.error(f"API error {error_code or http_status}: {message}")
+            logger.error(f"API error {error_code or http_status}: {message}")
 
-                exception_class = get_exception_class(error_code or 0, http_status)
-                raise exception_class(
-                    message=message, error_code=error_code or 0, http_status=http_status
-                ) from e
+            exception_class = get_exception_class(error_code or 0, http_status)
+            raise exception_class(
+                message=message, error_code=error_code or 0, http_status=http_status
+            ) from e
 
-            except httpx.RequestError as e:
-                logger.error(f"Request failed: {e}")
-                raise PostmarkException(f"Request failed: {str(e)}") from e
+        except httpx.RequestError as e:
+            logger.error(f"Request failed: {e}")
+            raise PostmarkException(f"Request failed: {str(e)}") from e
 
     async def get(
         self, endpoint: str, params: Optional[Dict[str, Any]] = None

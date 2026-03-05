@@ -85,15 +85,27 @@ class TestServerClient:
         assert response == mock_ok_response
         mock_req.assert_called_once_with("GET", "/test")
 
-    @pytest.mark.asyncio
-    async def test_ssl_verify_passed_to_httpx(self, mock_ok_response):
+    def test_ssl_verify_passed_to_httpx(self):
         """Confirm verify_ssl reaches the underlying httpx.AsyncClient."""
         with patch.dict(os.environ, {"POSTMARK_SSL_VERIFY": "false"}):
             client = ServerClient(server_token="test-token")
+        assert client.verify_ssl is False
 
-        with patch.object(AsyncClient, "request", new_callable=AsyncMock) as mock_req:
-            mock_req.return_value = mock_ok_response
-            await client.request(method="GET", endpoint="/test")
+    def test_server_token_header_on_persistent_client(self, client):
+        assert client._http_client.headers["x-postmark-server-token"] == "test-token"
+
+    @pytest.mark.asyncio
+    async def test_close_calls_aclose(self, client):
+        with patch.object(
+            client._http_client, "aclose", new_callable=AsyncMock
+        ) as mock_aclose:
+            await client.close()
+            mock_aclose.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_async_context_manager(self):
+        async with ServerClient(server_token="test-token") as client:
+            assert isinstance(client, ServerClient)
 
     # -------------------------------------------------------------------------
     # Error mapping
