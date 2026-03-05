@@ -1,4 +1,5 @@
-from typing import Any, Dict
+from datetime import datetime
+from typing import Any, Dict, Optional
 
 from postmark.models.page import Page
 from postmark.utils.types import HTTPClient
@@ -14,26 +15,39 @@ class InboundManager:
         self,
         count: int = 100,
         offset: int = 0,
-        **filters,
+        recipient: Optional[str] = None,
+        from_email: Optional[str] = None,
+        tag: Optional[str] = None,
+        subject: Optional[str] = None,
+        mailbox_hash: Optional[str] = None,
+        status: Optional[str] = None,
+        from_date: Optional[datetime] = None,
+        to_date: Optional[datetime] = None,
     ) -> Page[InboundMessage]:
-        """
-        List inbound messages.
-
-        Args:
-            count: Number of messages to return (max 500).
-            offset: Number of records to skip.
-            **filters: recipient, fromemail, tag, subject, mailboxhash, status,
-                todate, fromdate.
-        """
+        """List inbound messages."""
         if count > 500:
             raise ValueError("Count cannot exceed 500 per request")
         if count + offset > 10000:
             raise ValueError("Count + Offset cannot exceed 10,000")
 
         params: Dict[str, Any] = {"count": count, "offset": offset}
-        for key, value in filters.items():
-            if value is not None:
-                params[key] = value
+
+        if recipient is not None:
+            params["recipient"] = recipient
+        if from_email is not None:
+            params["fromemail"] = from_email
+        if tag is not None:
+            params["tag"] = tag
+        if subject is not None:
+            params["subject"] = subject
+        if mailbox_hash is not None:
+            params["mailboxhash"] = mailbox_hash
+        if status is not None:
+            params["status"] = status
+        if from_date is not None:
+            params["fromdate"] = from_date.strftime("%Y-%m-%dT%H:%M:%S")
+        if to_date is not None:
+            params["todate"] = to_date.strftime("%Y-%m-%dT%H:%M:%S")
 
         response = await self.client.get("/messages/inbound", params=params)
         data = response.json()

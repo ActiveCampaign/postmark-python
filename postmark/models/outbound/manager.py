@@ -203,8 +203,15 @@ class OutboundManager:
         self,
         count: int = 100,
         offset: int = 0,
+        recipient: Optional[str] = None,
+        from_email: Optional[str] = None,
+        tag: Optional[str] = None,
+        status: Optional[str] = None,
+        from_date: Optional[datetime] = None,
+        to_date: Optional[datetime] = None,
+        subject: Optional[str] = None,
+        message_stream: Optional[str] = None,
         metadata: Optional[Dict[str, str]] = None,
-        **filters,
     ) -> Page[Message]:
         """List sent messages."""
         if count > 500:
@@ -212,19 +219,29 @@ class OutboundManager:
         if count + offset > 10000:
             raise ValueError("Count + Offset cannot exceed 10,000 messages")
 
-        if metadata:
+        params: Dict[str, Any] = {"count": count, "offset": offset}
+
+        if recipient is not None:
+            params["recipient"] = recipient
+        if from_email is not None:
+            params["fromemail"] = from_email
+        if tag is not None:
+            params["tag"] = tag
+        if status is not None:
+            params["status"] = status
+        if from_date is not None:
+            params["fromdate"] = from_date.strftime("%Y-%m-%dT%H:%M:%S")
+        if to_date is not None:
+            params["todate"] = to_date.strftime("%Y-%m-%dT%H:%M:%S")
+        if subject is not None:
+            params["subject"] = subject
+        if message_stream is not None:
+            params["messagestream"] = message_stream
+        if metadata is not None:
             if len(metadata) > 1:
                 raise ValueError("Can only filter by one metadata field at a time")
             for key, value in metadata.items():
-                filters[f"metadata_{key}"] = value
-
-        params: Dict[str, Any] = {"count": count, "offset": offset}
-        for key, value in filters.items():
-            if value is not None:
-                if isinstance(value, datetime):
-                    params[key] = value.strftime("%Y-%m-%dT%H:%M:%S")
-                else:
-                    params[key] = value
+                params[f"metadata_{key}"] = value
 
         response = await self.client.get("/messages/outbound", params=params)
         response.raise_for_status()
@@ -236,10 +253,34 @@ class OutboundManager:
         )
 
     async def stream(
-        self, batch_size: int = 500, max_messages: int = 1000, **filters
+        self,
+        batch_size: int = 500,
+        max_messages: int = 1000,
+        recipient: Optional[str] = None,
+        from_email: Optional[str] = None,
+        tag: Optional[str] = None,
+        status: Optional[str] = None,
+        from_date: Optional[datetime] = None,
+        to_date: Optional[datetime] = None,
+        subject: Optional[str] = None,
+        message_stream: Optional[str] = None,
+        metadata: Optional[Dict[str, str]] = None,
     ) -> AsyncGenerator[Message, None]:
         """Stream messages with automatic pagination."""
-        async for msg in paginate(self.list, max_messages, batch_size, **filters):
+        async for msg in paginate(
+            self.list,
+            max_messages,
+            batch_size,
+            recipient=recipient,
+            from_email=from_email,
+            tag=tag,
+            status=status,
+            from_date=from_date,
+            to_date=to_date,
+            subject=subject,
+            message_stream=message_stream,
+            metadata=metadata,
+        ):
             yield msg
 
     async def get(self, message_id: str) -> MessageDetails:
@@ -257,30 +298,63 @@ class OutboundManager:
     # -------------------------------------------------------------------------
 
     async def list_opens(
-        self, count: int = 100, offset: int = 0, **filters
+        self,
+        count: int = 100,
+        offset: int = 0,
+        recipient: Optional[str] = None,
+        tag: Optional[str] = None,
+        client_name: Optional[str] = None,
+        client_company: Optional[str] = None,
+        client_family: Optional[str] = None,
+        os_name: Optional[str] = None,
+        os_family: Optional[str] = None,
+        os_company: Optional[str] = None,
+        platform: Optional[str] = None,
+        country: Optional[str] = None,
+        region: Optional[str] = None,
+        city: Optional[str] = None,
+        message_stream: Optional[str] = None,
+        from_date: Optional[datetime] = None,
+        to_date: Optional[datetime] = None,
     ) -> Page[OpenEvent]:
-        """
-        List open tracking events across all messages.
-
-        Args:
-            count: Number of events to return (max 500).
-            offset: Number of records to skip.
-            **filters: recipient, tag, client_name, client_company, client_family,
-                os_name, os_family, os_company, platform, country, region, city,
-                messagestream, fromdate, todate.
-
-        Returns:
-            A ``(opens, total_count)`` tuple.
-        """
+        """List open tracking events across all messages."""
         if count > 500:
             raise ValueError("Count cannot exceed 500 per request")
         if count + offset > 10000:
             raise ValueError("Count + Offset cannot exceed 10,000")
 
         params: Dict[str, Any] = {"count": count, "offset": offset}
-        for key, value in filters.items():
-            if value is not None:
-                params[key] = value
+
+        if recipient is not None:
+            params["recipient"] = recipient
+        if tag is not None:
+            params["tag"] = tag
+        if client_name is not None:
+            params["clientName"] = client_name
+        if client_company is not None:
+            params["clientCompany"] = client_company
+        if client_family is not None:
+            params["clientFamily"] = client_family
+        if os_name is not None:
+            params["osName"] = os_name
+        if os_family is not None:
+            params["osFamily"] = os_family
+        if os_company is not None:
+            params["osCompany"] = os_company
+        if platform is not None:
+            params["platform"] = platform
+        if country is not None:
+            params["country"] = country
+        if region is not None:
+            params["region"] = region
+        if city is not None:
+            params["city"] = city
+        if message_stream is not None:
+            params["messagestream"] = message_stream
+        if from_date is not None:
+            params["fromdate"] = from_date.strftime("%Y-%m-%dT%H:%M:%S")
+        if to_date is not None:
+            params["todate"] = to_date.strftime("%Y-%m-%dT%H:%M:%S")
 
         response = await self.client.get("/messages/outbound/opens", params=params)
         data = response.json()
@@ -318,30 +392,63 @@ class OutboundManager:
     # -------------------------------------------------------------------------
 
     async def list_clicks(
-        self, count: int = 100, offset: int = 0, **filters
+        self,
+        count: int = 100,
+        offset: int = 0,
+        recipient: Optional[str] = None,
+        tag: Optional[str] = None,
+        client_name: Optional[str] = None,
+        client_company: Optional[str] = None,
+        client_family: Optional[str] = None,
+        os_name: Optional[str] = None,
+        os_family: Optional[str] = None,
+        os_company: Optional[str] = None,
+        platform: Optional[str] = None,
+        country: Optional[str] = None,
+        region: Optional[str] = None,
+        city: Optional[str] = None,
+        message_stream: Optional[str] = None,
+        from_date: Optional[datetime] = None,
+        to_date: Optional[datetime] = None,
     ) -> Page[ClickEvent]:
-        """
-        List click tracking events across all messages.
-
-        Args:
-            count: Number of events to return (max 500).
-            offset: Number of records to skip.
-            **filters: recipient, tag, client_name, client_company, client_family,
-                os_name, os_family, os_company, platform, country, region, city,
-                messagestream, fromdate, todate.
-
-        Returns:
-            A ``(clicks, total_count)`` tuple.
-        """
+        """List click tracking events across all messages."""
         if count > 500:
             raise ValueError("Count cannot exceed 500 per request")
         if count + offset > 10000:
             raise ValueError("Count + Offset cannot exceed 10,000")
 
         params: Dict[str, Any] = {"count": count, "offset": offset}
-        for key, value in filters.items():
-            if value is not None:
-                params[key] = value
+
+        if recipient is not None:
+            params["recipient"] = recipient
+        if tag is not None:
+            params["tag"] = tag
+        if client_name is not None:
+            params["clientName"] = client_name
+        if client_company is not None:
+            params["clientCompany"] = client_company
+        if client_family is not None:
+            params["clientFamily"] = client_family
+        if os_name is not None:
+            params["osName"] = os_name
+        if os_family is not None:
+            params["osFamily"] = os_family
+        if os_company is not None:
+            params["osCompany"] = os_company
+        if platform is not None:
+            params["platform"] = platform
+        if country is not None:
+            params["country"] = country
+        if region is not None:
+            params["region"] = region
+        if city is not None:
+            params["city"] = city
+        if message_stream is not None:
+            params["messagestream"] = message_stream
+        if from_date is not None:
+            params["fromdate"] = from_date.strftime("%Y-%m-%dT%H:%M:%S")
+        if to_date is not None:
+            params["todate"] = to_date.strftime("%Y-%m-%dT%H:%M:%S")
 
         response = await self.client.get("/messages/outbound/clicks", params=params)
         data = response.json()

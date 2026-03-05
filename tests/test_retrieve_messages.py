@@ -98,15 +98,15 @@ class TestEmailMessages:
 
         await manager.list(
             recipient="user@example.com",
-            fromdate=datetime(2024, 1, 1, 10, 0, 0),
-            todate="2024-01-31T23:59:59",
+            from_date=datetime(2024, 1, 1, 10, 0, 0),
+            to_date=datetime(2024, 1, 31, 23, 59, 59),
             status="sent",
         )
 
         params = fake.get.call_args[1]["params"]
         assert params["recipient"] == "user@example.com"
-        assert params["fromdate"] == "2024-01-01T10:00:00"  # datetime was formatted
-        assert params["todate"] == "2024-01-31T23:59:59"  # string passed through
+        assert params["fromdate"] == "2024-01-01T10:00:00"
+        assert params["todate"] == "2024-01-31T23:59:59"
         assert params["status"] == "sent"
 
     @pytest.mark.asyncio

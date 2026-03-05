@@ -90,10 +90,29 @@ class BounceManager:
         self,
         batch_size: int = 500,
         max_bounces: int = 1000,
-        **filters,
+        type: Optional[BounceType] = None,
+        inactive: Optional[bool] = None,
+        email_filter: Optional[str] = None,
+        tag: Optional[str] = None,
+        message_id: Optional[str] = None,
+        from_date: Optional[datetime] = None,
+        to_date: Optional[datetime] = None,
+        message_stream: Optional[str] = None,
     ) -> AsyncGenerator[Bounce, None]:
         """Yield bounces with automatic pagination."""
-        async for bounce in paginate(self.list, max_bounces, batch_size, **filters):
+        async for bounce in paginate(
+            self.list,
+            max_bounces,
+            batch_size,
+            type=type,
+            inactive=inactive,
+            email_filter=email_filter,
+            tag=tag,
+            message_id=message_id,
+            from_date=from_date,
+            to_date=to_date,
+            message_stream=message_stream,
+        ):
             yield bounce
 
     async def get(self, bounce_id: int) -> Bounce:
