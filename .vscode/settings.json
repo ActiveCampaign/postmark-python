@@ -1,21 +1,18 @@
 {
     // Python settings
-    "python.linting.enabled": true,
-    "python.linting.pylintEnabled": false,
-    "python.linting.flake8Enabled": true,
-    "python.formatting.provider": "black",
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.testing.pytestArgs": [
         "tests"
     ],
-    // Auto-format on save
-    "editor.formatOnSave": true,
-    "python.formatting.blackArgs": [
-        "--line-length=100"
-    ],
+    // Ruff handles formatting and linting
     "[python]": {
-        "editor.codeActionsOnSave": {}
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+        }
     },
     // File associations
     "files.associations": {
@@ -35,10 +32,5 @@
         "build": true
     },
     // Type checking
-    "python.linting.mypyEnabled": true,
-    "python.linting.mypyArgs": [
-        "--ignore-missing-imports",
-        "--follow-imports=silent",
-        "--show-column-numbers"
-    ]
+    "python.analysis.typeCheckingMode": "basic"
 }
