@@ -36,12 +36,14 @@ logger = logging.getLogger(__name__)
 class ServerClient:
     _base_url = "https://api.postmarkapp.com"
 
-    def __init__(self, server_token: str, retries: int = 3):
+    def __init__(self, server_token: str, retries: int = 3, timeout: float = 30.0):
         """
         Initialize the Postmark Server Client.
 
         Args:
             server_token: The Postmark server token.
+            retries: Number of times to retry on rate limit, server, or timeout errors.
+            timeout: HTTP request timeout in seconds.
         """
         if not server_token:
             logger.error("A Postmark server token is required")
@@ -49,6 +51,7 @@ class ServerClient:
 
         self.server_token = server_token
         self.retries = retries
+        self.timeout = timeout
 
         # Allow SSL verification to be controlled via environment variable
         self.verify_ssl = os.getenv("POSTMARK_SSL_VERIFY", "true").lower() != "false"
@@ -75,7 +78,7 @@ class ServerClient:
                 "Content-Type": "application/json",
             },
             verify=self.verify_ssl,
-            timeout=30.0,
+            timeout=self.timeout,
         )
 
     async def __aenter__(self):

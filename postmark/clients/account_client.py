@@ -31,12 +31,14 @@ logger = logging.getLogger(__name__)
 class AccountClient:
     _base_url = "https://api.postmarkapp.com"
 
-    def __init__(self, account_token: str, retries: int = 3):
+    def __init__(self, account_token: str, retries: int = 3, timeout: float = 30.0):
         """
         Initialize the Postmark Account Client.
 
         Args:
             account_token: The Postmark account token.
+            retries: Number of times to retry on rate limit, server, or timeout errors.
+            timeout: HTTP request timeout in seconds.
         """
         if not account_token:
             logger.error("A Postmark account token is required")
@@ -44,6 +46,7 @@ class AccountClient:
 
         self.account_token = account_token
         self.retries = retries
+        self.timeout = timeout
 
         self.verify_ssl = os.getenv("POSTMARK_SSL_VERIFY", "true").lower() != "false"
 
@@ -64,7 +67,7 @@ class AccountClient:
                 "Content-Type": "application/json",
             },
             verify=self.verify_ssl,
-            timeout=30.0,
+            timeout=self.timeout,
         )
 
     async def __aenter__(self):
