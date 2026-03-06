@@ -46,11 +46,19 @@ class PostmarkAPIException(PostmarkException):
     Always carries both a Postmark error_code and an http_status.
     """
 
-    def __init__(self, message: str, error_code: int, http_status: int):
+    def __init__(
+        self,
+        message: str,
+        error_code: int,
+        http_status: int,
+        request_id: Optional[str] = None,
+    ):
         super().__init__(message, error_code, http_status)
+        self.request_id = request_id
 
     def __str__(self):
-        return f"[{self.error_code}] {self.message} (HTTP {self.http_status})"
+        base = f"[{self.error_code}] {self.message} (HTTP {self.http_status})"
+        return f"{base} [request_id={self.request_id}]" if self.request_id else base
 
 
 class InvalidAPIKeyException(PostmarkAPIException):
@@ -62,8 +70,14 @@ class InvalidAPIKeyException(PostmarkAPIException):
 class InactiveRecipientException(PostmarkAPIException):
     """406 - Inactive recipient."""
 
-    def __init__(self, message: str, error_code: int, http_status: int):
-        super().__init__(message, error_code, http_status)
+    def __init__(
+        self,
+        message: str,
+        error_code: int,
+        http_status: int,
+        request_id: Optional[str] = None,
+    ):
+        super().__init__(message, error_code, http_status, request_id)
         match = re.search(r"Found inactive addresses: ([^.]+)", message)
         self.inactive_recipients: list[str] = (
             [addr.strip() for addr in match.group(1).split(",")] if match else []

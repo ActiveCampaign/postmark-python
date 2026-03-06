@@ -32,6 +32,7 @@ class TestAccountClient:
         response = Mock(spec=Response)
         response.raise_for_status = Mock()
         response.status_code = 200
+        response.headers = {}
         return response
 
     # -------------------------------------------------------------------------
@@ -135,6 +136,7 @@ class TestAccountClient:
     async def test_401_raises_invalid_api_key(self, client):
         mock_response = Mock(spec=Response)
         mock_response.status_code = 401
+        mock_response.headers = {}
         mock_response.json.return_value = {
             "ErrorCode": 10,
             "Message": "Invalid API key",
@@ -157,6 +159,7 @@ class TestAccountClient:
     async def test_422_raises_validation_exception(self, client):
         mock_response = Mock(spec=Response)
         mock_response.status_code = 422
+        mock_response.headers = {}
         mock_response.json.return_value = {
             "ErrorCode": 300,
             "Message": "Invalid request body",
@@ -200,6 +203,7 @@ class TestAccountClient:
 
         failing_resp = Mock(spec=Response)
         failing_resp.status_code = 429
+        failing_resp.headers = {}
         failing_resp.json.return_value = {"ErrorCode": 429, "Message": "Rate limit"}
         failing_resp.raise_for_status.side_effect = HTTPStatusError(
             "429", request=Mock(), response=failing_resp
@@ -207,6 +211,7 @@ class TestAccountClient:
         ok_resp = Mock(spec=Response)
         ok_resp.raise_for_status = Mock()
         ok_resp.status_code = 200
+        ok_resp.headers = {}
 
         with patch("asyncio.sleep", new_callable=AsyncMock):
             with patch.object(
@@ -226,6 +231,7 @@ class TestAccountClient:
 
         mock_response = Mock(spec=Response)
         mock_response.status_code = 500
+        mock_response.headers = {}
         mock_response.json.return_value = {"ErrorCode": 500, "Message": "Server error"}
         mock_response.raise_for_status.side_effect = HTTPStatusError(
             "500", request=Mock(), response=mock_response
@@ -249,6 +255,7 @@ class TestAccountClient:
 
         mock_response = Mock(spec=Response)
         mock_response.status_code = 422
+        mock_response.headers = {}
         mock_response.json.return_value = {
             "ErrorCode": 300,
             "Message": "Validation error",
@@ -271,6 +278,7 @@ class TestAccountClient:
 
         mock_response = Mock(spec=Response)
         mock_response.status_code = 500
+        mock_response.headers = {}
         mock_response.json.return_value = {"ErrorCode": 500, "Message": "Server error"}
         mock_response.raise_for_status.side_effect = HTTPStatusError(
             "500", request=Mock(), response=mock_response

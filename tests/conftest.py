@@ -25,6 +25,7 @@ def make_response(data: dict | list) -> Mock:
     response = Mock(spec=Response)
     response.json.return_value = data
     response.raise_for_status = Mock()
+    response.headers = {}
     return response
 
 

@@ -79,7 +79,7 @@ class OutboundManager:
         """Send a single email."""
         email_payload = _parse_email(message)
 
-        logger.debug(f"Sending email to {email_payload.to}")
+        logger.debug("Sending email", extra={"recipient": email_payload.to})
         response = await self.client.post(
             "/email",
             json=email_payload.model_dump(by_alias=True, exclude_none=True),
@@ -137,7 +137,9 @@ class OutboundManager:
                 "Bulk email must include at least one recipient in messages"
             )
 
-        logger.debug(f"Sending bulk email to {len(bulk_payload.messages)} recipients")
+        logger.debug(
+            "Sending bulk email", extra={"recipient_count": len(bulk_payload.messages)}
+        )
         response = await self.client.post(
             "/email/bulk",
             json=bulk_payload.model_dump(by_alias=True, exclude_none=True),
@@ -160,7 +162,7 @@ class OutboundManager:
     ) -> SendResponse:
         """Send an email using a template."""
         email = _parse_template_email(message)
-        logger.debug(f"Sending template email to {email.to}")
+        logger.debug("Sending template email", extra={"recipient": email.to})
         response = await self.client.post(
             "/email/withTemplate",
             json=email.model_dump(by_alias=True, exclude_none=True),
