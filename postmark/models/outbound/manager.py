@@ -244,7 +244,7 @@ class OutboundManager:
                 params[f"metadata_{key}"] = value
 
         response = await self.client.get("/messages/outbound", params=params)
-        response.raise_for_status()
+
         data = response.json()
 
         return Page(
