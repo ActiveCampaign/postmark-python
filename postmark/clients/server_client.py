@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from typing import Any, Dict, List, Optional, Union
 
 import httpx
@@ -21,6 +22,7 @@ from postmark.models.suppressions import SuppressionManager
 from postmark.models.templates import TemplateManager
 from postmark.models.webhooks import WebhookManager
 
+from .. import __version__
 from ..exceptions import (
     PostmarkException,
     RateLimitException,
@@ -83,6 +85,7 @@ class ServerClient:
                 "X-Postmark-Server-Token": self.server_token,
                 "Accept": "application/json",
                 "Content-Type": "application/json",
+                "User-Agent": f"Postmark.PY - {__version__} (Python/{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro})",
             },
             verify=self.verify_ssl,
             timeout=self.timeout,

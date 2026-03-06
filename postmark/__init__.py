@@ -1,4 +1,10 @@
 import logging
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("postmark")
+except PackageNotFoundError:  # running from source without install
+    __version__ = "0.0.0"
 
 from .clients.account_client import AccountClient
 from .clients.server_client import ServerClient
@@ -42,4 +48,5 @@ __all__ = [
     "TimeoutException",
     "server_utils",
     "Page",
+    "__version__",
 ]

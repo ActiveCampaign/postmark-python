@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from typing import Any, Dict, List, Optional, Union
 
 import httpx
@@ -16,6 +17,7 @@ from postmark.models.servers import AccountServerManager
 from postmark.models.signatures import SenderSignatureManager
 from postmark.models.templates import AccountTemplateManager
 
+from .. import __version__
 from ..exceptions import (
     PostmarkException,
     RateLimitException,
@@ -72,6 +74,7 @@ class AccountClient:
                 "X-Postmark-Account-Token": self.account_token,
                 "Accept": "application/json",
                 "Content-Type": "application/json",
+                "User-Agent": f"Postmark.PY - {__version__} (Python/{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro})",
             },
             verify=self.verify_ssl,
             timeout=self.timeout,
