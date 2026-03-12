@@ -1,0 +1,62 @@
+[tool.poetry]
+name = "postmark"
+version = "0.2.0"
+description = "The Official Postmark Python SDK."
+authors = ["Greg Svoboda <gsvoboda@activecampaign.com>"]
+license = "MIT"
+readme = "README.md"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Communications :: Email",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+httpx = "^0.27.0"             # Concurrency (async) and HTTP requests
+pydantic = "^2.6.0"           # Type safety and validation
+email-validator = "^2.1.1"    # REQUIRED by pydantic.EmailStr for email format validation
+tenacity = "^8.2.3"           # Resilience and retry logic
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.1.1"             # Testing framework
+pytest-asyncio = "^1.0.0"     # To run async tests with pytest
+respx = "^0.21.0"             # Mocking HTTP requests for testing
+pytest-cov = "^7.0.0"         # For coverage reports
+mypy = "^1.8.0"
+ruff = "^0.9.0"
+pre-commit = "^4.0.0"
+python-dotenv = "^1.2.2"
+
+
+
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N"]
+ignore = ["N818", "E501"]  # allow "Exception" suffix on exception classes
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.bandit]
+skips = ["B101"]  # assert statements are fine in tests
+exclude_dirs = ["tests"]
+
+[tool.coverage.report]
+omit = ["*/enums.py"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

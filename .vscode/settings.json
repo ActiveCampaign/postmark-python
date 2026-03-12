@@ -1,0 +1,36 @@
+{
+    // Python settings
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    // Ruff handles formatting and linting
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+        }
+    },
+    // File associations
+    "files.associations": {
+        "*.md": "markdown",
+        "*.yml": "yaml",
+        "*.toml": "toml"
+    },
+    // Exclude from search/watch
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        ".pytest_cache": true,
+        "*.egg-info": true,
+        ".coverage": true,
+        "htmlcov": true,
+        "dist": true,
+        "build": true
+    },
+    // Type checking
+    "python.analysis.typeCheckingMode": "basic"
+}
