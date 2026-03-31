@@ -1,8 +1,16 @@
-# postmark-python
-
-[![Python Versions](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://github.com/ActiveCampaign/postmark-python/actions/workflows/tests.yml/badge.svg)](https://github.com/ActiveCampaign/postmark-python/actions/workflows/tests.yml)
+<table>
+<tr>
+<td>
+<h1>postmark-python</h1>
+<a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue" alt="Python Versions"></a>
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+<a href="https://github.com/ActiveCampaign/postmark-python/actions/workflows/tests.yml"><img src="https://github.com/ActiveCampaign/postmark-python/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
+</td>
+<td align="right" valign="top">
+<img src="postmark_python_sdk.png" width="200" alt="Postmark Python SDK">
+</td>
+</tr>
+</table>
 
 The official Python SDK for [Postmark](https://postmarkapp.com) — send emails, manage bounces, templates, webhooks, and more.
 
