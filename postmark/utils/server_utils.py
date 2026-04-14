@@ -8,7 +8,9 @@ def _coerce_postmark_error_code(raw: Any) -> Optional[int]:
     """Normalize Postmark ``ErrorCode`` from JSON (int or numeric string) to ``int`` or ``None``."""
     if raw is None:
         return None
-    if isinstance(raw, bool):  # must be before ``int`` (``bool`` is a subclass of ``int``)
+    if isinstance(
+        raw, bool
+    ):  # must be before ``int`` (``bool`` is a subclass of ``int``)
         return None
     if isinstance(raw, int):
         return raw
