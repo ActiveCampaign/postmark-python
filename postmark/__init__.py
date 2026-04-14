@@ -2,8 +2,8 @@ import logging
 from importlib.metadata import PackageNotFoundError, version
 
 try:
-    __version__ = version("postmark")
-except PackageNotFoundError:  # running from source without install
+    __version__ = version("postmark-python")
+except PackageNotFoundError:  # running from checkout / editable without metadata
     __version__ = "0.0.0"
 
 from .clients.account_client import AccountClient

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.3] - 2026-04-14
+
+### Fixed
+
+- `__version__` resolves from the **`postmark-python`** distribution metadata so `X-Postmark-Client-Version` matches after `pip install postmark-python` (falls back to `0.0.0` when not installed as a package).
+
+### Changed
+
+- **`poetry.lock`** is tracked in version control again (removed from `.gitignore`) for reproducible installs and CI cache keys.
+- README: removed the misleading note about a future PyPI distribution under the name `postmark`.
+
+---
+
 ## [0.2.2] - 2026-04-14
 
 ### Fixed
@@ -21,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
-- PyPI distribution renamed from `postmark` to **`postmark-python`** to avoid clashing with the unrelated [`postmark`](https://pypi.org/project/postmark/) package until the name is available. The import name remains `postmark`.
+- PyPI distribution renamed from `postmark` to **`postmark-python`** to avoid clashing with the unrelated [`postmark`](https://pypi.org/project/postmark/) package on PyPI. The import name remains `postmark`.
 - Trove classifier updated from **Alpha** to **Beta** (`Development Status :: 4 - Beta`).
 
 ### Added

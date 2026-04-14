@@ -30,8 +30,6 @@ Install from PyPI as **`postmark-python`** (the Python package you import is sti
 pip install postmark-python
 ```
 
-(PyPI under `postmark` name coming soon!)
-
 ## Quick Start
 
 The SDK is fully async. All API calls must be awaited.
