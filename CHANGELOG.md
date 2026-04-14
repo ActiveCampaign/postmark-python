@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.1] - 2026-04-14
+
+### Changed
+
+- PyPI distribution renamed from `postmark` to **`postmark-python`** to avoid clashing with the unrelated [`postmark`](https://pypi.org/project/postmark/) package until the name is available. The import name remains `postmark`.
+- Trove classifier updated from **Alpha** to **Beta** (`Development Status :: 4 - Beta`).
+
+### Added
+
+- Project URLs for PyPI metadata: repository, homepage ([official libraries](https://postmarkapp.com/developer/integration/official-libraries)), documentation (wiki), and Issues link.
+
+---
+
 ## [0.2.0] - 2026-03-06
 
 ### Added
