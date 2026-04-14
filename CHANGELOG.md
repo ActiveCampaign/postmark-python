@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.2] - 2026-04-14
+
+### Fixed
+
+- Timeout error message now uses the client’s configured timeout with clearer numeric formatting (`:g`), for both `ServerClient` and `AccountClient`.
+- Postmark API `ErrorCode` values from JSON are coerced to `int` when sent as numeric strings; invalid values and booleans map to `None` so exception mapping stays reliable.
+- README quick start no longer imports `python-dotenv` (a dev-only dependency); optional `.env` loading is described in a comment instead.
+
+---
+
 ## [0.2.1] - 2026-04-14
 
 ### Changed

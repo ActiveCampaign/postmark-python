@@ -39,10 +39,11 @@ The SDK is fully async. All API calls must be awaited.
 ```python
 import asyncio
 import os
-import postmark
-from dotenv import load_dotenv
 
-load_dotenv()
+import postmark
+
+# Tokens are read from the environment here. Optionally: pip install python-dotenv,
+# then use load_dotenv() to populate os.environ from a .env file.
 
 async def main():
     async with postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"]) as client:
