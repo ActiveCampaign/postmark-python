@@ -33,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [0.2.0] - 2026-03-06
 
 ### Added
-- `User-Agent` header sent on every request in the format `Postmark.PY - {version} (Python/{major}.{minor}.{micro})`.
+- Client identification on every request: `User-Agent` as `Python/{major}.{minor}.{micro}`, `X-Postmark-Client` as `postmark-python`, `X-Postmark-Client-Version` as the installed SDK version, and a fresh `X-Postmark-Correlation-Id` (UUID) per HTTP request.
 - `X-Request-Id` from Postmark responses is now stored as `request_id` on all `PostmarkAPIException` subclasses and included in the exception `__str__` output when present — enabling direct support escalations.
 - `request_id` included in structured log records for both successful requests and API errors.
 - Structured `extra={}` fields on all log calls (`method`, `endpoint`, `status_code`, `duration_ms`, `error_code`, `postmark_message`, `request_id`) for compatibility with Datadog, Splunk, and other log aggregators.
