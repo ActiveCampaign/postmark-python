@@ -30,6 +30,24 @@ class TestParseErrorResponse:
         assert message == "Oops"
         assert code is None
 
+    def test_error_code_numeric_string_coerced_to_int(self):
+        response = self._mock_response({"Message": "Bad", "ErrorCode": "300"})
+        message, code = parse_error_response(response)
+        assert message == "Bad"
+        assert code == 300
+
+    def test_error_code_invalid_string_returns_none(self):
+        response = self._mock_response({"Message": "Bad", "ErrorCode": "not-a-code"})
+        message, code = parse_error_response(response)
+        assert message == "Bad"
+        assert code is None
+
+    def test_error_code_bool_returns_none(self):
+        response = self._mock_response({"Message": "Bad", "ErrorCode": True})
+        message, code = parse_error_response(response)
+        assert message == "Bad"
+        assert code is None
+
     def test_missing_message_returns_unknown(self):
         response = self._mock_response({"ErrorCode": 422})
         message, code = parse_error_response(response)

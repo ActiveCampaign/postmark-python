@@ -147,7 +147,7 @@ class AccountClient:
                         },
                     )
                     raise TimeoutException(
-                        f"Request timed out after {self.timeout} seconds"
+                        f"Request timed out after {self.timeout:g} seconds"
                     ) from e
 
                 except httpx.HTTPStatusError as e:

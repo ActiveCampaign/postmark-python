@@ -205,6 +205,16 @@ class TestAccountClient:
                 await client.request("GET", "/servers")
 
     @pytest.mark.asyncio
+    async def test_timeout_message_reflects_client_timeout(self):
+        client = AccountClient("test-token", timeout=7.25)
+        with patch.object(AsyncClient, "request", new_callable=AsyncMock) as mock_req:
+            mock_req.side_effect = httpx.TimeoutException("timed out")
+            with pytest.raises(TimeoutException) as exc_info:
+                await client.request("GET", "/servers")
+        assert "7.25" in str(exc_info.value)
+        await client.close()
+
+    @pytest.mark.asyncio
     async def test_correlation_ids_unique_across_requests(self, client):
         ok_resp = Mock(spec=Response)
         ok_resp.raise_for_status = Mock()

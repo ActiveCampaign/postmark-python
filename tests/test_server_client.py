@@ -188,6 +188,16 @@ class TestServerClient:
                 await client.request("GET", "/test")
 
     @pytest.mark.asyncio
+    async def test_timeout_message_reflects_client_timeout(self):
+        client = ServerClient("test-token", timeout=12.5)
+        with patch.object(AsyncClient, "request", new_callable=AsyncMock) as mock_req:
+            mock_req.side_effect = httpx.TimeoutException("timed out")
+            with pytest.raises(TimeoutException) as exc_info:
+                await client.request("GET", "/test")
+        assert "12.5" in str(exc_info.value)
+        await client.close()
+
+    @pytest.mark.asyncio
     async def test_request_error_raises_postmark_exception(self, client):
         with patch.object(AsyncClient, "request", new_callable=AsyncMock) as mock_req:
             mock_req.side_effect = httpx.RequestError("connection refused")
