@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.4] - 2026-04-15
+
+### Fixed
+
+- README: logo image now uses an absolute raw GitHub URL so it renders correctly on the PyPI project page.
+
+---
+
 ## [0.2.3] - 2026-04-14
 
 ### Fixed

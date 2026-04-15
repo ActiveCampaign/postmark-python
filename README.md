@@ -7,7 +7,7 @@
 <a href="https://github.com/ActiveCampaign/postmark-python/actions/workflows/tests.yml"><img src="https://github.com/ActiveCampaign/postmark-python/actions/workflows/tests.yml/badge.svg" alt="Tests"></a>
 </td>
 <td align="right" valign="top">
-<img src="postmark_python_sdk.png" width="200" alt="Postmark Python SDK">
+<img src="https://raw.githubusercontent.com/ActiveCampaign/postmark-python/main/postmark_python_sdk.png" width="200" alt="Postmark Python SDK">
 </td>
 </tr>
 </table>
