@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.5] - 2026-06-04
+
+### Changed
+
+- Upgraded `httpx` dependency to `0.28.1`.
+- CI: expanded test matrix to include Python 3.13 and 3.14.
+- CI: updated GitHub Actions to `actions/checkout@v6`, `actions/setup-python@v6`, `actions/cache@v5`, and Poetry `2.3.4`.
+
+---
+
 ## [0.2.4] - 2026-04-15
 
 ### Fixed
