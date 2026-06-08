@@ -5,7 +5,6 @@ Examples for sending messages.
 """
 
 import postmark
-from postmark import Email
 
 SENDER = "sender@example.com"
 
@@ -29,7 +28,7 @@ with postmark.sync.ServerClient("xxx-YOUR-SERVER-TOKEN-xxxx-xxxxxxx") as client:
 
     # --- Send via Email model (recommended, offering better type safety) ---
     response = client.outbound.send(
-        Email(
+        postmark.Email(
             sender=SENDER,
             to="receiver@example.com",
             subject="Hello via Model",

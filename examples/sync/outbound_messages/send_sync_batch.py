@@ -9,18 +9,17 @@ Run:
 """
 
 import postmark
-from postmark import Email
 
 SENDER = "sender@example.com"
 
 messages = [
-    Email(
+    postmark.Email(
         sender=SENDER,
         to="alice@example.com",  # change to real addresses
         subject="Hello Alice",
         text_body="Hi Alice, sent via postmark.sync.",
     ),
-    Email(
+    postmark.Email(
         sender=SENDER,
         to="bob@example.com",
         subject="Hello Bob",
