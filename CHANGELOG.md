@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.0] - 2026-06-08
+
+### Added
+
+- `SyncServerClient` and `SyncAccountClient` — synchronous wrappers around the async clients, backed by a single daemon thread with a persistent asyncio event loop. Enables SDK use in scripts, Flask apps, and Jupyter notebooks without `async`/`await`. HTTP connection pooling is retained across calls for performance.
+- Examples reorganized into `examples/async/` and `examples/sync/` directories with parallel coverage, plus two new sync-only examples (`send_sync_simple.py`, `send_sync_batch.py`).
+- 31 new tests for sync client behavior (`tests/test_sync_client.py`).
+
+---
+
 ## [0.2.5] - 2026-06-04
 
 ### Changed
