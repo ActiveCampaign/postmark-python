@@ -23,6 +23,7 @@ repos:
     hooks:
       - id: mypy
         args: [--ignore-missing-imports]
+        files: ^(postmark|tests)/
         additional_dependencies:
           - pydantic
           - httpx

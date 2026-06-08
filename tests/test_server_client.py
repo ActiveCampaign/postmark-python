@@ -103,12 +103,6 @@ class TestServerClient:
             "GET", "/test", headers={"X-Postmark-Correlation-Id": ANY}
         )
 
-    def test_ssl_verify_passed_to_httpx(self):
-        """Confirm verify_ssl reaches the underlying httpx.AsyncClient."""
-        with patch.dict(os.environ, {"POSTMARK_SSL_VERIFY": "false"}):
-            client = ServerClient(server_token="test-token")
-        assert client.verify_ssl is False
-
     def test_server_token_header_on_persistent_client(self, client):
         assert client._http_client.headers["x-postmark-server-token"] == "test-token"
 

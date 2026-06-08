@@ -1,0 +1,32 @@
+"""
+Example for sending emails with custom headers.
+
+Custom headers are useful for:
+- Threading replies (Reply-To, References, In-Reply-To)
+- Passing internal tracking or correlation IDs
+- Setting message priority
+- Integrating with third-party systems that inspect headers
+"""
+
+import postmark
+from postmark.models.outbound import Email, Header
+
+SENDER = "sender@example.com"
+
+with postmark.sync.ServerClient("xxx-YOUR-SERVER-TOKEN-xxxx-xxxxxxx") as client:
+    response = client.outbound.send(
+        Email(
+            sender=SENDER,
+            to="receiver@example.com",
+            subject="Invoice #1042",
+            text_body="Please find your invoice details below.",
+            headers=[
+                Header(name="X-Correlation-ID", value="order-1042-usr-9981"),
+                Header(name="X-Priority", value="1"),
+                Header(name="References", value="<original-message-id@example.com>"),
+                Header(name="In-Reply-To", value="<original-message-id@example.com>"),
+            ],
+        )
+    )
+
+    print(f"Sent: {response.message_id}")
