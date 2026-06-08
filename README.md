@@ -32,7 +32,9 @@ pip install postmark-python
 
 ## Quick Start
 
-The SDK is fully async. All API calls must be awaited.
+The SDK is async-first — all API calls return awaitables. As of v0.3.0, a synchronous wrapper is also available for use in non-async contexts.
+
+**Async:**
 
 ```python
 import asyncio
@@ -54,6 +56,23 @@ async def main():
         print(f"Sent: {response.message_id}")
 
 asyncio.run(main())
+```
+
+**Sync** (v0.3.0+):
+
+```python
+import os
+
+import postmark.sync
+
+with postmark.sync.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"]) as client:
+    response = client.outbound.send({
+        "sender": "sender@example.com",
+        "to": "recipient@example.com",
+        "subject": "Hello from Postmark",
+        "text_body": "Sent with the Postmark Python SDK.",
+    })
+    print(f"Sent: {response.message_id}")
 ```
 
 ## Two Client Types
