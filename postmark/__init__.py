@@ -6,6 +6,7 @@ try:
 except PackageNotFoundError:  # running from checkout / editable without metadata
     __version__ = "0.0.0"
 
+from . import sync
 from .clients.account_client import AccountClient
 from .clients.server_client import ServerClient
 from .exceptions import (
@@ -29,6 +30,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 __all__ = [
+    "sync",
     "ServerClient",
     "AccountClient",
     "Email",

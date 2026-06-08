@@ -271,15 +271,7 @@ class TestGetBounce:
         assert bounce.inactive is True
         assert bounce.can_activate is True
         assert bounce.dump_available is True
-
-    @pytest.mark.asyncio
-    async def test_get_calls_correct_endpoint(self, bounces):
-        manager, fake = bounces
-        fake.mock_get_response(BOUNCE)
-
-        await manager.get(999)
-
-        fake.get.assert_called_once_with("/bounces/999")
+        fake.get.assert_called_once_with("/bounces/123")
 
     @pytest.mark.asyncio
     async def test_get_optional_fields_are_none(self, bounces):
@@ -310,6 +302,7 @@ class TestGetBounceDump:
         dump = await manager.get_dump(123)
 
         assert dump.body == raw
+        fake.get.assert_called_once_with("/bounces/123/dump")
 
     @pytest.mark.asyncio
     async def test_get_dump_empty_body_when_unavailable(self, bounces):
@@ -319,15 +312,6 @@ class TestGetBounceDump:
         dump = await manager.get_dump(123)
 
         assert dump.body == ""
-
-    @pytest.mark.asyncio
-    async def test_get_dump_calls_correct_endpoint(self, bounces):
-        manager, fake = bounces
-        fake.mock_get_response({"Body": ""})
-
-        await manager.get_dump(456)
-
-        fake.get.assert_called_once_with("/bounces/456/dump")
 
 
 # ---------------------------------------------------------------------------

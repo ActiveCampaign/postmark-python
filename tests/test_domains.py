@@ -164,15 +164,6 @@ class TestGetDomain:
 
         fake.get.assert_called_once_with("/domains/10")
 
-    @pytest.mark.asyncio
-    async def test_get_different_domain_id(self, domains):
-        manager, fake = domains
-        fake.mock_get_response(_make_domain(ID=999))
-
-        await manager.get(999)
-
-        fake.get.assert_called_once_with("/domains/999")
-
 
 # ---------------------------------------------------------------------------
 # Create domain
@@ -268,23 +259,7 @@ class TestDeleteDomain:
 
         assert result.error_code == 0
         assert result.message == "Domain removed."
-
-    @pytest.mark.asyncio
-    async def test_delete_calls_correct_endpoint(self, domains):
-        manager, fake = domains
-        fake.mock_delete_response(DELETE_RESPONSE)
-
-        await manager.delete(10)
-
         fake.delete.assert_called_once_with("/domains/10")
-
-    @pytest.mark.asyncio
-    async def test_delete_does_not_call_other_methods(self, domains):
-        manager, fake = domains
-        fake.mock_delete_response(DELETE_RESPONSE)
-
-        await manager.delete(10)
-
         fake.get.assert_not_called()
         fake.post.assert_not_called()
         fake.put.assert_not_called()

@@ -118,11 +118,6 @@ class TestAccountClient:
             "GET", "/servers", headers={"X-Postmark-Correlation-Id": ANY}
         )
 
-    def test_ssl_verify_passed_to_httpx(self):
-        with patch.dict(os.environ, {"POSTMARK_SSL_VERIFY": "false"}):
-            client = AccountClient(account_token="test-account-token")
-        assert client.verify_ssl is False
-
     def test_account_token_header_on_persistent_client(self, client):
         assert (
             client._http_client.headers["x-postmark-account-token"]

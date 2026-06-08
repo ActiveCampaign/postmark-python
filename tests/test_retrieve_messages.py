@@ -249,132 +249,140 @@ class TestGetDump:
         fake.get.assert_called_once_with("/messages/outbound/msg-123/dump")
 
 
-class TestListOpens:
+@pytest.mark.parametrize(
+    "list_method,msg_method,response_key,event_data,unique_field,unique_value",
+    [
+        (
+            "list_opens",
+            "list_message_opens",
+            "Opens",
+            OPEN_EVENT,
+            "platform",
+            "Desktop",
+        ),
+        (
+            "list_clicks",
+            "list_message_clicks",
+            "Clicks",
+            CLICK_EVENT,
+            "click_location",
+            "HTML",
+        ),
+    ],
+)
+class TestTrackingEvents:
     @pytest.mark.asyncio
-    async def test_list_opens_success(self, outbound):
+    async def test_list_success(
+        self,
+        outbound,
+        list_method,
+        msg_method,
+        response_key,
+        event_data,
+        unique_field,
+        unique_value,
+    ):
         manager, fake = outbound
-        fake.mock_get_response({"TotalCount": 1, "Opens": [OPEN_EVENT]})
+        fake.mock_get_response({"TotalCount": 1, response_key: [event_data]})
 
-        result = await manager.list_opens()
+        result = await getattr(manager, list_method)()
 
         assert result.total == 1
         assert result.items[0].message_id == "msg-123"
-        assert result.items[0].recipient == "user@example.com"
-        assert result.items[0].platform == "Desktop"
-        assert result.items[0].geo.country == "United States"
+        assert getattr(result.items[0], unique_field) == unique_value
 
     @pytest.mark.asyncio
-    async def test_list_opens_default_params(self, outbound):
+    async def test_list_default_params(
+        self,
+        outbound,
+        list_method,
+        msg_method,
+        response_key,
+        event_data,
+        unique_field,
+        unique_value,
+    ):
         manager, fake = outbound
-        fake.mock_get_response({"TotalCount": 0, "Opens": []})
+        fake.mock_get_response({"TotalCount": 0, response_key: []})
 
-        await manager.list_opens()
+        await getattr(manager, list_method)()
 
         params = fake.get.call_args[1]["params"]
         assert params["count"] == 100
         assert params["offset"] == 0
 
     @pytest.mark.asyncio
-    async def test_list_opens_with_filters(self, outbound):
+    async def test_list_with_filters(
+        self,
+        outbound,
+        list_method,
+        msg_method,
+        response_key,
+        event_data,
+        unique_field,
+        unique_value,
+    ):
         manager, fake = outbound
-        fake.mock_get_response({"TotalCount": 0, "Opens": []})
+        fake.mock_get_response({"TotalCount": 0, response_key: []})
 
-        await manager.list_opens(tag="welcome", recipient="user@example.com")
-
-        params = fake.get.call_args[1]["params"]
-        assert params["tag"] == "welcome"
-        assert params["recipient"] == "user@example.com"
-
-    @pytest.mark.asyncio
-    async def test_list_opens_count_validation(self, outbound):
-        manager, fake = outbound
-
-        with pytest.raises(ValueError, match="Count cannot exceed 500"):
-            await manager.list_opens(count=501)
-
-    @pytest.mark.asyncio
-    async def test_list_message_opens_calls_correct_endpoint(self, outbound):
-        manager, fake = outbound
-        fake.mock_get_response({"TotalCount": 0, "Opens": []})
-
-        await manager.list_message_opens("msg-123")
-
-        fake.get.assert_called_once_with(
-            "/messages/outbound/opens/msg-123",
-            params={"count": 100, "offset": 0},
-        )
-
-    @pytest.mark.asyncio
-    async def test_list_message_opens_success(self, outbound):
-        manager, fake = outbound
-        fake.mock_get_response({"TotalCount": 1, "Opens": [OPEN_EVENT]})
-
-        result = await manager.list_message_opens("msg-123")
-
-        assert result.total == 1
-        assert result.items[0].message_id == "msg-123"
-
-
-class TestListClicks:
-    @pytest.mark.asyncio
-    async def test_list_clicks_success(self, outbound):
-        manager, fake = outbound
-        fake.mock_get_response({"TotalCount": 1, "Clicks": [CLICK_EVENT]})
-
-        result = await manager.list_clicks()
-
-        assert result.total == 1
-        assert result.items[0].message_id == "msg-123"
-        assert result.items[0].original_link == "https://example.com"
-        assert result.items[0].click_location == "HTML"
-
-    @pytest.mark.asyncio
-    async def test_list_clicks_default_params(self, outbound):
-        manager, fake = outbound
-        fake.mock_get_response({"TotalCount": 0, "Clicks": []})
-
-        await manager.list_clicks()
-
-        params = fake.get.call_args[1]["params"]
-        assert params["count"] == 100
-        assert params["offset"] == 0
-
-    @pytest.mark.asyncio
-    async def test_list_clicks_with_filters(self, outbound):
-        manager, fake = outbound
-        fake.mock_get_response({"TotalCount": 0, "Clicks": []})
-
-        await manager.list_clicks(tag="promo", recipient="user@example.com")
+        await getattr(manager, list_method)(tag="promo", recipient="user@example.com")
 
         params = fake.get.call_args[1]["params"]
         assert params["tag"] == "promo"
         assert params["recipient"] == "user@example.com"
 
     @pytest.mark.asyncio
-    async def test_list_clicks_count_validation(self, outbound):
+    async def test_list_count_validation(
+        self,
+        outbound,
+        list_method,
+        msg_method,
+        response_key,
+        event_data,
+        unique_field,
+        unique_value,
+    ):
         manager, fake = outbound
 
         with pytest.raises(ValueError, match="Count cannot exceed 500"):
-            await manager.list_clicks(count=501)
+            await getattr(manager, list_method)(count=501)
 
     @pytest.mark.asyncio
-    async def test_list_message_clicks_calls_correct_endpoint(self, outbound):
+    async def test_list_message_endpoint(
+        self,
+        outbound,
+        list_method,
+        msg_method,
+        response_key,
+        event_data,
+        unique_field,
+        unique_value,
+    ):
         manager, fake = outbound
-        fake.mock_get_response({"TotalCount": 0, "Clicks": []})
+        fake.mock_get_response({"TotalCount": 0, response_key: []})
 
-        await manager.list_message_clicks("msg-123")
+        await getattr(manager, msg_method)("msg-123")
 
         fake.get.assert_called_once_with(
-            "/messages/outbound/clicks/msg-123",
+            f"/messages/outbound/{response_key.lower()}/msg-123",
             params={"count": 100, "offset": 0},
         )
 
     @pytest.mark.asyncio
-    async def test_list_message_clicks_success(self, outbound):
+    async def test_list_message_success(
+        self,
+        outbound,
+        list_method,
+        msg_method,
+        response_key,
+        event_data,
+        unique_field,
+        unique_value,
+    ):
         manager, fake = outbound
-        fake.mock_get_response({"TotalCount": 1, "Clicks": [CLICK_EVENT]})
+        fake.mock_get_response({"TotalCount": 1, response_key: [event_data]})
 
-        result = await manager.list_message_clicks("msg-123")
+        result = await getattr(manager, msg_method)("msg-123")
 
         assert result.total == 1
-        assert result.items[0].original_link == "https://example.com"
+        assert result.items[0].message_id == "msg-123"

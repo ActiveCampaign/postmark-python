@@ -130,44 +130,23 @@ class TestParamBuilding:
         fake.get.assert_called_once_with("/stats/outbound", params={})
 
     @pytest.mark.asyncio
-    async def test_tag_param(self, stats):
+    @pytest.mark.parametrize(
+        "kwargs,expected_key,expected_val",
+        [
+            ({"tag": "welcome"}, "tag", "welcome"),
+            ({"from_date": date(2024, 1, 1)}, "fromdate", "2024-01-01"),
+            ({"to_date": date(2024, 1, 31)}, "todate", "2024-01-31"),
+            ({"message_stream": "outbound"}, "messagestream", "outbound"),
+        ],
+    )
+    async def test_single_param(self, stats, kwargs, expected_key, expected_val):
         manager, fake = stats
         fake.mock_get_response(OVERVIEW)
 
-        await manager.overview(tag="welcome")
+        await manager.overview(**kwargs)
 
         params = fake.get.call_args[1]["params"]
-        assert params["tag"] == "welcome"
-
-    @pytest.mark.asyncio
-    async def test_from_date_param(self, stats):
-        manager, fake = stats
-        fake.mock_get_response(OVERVIEW)
-
-        await manager.overview(from_date=date(2024, 1, 1))
-
-        params = fake.get.call_args[1]["params"]
-        assert params["fromdate"] == "2024-01-01"
-
-    @pytest.mark.asyncio
-    async def test_to_date_param(self, stats):
-        manager, fake = stats
-        fake.mock_get_response(OVERVIEW)
-
-        await manager.overview(to_date=date(2024, 1, 31))
-
-        params = fake.get.call_args[1]["params"]
-        assert params["todate"] == "2024-01-31"
-
-    @pytest.mark.asyncio
-    async def test_message_stream_param(self, stats):
-        manager, fake = stats
-        fake.mock_get_response(OVERVIEW)
-
-        await manager.overview(message_stream="outbound")
-
-        params = fake.get.call_args[1]["params"]
-        assert params["messagestream"] == "outbound"
+        assert params[expected_key] == expected_val
 
     @pytest.mark.asyncio
     async def test_all_params(self, stats):
@@ -199,99 +178,41 @@ class TestEndpoints:
     """Each method hits the correct URL."""
 
     @pytest.mark.asyncio
-    async def test_overview(self, stats):
+    @pytest.mark.parametrize(
+        "method,endpoint,data",
+        [
+            ("overview", "/stats/outbound", OVERVIEW),
+            ("sent_counts", "/stats/outbound/sends", SENT_COUNTS),
+            ("bounce_counts", "/stats/outbound/bounces", BOUNCE_COUNTS),
+            ("spam_counts", "/stats/outbound/spam", SPAM_COMPLAINTS),
+            ("tracked_counts", "/stats/outbound/tracked", TRACKED_COUNTS),
+            ("open_counts", "/stats/outbound/opens", OPEN_COUNTS),
+            ("platform_usage", "/stats/outbound/opens/platforms", PLATFORM_USAGE),
+            (
+                "email_client_usage",
+                "/stats/outbound/opens/emailclients",
+                EMAIL_CLIENT_USAGE,
+            ),
+            ("click_counts", "/stats/outbound/clicks", CLICK_COUNTS),
+            ("browser_usage", "/stats/outbound/clicks/browserfamilies", BROWSER_USAGE),
+            (
+                "browser_platform_usage",
+                "/stats/outbound/clicks/platforms",
+                BROWSER_PLATFORM_USAGE,
+            ),
+            ("click_location", "/stats/outbound/clicks/location", CLICK_LOCATION),
+            (
+                "read_times",
+                "/stats/outbound/opens/readTimes",
+                {"Days": [], "read_2s": 0},
+            ),
+        ],
+    )
+    async def test_endpoint_routing(self, stats, method, endpoint, data):
         manager, fake = stats
-        fake.mock_get_response(OVERVIEW)
-        await manager.overview()
-        fake.get.assert_called_once_with("/stats/outbound", params={})
-
-    @pytest.mark.asyncio
-    async def test_sent_counts(self, stats):
-        manager, fake = stats
-        fake.mock_get_response(SENT_COUNTS)
-        await manager.sent_counts()
-        fake.get.assert_called_once_with("/stats/outbound/sends", params={})
-
-    @pytest.mark.asyncio
-    async def test_bounce_counts(self, stats):
-        manager, fake = stats
-        fake.mock_get_response(BOUNCE_COUNTS)
-        await manager.bounce_counts()
-        fake.get.assert_called_once_with("/stats/outbound/bounces", params={})
-
-    @pytest.mark.asyncio
-    async def test_spam_counts(self, stats):
-        manager, fake = stats
-        fake.mock_get_response(SPAM_COMPLAINTS)
-        await manager.spam_counts()
-        fake.get.assert_called_once_with("/stats/outbound/spam", params={})
-
-    @pytest.mark.asyncio
-    async def test_tracked_counts(self, stats):
-        manager, fake = stats
-        fake.mock_get_response(TRACKED_COUNTS)
-        await manager.tracked_counts()
-        fake.get.assert_called_once_with("/stats/outbound/tracked", params={})
-
-    @pytest.mark.asyncio
-    async def test_open_counts(self, stats):
-        manager, fake = stats
-        fake.mock_get_response(OPEN_COUNTS)
-        await manager.open_counts()
-        fake.get.assert_called_once_with("/stats/outbound/opens", params={})
-
-    @pytest.mark.asyncio
-    async def test_platform_usage(self, stats):
-        manager, fake = stats
-        fake.mock_get_response(PLATFORM_USAGE)
-        await manager.platform_usage()
-        fake.get.assert_called_once_with("/stats/outbound/opens/platforms", params={})
-
-    @pytest.mark.asyncio
-    async def test_email_client_usage(self, stats):
-        manager, fake = stats
-        fake.mock_get_response(EMAIL_CLIENT_USAGE)
-        await manager.email_client_usage()
-        fake.get.assert_called_once_with(
-            "/stats/outbound/opens/emailclients", params={}
-        )
-
-    @pytest.mark.asyncio
-    async def test_click_counts(self, stats):
-        manager, fake = stats
-        fake.mock_get_response(CLICK_COUNTS)
-        await manager.click_counts()
-        fake.get.assert_called_once_with("/stats/outbound/clicks", params={})
-
-    @pytest.mark.asyncio
-    async def test_browser_usage(self, stats):
-        manager, fake = stats
-        fake.mock_get_response(BROWSER_USAGE)
-        await manager.browser_usage()
-        fake.get.assert_called_once_with(
-            "/stats/outbound/clicks/browserfamilies", params={}
-        )
-
-    @pytest.mark.asyncio
-    async def test_browser_platform_usage(self, stats):
-        manager, fake = stats
-        fake.mock_get_response(BROWSER_PLATFORM_USAGE)
-        await manager.browser_platform_usage()
-        fake.get.assert_called_once_with("/stats/outbound/clicks/platforms", params={})
-
-    @pytest.mark.asyncio
-    async def test_click_location(self, stats):
-        manager, fake = stats
-        fake.mock_get_response(CLICK_LOCATION)
-        await manager.click_location()
-        fake.get.assert_called_once_with("/stats/outbound/clicks/location", params={})
-
-    @pytest.mark.asyncio
-    async def test_read_times(self, stats):
-        manager, fake = stats
-        fake.mock_get_response({"Days": [], "read_2s": 0})
-        await manager.read_times()
-        fake.get.assert_called_once_with("/stats/outbound/opens/readTimes", params={})
+        fake.mock_get_response(data)
+        await getattr(manager, method)()
+        fake.get.assert_called_once_with(endpoint, params={})
 
 
 # ---------------------------------------------------------------------------
