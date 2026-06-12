@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.1] - 2026-06-12
+
+### Fixed
+
+- `postmark.sync`: Gunicorn and Odoo devs, rejoice! ...the module-level event loop thread is now fork-safe. Previously, importing `postmark.sync` before a process fork caused child processes to inherit a stale event loop with no running thread, causing all sync API calls to hang indefinitely. The loop and thread are now created lazily on first use and recreated automatically when a PID change is detected. (Good eye, [@yibudak](https://github.com/yibudak).)
+
+---
+
 ## [0.3.0] - 2026-06-08
 
 ### Added

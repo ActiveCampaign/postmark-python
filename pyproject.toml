@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "postmark-python"
-version = "0.3.0"
+version = "0.3.1"
 description = "The Official Postmark Python SDK."
 authors = ["Greg Svoboda <gsvoboda@activecampaign.com>"]
 license = "MIT"
