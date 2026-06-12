@@ -279,7 +279,9 @@ class TestModuleLevelLoop:
             os.close(read_fd)
             try:
                 result = postmark.sync._loop.run(echo("child"))
-                os.write(write_fd, result.encode())
+                stored_pid = postmark.sync._loop._pid
+                payload = f"{result},{stored_pid},{os.getpid()}"
+                os.write(write_fd, payload.encode())
             except Exception as exc:
                 os.write(write_fd, f"ERROR:{exc}".encode())
             finally:
@@ -300,4 +302,7 @@ class TestModuleLevelLoop:
             os.close(read_fd)
 
         assert status == 0
-        assert payload == "child"
+        result, stored_pid_str, child_pid_str = payload.split(",")
+        assert result == "child"
+        assert int(stored_pid_str) == int(child_pid_str)
+        assert int(child_pid_str) == pid
