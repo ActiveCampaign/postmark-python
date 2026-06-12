@@ -21,6 +21,7 @@ Example::
 
 import asyncio
 import inspect
+import os
 import threading
 from typing import Optional
 
@@ -32,12 +33,33 @@ class _EventLoopThread:
     """Persistent background thread running a dedicated event loop."""
 
     def __init__(self):
-        self._loop = asyncio.new_event_loop()
-        t = threading.Thread(target=self._loop.run_forever, daemon=True)
-        t.start()
+        self._lock = threading.Lock()
+        self._loop = None
+        self._thread = None
+        self._pid = None
+
+    def _ensure_started(self):
+        current_pid = os.getpid()
+        with self._lock:
+            if (
+                self._pid == current_pid
+                and self._loop is not None
+                and not self._loop.is_closed()
+                and self._thread is not None
+                and self._thread.is_alive()
+            ):
+                return
+
+            self._loop = asyncio.new_event_loop()
+            self._thread = threading.Thread(
+                target=self._loop.run_forever, daemon=True
+            )
+            self._thread.start()
+            self._pid = current_pid
 
     def run(self, coro):
         """Submit a coroutine and block the calling thread until it returns or raises."""
+        self._ensure_started()
         return asyncio.run_coroutine_threadsafe(coro, self._loop).result()
 
 

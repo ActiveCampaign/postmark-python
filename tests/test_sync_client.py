@@ -1,5 +1,8 @@
 """Tests for postmark.sync — synchronous wrapper around the async clients."""
 
+import os
+import select
+import signal
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -262,3 +265,39 @@ class TestModuleLevelLoop:
 
         result = postmark.sync._loop.run(echo("hello"))
         assert result == "hello"
+
+    @pytest.mark.skipif(not hasattr(os, "fork"), reason="requires os.fork")
+    def test_module_loop_recovers_after_fork(self):
+        async def echo(value):
+            return value
+
+        assert postmark.sync._loop.run(echo("parent")) == "parent"
+
+        read_fd, write_fd = os.pipe()
+        pid = os.fork()
+        if pid == 0:
+            os.close(read_fd)
+            try:
+                result = postmark.sync._loop.run(echo("child"))
+                os.write(write_fd, result.encode())
+            except Exception as exc:
+                os.write(write_fd, f"ERROR:{exc}".encode())
+            finally:
+                os.close(write_fd)
+            os._exit(0)
+
+        os.close(write_fd)
+        try:
+            ready, _, _ = select.select([read_fd], [], [], 2)
+            if not ready:
+                os.kill(pid, signal.SIGKILL)
+                os.waitpid(pid, 0)
+                pytest.fail("module event loop hung after fork")
+
+            payload = os.read(read_fd, 1024).decode()
+            _, status = os.waitpid(pid, 0)
+        finally:
+            os.close(read_fd)
+
+        assert status == 0
+        assert payload == "child"
