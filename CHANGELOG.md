@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.2] - 2026-06-15
+### Changed
+- Updated dev tooling: mypy 2.x, ruff 0.15.x, Poetry 2.4.1, and pre-commit hooks
+
+---
+
 ## [0.3.1] - 2026-06-12
 
 ### Fixed
