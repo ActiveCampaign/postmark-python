@@ -36,8 +36,8 @@ pytest = "^8.1.1"             # Testing framework
 pytest-asyncio = "^1.0.0"     # To run async tests with pytest
 respx = "^0.21.0"             # Mocking HTTP requests for testing
 pytest-cov = "^7.0.0"         # For coverage reports
-mypy = "^1.8.0"
-ruff = "^0.9.0"
+mypy = "^2.1.0"
+ruff = "^0.15.0"
 pre-commit = "^4.0.0"
 python-dotenv = "^1.2.2"
 
