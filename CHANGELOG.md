@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.3] - 2026-06-24
+
+### Added
+
+- `postmark/py.typed` marker (PEP 561): type checkers (mypy, pyright, Pylance) in downstream projects now pick up the package's inline annotations. The annotations were already present; the missing marker caused conformant checkers to ignore them.
+
+### Changed
+
+- Trove classifiers synced with CI: added `Programming Language :: Python :: 3.13`, `Programming Language :: Python :: 3.14`, and `Typing :: Typed`.
+
+---
+
 ## [0.3.2] - 2026-06-15
 ### Changed
 - Updated dev tooling: mypy 2.x, ruff 0.15.x, Poetry 2.4.1, and pre-commit hooks
