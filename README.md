@@ -75,6 +75,8 @@ with postmark.sync.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"]) as client:
     print(f"Sent: {response.message_id}")
 ```
 
+> **Why `sender`, not `from`?** `from` is a reserved keyword in Python, so the SDK uses `sender` for the sending address. Everything else matches the [Postmark API field names](https://postmarkapp.com/developer/api/email-api) directly.
+
 ## Two Client Types
 
 | Client | Token | Use for |
