@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.4] - 2026-06-29
+
+### Changed
+
+- Migrated `pyproject.toml` package metadata from the legacy `[tool.poetry]` table to the PEP 621 `[project]` table. No functional changes — dependency version constraints are semantically equivalent, `[tool.poetry]` is retained only for the Poetry-specific `packages` directive, and the build-system pin is now explicit (`poetry-core>=2.4.0,<3.0.0`).
+
+---
+
 ## [0.3.3] - 2026-06-24
 
 ### Added
