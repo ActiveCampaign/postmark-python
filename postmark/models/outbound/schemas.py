@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Annotated, Any, Dict, List, Optional, Union
+from typing import Annotated, Any
 
 from pydantic import (
     BaseModel,
@@ -16,7 +16,7 @@ from .enums import BulkJobStatus, MessageEventType, MessageStatus, TrackLinksOpt
 logger = logging.getLogger(__name__)
 
 FormattedEmailStr = Annotated[str, BeforeValidator(validate_formatted_email)]
-EmailList = Annotated[List[str], BeforeValidator(validate_email_list)]
+EmailList = Annotated[list[str], BeforeValidator(validate_email_list)]
 
 
 # ---------------------------------------------------------------------------
@@ -26,15 +26,15 @@ EmailList = Annotated[List[str], BeforeValidator(validate_email_list)]
 
 class EmailAddress(BaseModel):
     email: EmailStr = Field(alias="Email")
-    name: Optional[str] = Field(None, alias="Name")
+    name: str | None = Field(None, alias="Name")
 
 
 class Attachment(BaseModel):
     name: str = Field(alias="Name")
     content: str = Field(alias="Content")
     content_type: str = Field(alias="ContentType")
-    content_id: Optional[str] = Field(None, alias="ContentID")
-    content_length: Optional[int] = Field(None, alias="ContentLength")
+    content_id: str | None = Field(None, alias="ContentID")
+    content_length: int | None = Field(None, alias="ContentLength")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -47,26 +47,26 @@ class Header(BaseModel):
 
 
 class ClientInfo(BaseModel):
-    name: Optional[str] = Field(None, alias="Name")
-    company: Optional[str] = Field(None, alias="Company")
-    family: Optional[str] = Field(None, alias="Family")
+    name: str | None = Field(None, alias="Name")
+    company: str | None = Field(None, alias="Company")
+    family: str | None = Field(None, alias="Family")
 
 
 class OSInfo(BaseModel):
-    name: Optional[str] = Field(None, alias="Name")
-    company: Optional[str] = Field(None, alias="Company")
-    family: Optional[str] = Field(None, alias="Family")
+    name: str | None = Field(None, alias="Name")
+    company: str | None = Field(None, alias="Company")
+    family: str | None = Field(None, alias="Family")
 
 
 class GeoInfo(BaseModel):
-    country_iso_code: Optional[str] = Field(None, alias="CountryISOCode")
-    country: Optional[str] = Field(None, alias="Country")
-    region_iso_code: Optional[str] = Field(None, alias="RegionISOCode")
-    region: Optional[str] = Field(None, alias="Region")
-    city: Optional[str] = Field(None, alias="City")
-    zip: Optional[str] = Field(None, alias="Zip")
-    coords: Optional[str] = Field(None, alias="Coords")
-    ip: Optional[str] = Field(None, alias="IP")
+    country_iso_code: str | None = Field(None, alias="CountryISOCode")
+    country: str | None = Field(None, alias="Country")
+    region_iso_code: str | None = Field(None, alias="RegionISOCode")
+    region: str | None = Field(None, alias="Region")
+    city: str | None = Field(None, alias="City")
+    zip: str | None = Field(None, alias="Zip")
+    coords: str | None = Field(None, alias="Coords")
+    ip: str | None = Field(None, alias="IP")
 
 
 # ---------------------------------------------------------------------------
@@ -75,22 +75,22 @@ class GeoInfo(BaseModel):
 
 
 class MessageEventDetails(BaseModel):
-    delivery_message: Optional[str] = Field(None, alias="DeliveryMessage")
-    destination_server: Optional[str] = Field(None, alias="DestinationServer")
-    destination_ip: Optional[str] = Field(None, alias="DestinationIP")
-    summary: Optional[str] = Field(None, alias="Summary")
-    bounce_id: Optional[str] = Field(None, alias="BounceID")
-    origin: Optional[str] = Field(None, alias="Origin")
-    suppress_sending: Optional[bool] = Field(None, alias="SuppressSending")
-    link: Optional[str] = Field(None, alias="Link")
-    click_location: Optional[str] = Field(None, alias="ClickLocation")
+    delivery_message: str | None = Field(None, alias="DeliveryMessage")
+    destination_server: str | None = Field(None, alias="DestinationServer")
+    destination_ip: str | None = Field(None, alias="DestinationIP")
+    summary: str | None = Field(None, alias="Summary")
+    bounce_id: str | None = Field(None, alias="BounceID")
+    origin: str | None = Field(None, alias="Origin")
+    suppress_sending: bool | None = Field(None, alias="SuppressSending")
+    link: str | None = Field(None, alias="Link")
+    click_location: str | None = Field(None, alias="ClickLocation")
 
 
 class MessageEvent(BaseModel):
     recipient: EmailStr = Field(alias="Recipient")
     type: MessageEventType = Field(alias="Type")
     received_at: datetime = Field(alias="ReceivedAt")
-    details: Optional[MessageEventDetails] = Field(None, alias="Details")
+    details: MessageEventDetails | None = Field(None, alias="Details")
 
 
 class SendResponse(BaseModel):
@@ -111,51 +111,51 @@ class SendResponse(BaseModel):
 class Email(BaseModel):
     sender: str = Field(alias="From")
     to: str = Field(alias="To")
-    cc: Optional[str] = Field(None, alias="Cc")
-    bcc: Optional[str] = Field(None, alias="Bcc")
-    subject: Optional[str] = Field(None, alias="Subject")
-    tag: Optional[str] = Field(None, alias="Tag")
-    html_body: Optional[str] = Field(None, alias="HtmlBody")
-    text_body: Optional[str] = Field(None, alias="TextBody")
-    reply_to: Optional[str] = Field(None, alias="ReplyTo")
-    headers: List[Header] = Field(default_factory=list, alias="Headers")
-    track_opens: Optional[bool] = Field(None, alias="TrackOpens")
-    track_links: Optional[TrackLinksOption] = Field(None, alias="TrackLinks")
-    attachments: List[Attachment] = Field(default_factory=list, alias="Attachments")
-    metadata: Dict[str, str] = Field(default_factory=dict, alias="Metadata")
-    message_stream: Optional[str] = Field(None, alias="MessageStream")
+    cc: str | None = Field(None, alias="Cc")
+    bcc: str | None = Field(None, alias="Bcc")
+    subject: str | None = Field(None, alias="Subject")
+    tag: str | None = Field(None, alias="Tag")
+    html_body: str | None = Field(None, alias="HtmlBody")
+    text_body: str | None = Field(None, alias="TextBody")
+    reply_to: str | None = Field(None, alias="ReplyTo")
+    headers: list[Header] = Field(default_factory=list, alias="Headers")
+    track_opens: bool | None = Field(None, alias="TrackOpens")
+    track_links: TrackLinksOption | None = Field(None, alias="TrackLinks")
+    attachments: list[Attachment] = Field(default_factory=list, alias="Attachments")
+    metadata: dict[str, str] = Field(default_factory=dict, alias="Metadata")
+    message_stream: str | None = Field(None, alias="MessageStream")
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class Message(BaseModel):
-    tag: Optional[str] = Field(None, alias="Tag")
+    tag: str | None = Field(None, alias="Tag")
     message_id: str = Field(alias="MessageID")
     message_stream: str = Field(alias="MessageStream")
-    to: List[EmailAddress] = Field(alias="To")
-    cc: List[EmailAddress] = Field(default_factory=list, alias="Cc")
-    bcc: List[EmailAddress] = Field(default_factory=list, alias="Bcc")
+    to: list[EmailAddress] = Field(alias="To")
+    cc: list[EmailAddress] = Field(default_factory=list, alias="Cc")
+    bcc: list[EmailAddress] = Field(default_factory=list, alias="Bcc")
     recipients: EmailList = Field(alias="Recipients")
     received_at: datetime = Field(alias="ReceivedAt")
     sender: FormattedEmailStr = Field(alias="From")
     subject: str = Field(alias="Subject")
-    attachments: List[Union[str, Attachment]] = Field(
+    attachments: list[str | Attachment] = Field(
         default_factory=list, alias="Attachments"
     )
     status: MessageStatus = Field(alias="Status")
     track_opens: bool = Field(alias="TrackOpens")
     track_links: TrackLinksOption = Field(alias="TrackLinks")
-    metadata: Dict[str, Any] = Field(default_factory=dict, alias="Metadata")
+    metadata: dict[str, Any] = Field(default_factory=dict, alias="Metadata")
     sandboxed: bool = Field(alias="Sandboxed")
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class MessageDetails(Message):
-    text_body: Optional[str] = Field(None, alias="TextBody")
-    html_body: Optional[str] = Field(None, alias="HtmlBody")
-    body: Optional[str] = Field(None, alias="Body")
-    message_events: List[MessageEvent] = Field(
+    text_body: str | None = Field(None, alias="TextBody")
+    html_body: str | None = Field(None, alias="HtmlBody")
+    body: str | None = Field(None, alias="Body")
+    message_events: list[MessageEvent] = Field(
         default_factory=list, alias="MessageEvents"
     )
 
@@ -177,11 +177,11 @@ class OpenEvent(BaseModel):
     """Single record from ``GET /messages/outbound/opens`` endpoints."""
 
     record_type: str = Field(alias="RecordType")
-    user_agent: Optional[str] = Field(None, alias="UserAgent")
+    user_agent: str | None = Field(None, alias="UserAgent")
     message_id: str = Field(alias="MessageID")
     message_stream: str = Field(alias="MessageStream")
     received_at: datetime = Field(alias="ReceivedAt")
-    tag: Optional[str] = Field(None, alias="Tag")
+    tag: str | None = Field(None, alias="Tag")
     recipient: str = Field(alias="Recipient")
     client: ClientInfo = Field(alias="Client")
     os: OSInfo = Field(alias="OS")
@@ -195,13 +195,13 @@ class ClickEvent(BaseModel):
     """Single record from ``GET /messages/outbound/clicks`` endpoints."""
 
     record_type: str = Field(alias="RecordType")
-    user_agent: Optional[str] = Field(None, alias="UserAgent")
+    user_agent: str | None = Field(None, alias="UserAgent")
     message_id: str = Field(alias="MessageID")
     message_stream: str = Field(alias="MessageStream")
     received_at: datetime = Field(alias="ReceivedAt")
-    tag: Optional[str] = Field(None, alias="Tag")
+    tag: str | None = Field(None, alias="Tag")
     recipient: str = Field(alias="Recipient")
-    click_location: Optional[str] = Field(None, alias="ClickLocation")
+    click_location: str | None = Field(None, alias="ClickLocation")
     original_link: str = Field(alias="OriginalLink")
     client: ClientInfo = Field(alias="Client")
     os: OSInfo = Field(alias="OS")
@@ -222,11 +222,11 @@ class BulkRecipient(BaseModel):
     """
 
     to: str = Field(alias="To")
-    cc: Optional[str] = Field(None, alias="Cc")
-    bcc: Optional[str] = Field(None, alias="Bcc")
-    template_model: Optional[Dict[str, Any]] = Field(None, alias="TemplateModel")
-    metadata: Optional[Dict[str, str]] = Field(None, alias="Metadata")
-    headers: List[Header] = Field(default_factory=list, alias="Headers")
+    cc: str | None = Field(None, alias="Cc")
+    bcc: str | None = Field(None, alias="Bcc")
+    template_model: dict[str, Any] | None = Field(None, alias="TemplateModel")
+    metadata: dict[str, str] | None = Field(None, alias="Metadata")
+    headers: list[Header] = Field(default_factory=list, alias="Headers")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -237,21 +237,21 @@ class BulkEmail(BaseModel):
     """
 
     sender: str = Field(alias="From")
-    messages: List[BulkRecipient] = Field(alias="Messages")
-    reply_to: Optional[str] = Field(None, alias="ReplyTo")
-    subject: Optional[str] = Field(None, alias="Subject")
-    html_body: Optional[str] = Field(None, alias="HtmlBody")
-    text_body: Optional[str] = Field(None, alias="TextBody")
-    template_id: Optional[int] = Field(None, alias="TemplateId")
-    template_alias: Optional[str] = Field(None, alias="TemplateAlias")
-    inline_css: Optional[bool] = Field(None, alias="InlineCss")
-    tag: Optional[str] = Field(None, alias="Tag")
-    metadata: Optional[Dict[str, str]] = Field(None, alias="Metadata")
-    message_stream: Optional[str] = Field(None, alias="MessageStream")
-    track_opens: Optional[bool] = Field(None, alias="TrackOpens")
-    track_links: Optional[TrackLinksOption] = Field(None, alias="TrackLinks")
-    attachments: List[Attachment] = Field(default_factory=list, alias="Attachments")
-    headers: List[Header] = Field(default_factory=list, alias="Headers")
+    messages: list[BulkRecipient] = Field(alias="Messages")
+    reply_to: str | None = Field(None, alias="ReplyTo")
+    subject: str | None = Field(None, alias="Subject")
+    html_body: str | None = Field(None, alias="HtmlBody")
+    text_body: str | None = Field(None, alias="TextBody")
+    template_id: int | None = Field(None, alias="TemplateId")
+    template_alias: str | None = Field(None, alias="TemplateAlias")
+    inline_css: bool | None = Field(None, alias="InlineCss")
+    tag: str | None = Field(None, alias="Tag")
+    metadata: dict[str, str] | None = Field(None, alias="Metadata")
+    message_stream: str | None = Field(None, alias="MessageStream")
+    track_opens: bool | None = Field(None, alias="TrackOpens")
+    track_links: TrackLinksOption | None = Field(None, alias="TrackLinks")
+    attachments: list[Attachment] = Field(default_factory=list, alias="Attachments")
+    headers: list[Header] = Field(default_factory=list, alias="Headers")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -278,6 +278,6 @@ class BulkSendStatus(BaseModel):
     total_messages: int = Field(alias="TotalMessages")
     percentage_completed: float = Field(alias="PercentageCompleted")
     status: BulkJobStatus = Field(alias="Status")
-    subject: Optional[str] = Field(None, alias="Subject")
+    subject: str | None = Field(None, alias="Subject")
 
     model_config = ConfigDict(populate_by_name=True)

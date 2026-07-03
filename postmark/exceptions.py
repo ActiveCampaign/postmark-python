@@ -1,7 +1,7 @@
 """Postmark API exceptions."""
 
 import re
-from typing import Any, Optional
+from typing import Any
 
 
 class PostmarkException(Exception):
@@ -10,8 +10,8 @@ class PostmarkException(Exception):
     def __init__(
         self,
         message: str,
-        error_code: Optional[int] = None,
-        http_status: Optional[int] = None,
+        error_code: int | None = None,
+        http_status: int | None = None,
     ):
         super().__init__(message)
         self.error_code = error_code
@@ -51,7 +51,7 @@ class PostmarkAPIException(PostmarkException):
         message: str,
         error_code: int,
         http_status: int,
-        request_id: Optional[str] = None,
+        request_id: str | None = None,
     ):
         super().__init__(message, error_code, http_status)
         self.request_id = request_id
@@ -75,7 +75,7 @@ class InactiveRecipientException(PostmarkAPIException):
         message: str,
         error_code: int,
         http_status: int,
-        request_id: Optional[str] = None,
+        request_id: str | None = None,
     ):
         super().__init__(message, error_code, http_status, request_id)
         match = re.search(r"Found inactive addresses: ([^.]+)", message)

@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -36,13 +36,13 @@ class TemplateManager:
     def __init__(self, client: HTTPClient):
         self.client = client
 
-    async def get(self, template_id_or_alias: Union[int, str]) -> Template:
+    async def get(self, template_id_or_alias: int | str) -> Template:
         """Get a template by ID or alias."""
         response = await self.client.get(f"/templates/{template_id_or_alias}")
         return Template(**response.json())
 
     async def create(
-        self, request: Union[CreateTemplateRequest, Dict[str, Any]]
+        self, request: CreateTemplateRequest | dict[str, Any]
     ) -> UpsertTemplateResponse:
         """Create a new template."""
         req = _parse_request(CreateTemplateRequest, request)
@@ -54,8 +54,8 @@ class TemplateManager:
 
     async def edit(
         self,
-        template_id_or_alias: Union[int, str],
-        request: Union[EditTemplateRequest, Dict[str, Any]],
+        template_id_or_alias: int | str,
+        request: EditTemplateRequest | dict[str, Any],
     ) -> UpsertTemplateResponse:
         """Edit an existing template."""
         req = _parse_request(EditTemplateRequest, request)
@@ -69,7 +69,7 @@ class TemplateManager:
         self,
         count: int = 100,
         offset: int = 0,
-        template_type: Optional[TemplateTypeFilter] = None,
+        template_type: TemplateTypeFilter | None = None,
     ) -> Page[TemplateSummary]:
         """List templates with optional type filter."""
         if count > 500:
@@ -77,7 +77,7 @@ class TemplateManager:
         if count + offset > 10000:
             raise ValueError("count + offset cannot exceed 10,000 templates")
 
-        params: Dict[str, Any] = {"count": count, "offset": offset}
+        params: dict[str, Any] = {"count": count, "offset": offset}
         if template_type is not None:
             params["templateType"] = template_type.value
 
@@ -85,15 +85,13 @@ class TemplateManager:
         data = TemplateListResponse(**response.json())
         return Page(items=data.templates, total=data.total_count)
 
-    async def delete(
-        self, template_id_or_alias: Union[int, str]
-    ) -> DeleteTemplateResponse:
+    async def delete(self, template_id_or_alias: int | str) -> DeleteTemplateResponse:
         """Delete a template by ID or alias."""
         response = await self.client.delete(f"/templates/{template_id_or_alias}")
         return DeleteTemplateResponse(**response.json())
 
     async def validate(
-        self, request: Union[ValidateTemplateRequest, Dict[str, Any]]
+        self, request: ValidateTemplateRequest | dict[str, Any]
     ) -> ValidateTemplateResponse:
         """Validate template content."""
         req = _parse_request(ValidateTemplateRequest, request)

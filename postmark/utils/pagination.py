@@ -1,4 +1,5 @@
-from typing import AsyncGenerator, Awaitable, Callable, TypeVar
+from collections.abc import AsyncGenerator, Awaitable, Callable
+from typing import TypeVar
 
 from postmark.models.page import Page
 

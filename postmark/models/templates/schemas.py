@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -30,22 +30,22 @@ __all__ = [
 
 
 class TemplateEmail(BaseModel):
-    template_id: Optional[int] = Field(None, alias="TemplateId")
-    template_alias: Optional[str] = Field(None, alias="TemplateAlias")
-    template_model: Dict[str, Any] = Field(default_factory=dict, alias="TemplateModel")
+    template_id: int | None = Field(None, alias="TemplateId")
+    template_alias: str | None = Field(None, alias="TemplateAlias")
+    template_model: dict[str, Any] = Field(default_factory=dict, alias="TemplateModel")
     sender: str = Field(alias="From")
     to: str = Field(alias="To")
-    cc: Optional[str] = Field(None, alias="Cc")
-    bcc: Optional[str] = Field(None, alias="Bcc")
-    reply_to: Optional[str] = Field(None, alias="ReplyTo")
-    tag: Optional[str] = Field(None, alias="Tag")
-    inline_css: Optional[bool] = Field(None, alias="InlineCss")
-    headers: List[Header] = Field(default_factory=list, alias="Headers")
-    track_opens: Optional[bool] = Field(None, alias="TrackOpens")
-    track_links: Optional[TrackLinksOption] = Field(None, alias="TrackLinks")
-    attachments: List[Attachment] = Field(default_factory=list, alias="Attachments")
-    metadata: Dict[str, str] = Field(default_factory=dict, alias="Metadata")
-    message_stream: Optional[str] = Field(None, alias="MessageStream")
+    cc: str | None = Field(None, alias="Cc")
+    bcc: str | None = Field(None, alias="Bcc")
+    reply_to: str | None = Field(None, alias="ReplyTo")
+    tag: str | None = Field(None, alias="Tag")
+    inline_css: bool | None = Field(None, alias="InlineCss")
+    headers: list[Header] = Field(default_factory=list, alias="Headers")
+    track_opens: bool | None = Field(None, alias="TrackOpens")
+    track_links: TrackLinksOption | None = Field(None, alias="TrackLinks")
+    attachments: list[Attachment] = Field(default_factory=list, alias="Attachments")
+    metadata: dict[str, str] = Field(default_factory=dict, alias="Metadata")
+    message_stream: str | None = Field(None, alias="MessageStream")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -54,9 +54,9 @@ class TemplateSummary(BaseModel):
     active: bool = Field(alias="Active")
     template_id: int = Field(alias="TemplateId")
     name: str = Field(alias="Name")
-    alias: Optional[str] = Field(None, alias="Alias")
+    alias: str | None = Field(None, alias="Alias")
     template_type: TemplateType = Field(alias="TemplateType")
-    layout_template: Optional[str] = Field(None, alias="LayoutTemplate")
+    layout_template: str | None = Field(None, alias="LayoutTemplate")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -64,44 +64,44 @@ class TemplateSummary(BaseModel):
 class Template(BaseModel):
     template_id: int = Field(alias="TemplateId")
     name: str = Field(alias="Name")
-    subject: Optional[str] = Field(None, alias="Subject")
-    html_body: Optional[str] = Field(None, alias="HtmlBody")
-    text_body: Optional[str] = Field(None, alias="TextBody")
+    subject: str | None = Field(None, alias="Subject")
+    html_body: str | None = Field(None, alias="HtmlBody")
+    text_body: str | None = Field(None, alias="TextBody")
     associated_server_id: int = Field(alias="AssociatedServerId")
     active: bool = Field(alias="Active")
-    alias: Optional[str] = Field(None, alias="Alias")
+    alias: str | None = Field(None, alias="Alias")
     template_type: TemplateType = Field(alias="TemplateType")
-    layout_template: Optional[str] = Field(None, alias="LayoutTemplate")
+    layout_template: str | None = Field(None, alias="LayoutTemplate")
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class TemplateListResponse(BaseModel):
     total_count: int = Field(alias="TotalCount")
-    templates: List[TemplateSummary] = Field(alias="Templates")
+    templates: list[TemplateSummary] = Field(alias="Templates")
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class CreateTemplateRequest(BaseModel):
     name: str = Field(alias="Name")
-    alias: Optional[str] = Field(None, alias="Alias")
-    subject: Optional[str] = Field(None, alias="Subject")
-    html_body: Optional[str] = Field(None, alias="HtmlBody")
-    text_body: Optional[str] = Field(None, alias="TextBody")
-    template_type: Optional[TemplateType] = Field(None, alias="TemplateType")
-    layout_template: Optional[str] = Field(None, alias="LayoutTemplate")
+    alias: str | None = Field(None, alias="Alias")
+    subject: str | None = Field(None, alias="Subject")
+    html_body: str | None = Field(None, alias="HtmlBody")
+    text_body: str | None = Field(None, alias="TextBody")
+    template_type: TemplateType | None = Field(None, alias="TemplateType")
+    layout_template: str | None = Field(None, alias="LayoutTemplate")
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class EditTemplateRequest(BaseModel):
-    name: Optional[str] = Field(None, alias="Name")
-    alias: Optional[str] = Field(None, alias="Alias")
-    subject: Optional[str] = Field(None, alias="Subject")
-    html_body: Optional[str] = Field(None, alias="HtmlBody")
-    text_body: Optional[str] = Field(None, alias="TextBody")
-    layout_template: Optional[str] = Field(None, alias="LayoutTemplate")
+    name: str | None = Field(None, alias="Name")
+    alias: str | None = Field(None, alias="Alias")
+    subject: str | None = Field(None, alias="Subject")
+    html_body: str | None = Field(None, alias="HtmlBody")
+    text_body: str | None = Field(None, alias="TextBody")
+    layout_template: str | None = Field(None, alias="LayoutTemplate")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -110,9 +110,9 @@ class UpsertTemplateResponse(BaseModel):
     template_id: int = Field(alias="TemplateId")
     name: str = Field(alias="Name")
     active: bool = Field(alias="Active")
-    alias: Optional[str] = Field(None, alias="Alias")
+    alias: str | None = Field(None, alias="Alias")
     template_type: TemplateType = Field(alias="TemplateType")
-    layout_template: Optional[str] = Field(None, alias="LayoutTemplate")
+    layout_template: str | None = Field(None, alias="LayoutTemplate")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -126,40 +126,40 @@ class DeleteTemplateResponse(BaseModel):
 
 class ValidationError(BaseModel):
     message: str = Field(alias="Message")
-    line: Optional[int] = Field(None, alias="Line")
-    character_position: Optional[int] = Field(None, alias="CharacterPosition")
+    line: int | None = Field(None, alias="Line")
+    character_position: int | None = Field(None, alias="CharacterPosition")
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class TemplateContentValidation(BaseModel):
     content_is_valid: bool = Field(alias="ContentIsValid")
-    validation_errors: List[ValidationError] = Field(alias="ValidationErrors")
-    rendered_content: Optional[str] = Field(None, alias="RenderedContent")
+    validation_errors: list[ValidationError] = Field(alias="ValidationErrors")
+    rendered_content: str | None = Field(None, alias="RenderedContent")
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class ValidateTemplateRequest(BaseModel):
-    subject: Optional[str] = Field(None, alias="Subject")
-    html_body: Optional[str] = Field(None, alias="HtmlBody")
-    text_body: Optional[str] = Field(None, alias="TextBody")
-    test_render_model: Optional[Dict[str, Any]] = Field(None, alias="TestRenderModel")
-    inline_css_for_html_test_render: Optional[bool] = Field(
+    subject: str | None = Field(None, alias="Subject")
+    html_body: str | None = Field(None, alias="HtmlBody")
+    text_body: str | None = Field(None, alias="TextBody")
+    test_render_model: dict[str, Any] | None = Field(None, alias="TestRenderModel")
+    inline_css_for_html_test_render: bool | None = Field(
         None, alias="InlineCssForHtmlTestRender"
     )
-    template_type: Optional[TemplateType] = Field(None, alias="TemplateType")
-    layout_template: Optional[str] = Field(None, alias="LayoutTemplate")
+    template_type: TemplateType | None = Field(None, alias="TemplateType")
+    layout_template: str | None = Field(None, alias="LayoutTemplate")
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class ValidateTemplateResponse(BaseModel):
     all_content_is_valid: bool = Field(alias="AllContentIsValid")
-    html_body: Optional[TemplateContentValidation] = Field(None, alias="HtmlBody")
-    text_body: Optional[TemplateContentValidation] = Field(None, alias="TextBody")
-    subject: Optional[TemplateContentValidation] = Field(None, alias="Subject")
-    suggested_template_model: Optional[Dict[str, Any]] = Field(
+    html_body: TemplateContentValidation | None = Field(None, alias="HtmlBody")
+    text_body: TemplateContentValidation | None = Field(None, alias="TextBody")
+    subject: TemplateContentValidation | None = Field(None, alias="Subject")
+    suggested_template_model: dict[str, Any] | None = Field(
         None, alias="SuggestedTemplateModel"
     )
 
@@ -176,8 +176,8 @@ class PushTemplatesRequest(BaseModel):
 
 class PushedTemplate(BaseModel):
     action: TemplateAction = Field(alias="Action")
-    template_id: Optional[int] = Field(None, alias="TemplateId")
-    alias: Optional[str] = Field(None, alias="Alias")
+    template_id: int | None = Field(None, alias="TemplateId")
+    alias: str | None = Field(None, alias="Alias")
     name: str = Field(alias="Name")
     template_type: TemplateType = Field(alias="TemplateType")
 
@@ -186,6 +186,6 @@ class PushedTemplate(BaseModel):
 
 class PushTemplatesResponse(BaseModel):
     total_count: int = Field(alias="TotalCount")
-    templates: List[PushedTemplate] = Field(alias="Templates")
+    templates: list[PushedTemplate] = Field(alias="Templates")
 
     model_config = ConfigDict(populate_by_name=True)

@@ -23,7 +23,6 @@ import asyncio
 import inspect
 import os
 import threading
-from typing import Optional
 
 from postmark.clients.account_client import AccountClient as _AsyncAccountClient
 from postmark.clients.server_client import ServerClient as _AsyncServerClient
@@ -133,7 +132,7 @@ class SyncServerClient:
         server_token: str,
         retries: int = 3,
         timeout: float = 5.0,
-        base_url: Optional[str] = None,
+        base_url: str | None = None,
     ):
         self._async = _AsyncServerClient(
             server_token, retries=retries, timeout=timeout, base_url=base_url
@@ -183,7 +182,7 @@ class SyncAccountClient:
         account_token: str,
         retries: int = 3,
         timeout: float = 30.0,
-        base_url: Optional[str] = None,
+        base_url: str | None = None,
     ):
         self._async = _AsyncAccountClient(
             account_token, retries=retries, timeout=timeout, base_url=base_url

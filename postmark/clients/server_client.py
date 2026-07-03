@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 import uuid
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import httpx
 from tenacity import (
@@ -45,7 +45,7 @@ class ServerClient:
         server_token: str,
         retries: int = 3,
         timeout: float = 5,
-        base_url: Optional[str] = None,
+        base_url: str | None = None,
     ):
         """
         Initialize the Postmark Server Client.
@@ -202,28 +202,28 @@ class ServerClient:
         raise AssertionError("The Postmark API is unreachable.")
 
     async def get(
-        self, endpoint: str, params: Optional[Dict[str, Any]] = None
+        self, endpoint: str, params: dict[str, Any] | None = None
     ) -> httpx.Response:
         return await self.request("GET", endpoint, params=params)
 
     async def post(
         self,
         endpoint: str,
-        json: Union[Dict[str, Any], List[Dict[str, Any]], None] = None,
+        json: dict[str, Any] | list[dict[str, Any]] | None = None,
     ) -> httpx.Response:
         return await self.request("POST", endpoint, json=json)
 
     async def put(
-        self, endpoint: str, json: Optional[Dict[str, Any]] = None
+        self, endpoint: str, json: dict[str, Any] | None = None
     ) -> httpx.Response:
         return await self.request("PUT", endpoint, json=json)
 
     async def patch(
-        self, endpoint: str, json: Optional[Dict[str, Any]] = None
+        self, endpoint: str, json: dict[str, Any] | None = None
     ) -> httpx.Response:
         return await self.request("PATCH", endpoint, json=json)
 
     async def delete(
-        self, endpoint: str, params: Optional[Dict[str, Any]] = None
+        self, endpoint: str, params: dict[str, Any] | None = None
     ) -> httpx.Response:
         return await self.request("DELETE", endpoint, params=params)

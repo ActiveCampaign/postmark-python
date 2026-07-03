@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, AsyncGenerator, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 from pydantic import ValidationError
 
@@ -13,6 +14,8 @@ from postmark.utils.types import HTTPClient
 
 if TYPE_CHECKING:
     from postmark.models.templates.schemas import TemplateEmail
+
+import builtins
 
 from .schemas import (
     BulkEmail,
@@ -30,7 +33,7 @@ from .schemas import (
 logger = logging.getLogger(__name__)
 
 
-def _parse_email(message: Union[Email, Dict[str, Any]]) -> Email:
+def _parse_email(message: Email | dict[str, Any]) -> Email:
     """
     Coerce a dict to an Email model using snake_case field names,
     or raise InvalidEmailException
@@ -43,7 +46,7 @@ def _parse_email(message: Union[Email, Dict[str, Any]]) -> Email:
         raise InvalidEmailException(e.errors()) from e
 
 
-def _parse_template_email(msg: Union[TemplateEmail, Dict[str, Any]]) -> TemplateEmail:
+def _parse_template_email(msg: TemplateEmail | dict[str, Any]) -> TemplateEmail:
     from postmark.models.templates.schemas import TemplateEmail
 
     if isinstance(msg, TemplateEmail):
@@ -54,7 +57,7 @@ def _parse_template_email(msg: Union[TemplateEmail, Dict[str, Any]]) -> Template
         raise InvalidEmailException(e.errors()) from e
 
 
-def _parse_bulk_email(message: Union[BulkEmail, Dict[str, Any]]) -> BulkEmail:
+def _parse_bulk_email(message: BulkEmail | dict[str, Any]) -> BulkEmail:
     """
     Coerce a dict to a BulkEmail model, raising InvalidEmailException
     on validation failure. Passes through a BulkEmail instance unchanged.
@@ -75,7 +78,7 @@ class OutboundManager:
     # Single send
     # -------------------------------------------------------------------------
 
-    async def send(self, message: Union[Email, Dict[str, Any]]) -> SendResponse:
+    async def send(self, message: Email | dict[str, Any]) -> SendResponse:
         """Send a single email."""
         email_payload = _parse_email(message)
 
@@ -91,8 +94,8 @@ class OutboundManager:
     # -------------------------------------------------------------------------
 
     async def send_batch(
-        self, messages: List[Union[Email, Dict[str, Any]]]
-    ) -> List[SendResponse]:
+        self, messages: builtins.list[Email | dict[str, Any]]
+    ) -> builtins.list[SendResponse]:
         """
         Send up to 500 different emails in a single request.
         Use this when each recipient needs a **completely different** message.
@@ -128,9 +131,7 @@ class OutboundManager:
     # Bulk send — same message, many recipients, one request
     # -------------------------------------------------------------------------
 
-    async def send_bulk(
-        self, message: Union[BulkEmail, Dict[str, Any]]
-    ) -> BulkSendResponse:
+    async def send_bulk(self, message: BulkEmail | dict[str, Any]) -> BulkSendResponse:
         """
         Send the **same message** to multiple recipients in a single request.
         """
@@ -162,7 +163,7 @@ class OutboundManager:
     # -------------------------------------------------------------------------
 
     async def send_with_template(
-        self, message: Union[TemplateEmail, Dict[str, Any]]
+        self, message: TemplateEmail | dict[str, Any]
     ) -> SendResponse:
         """Send an email using a template."""
         email = _parse_template_email(message)
@@ -174,8 +175,8 @@ class OutboundManager:
         return SendResponse(**response.json())
 
     async def send_batch_with_template(
-        self, messages: List[Union[TemplateEmail, Dict[str, Any]]]
-    ) -> List[SendResponse]:
+        self, messages: builtins.list[TemplateEmail | dict[str, Any]]
+    ) -> builtins.list[SendResponse]:
         """Send up to 500 template emails in a single batch request."""
         if len(messages) > 500:
             raise ValueError("Batch size cannot exceed 500 messages")
@@ -209,15 +210,15 @@ class OutboundManager:
         self,
         count: int = 100,
         offset: int = 0,
-        recipient: Optional[str] = None,
-        from_email: Optional[str] = None,
-        tag: Optional[str] = None,
-        status: Optional[str] = None,
-        from_date: Optional[datetime] = None,
-        to_date: Optional[datetime] = None,
-        subject: Optional[str] = None,
-        message_stream: Optional[str] = None,
-        metadata: Optional[Dict[str, str]] = None,
+        recipient: str | None = None,
+        from_email: str | None = None,
+        tag: str | None = None,
+        status: str | None = None,
+        from_date: datetime | None = None,
+        to_date: datetime | None = None,
+        subject: str | None = None,
+        message_stream: str | None = None,
+        metadata: dict[str, str] | None = None,
     ) -> Page[Message]:
         """List sent messages."""
         if count > 500:
@@ -225,7 +226,7 @@ class OutboundManager:
         if count + offset > 10000:
             raise ValueError("Count + Offset cannot exceed 10,000 messages")
 
-        params: Dict[str, Any] = {"count": count, "offset": offset}
+        params: dict[str, Any] = {"count": count, "offset": offset}
 
         if recipient is not None:
             params["recipient"] = recipient
@@ -262,15 +263,15 @@ class OutboundManager:
         self,
         batch_size: int = 500,
         max_messages: int = 1000,
-        recipient: Optional[str] = None,
-        from_email: Optional[str] = None,
-        tag: Optional[str] = None,
-        status: Optional[str] = None,
-        from_date: Optional[datetime] = None,
-        to_date: Optional[datetime] = None,
-        subject: Optional[str] = None,
-        message_stream: Optional[str] = None,
-        metadata: Optional[Dict[str, str]] = None,
+        recipient: str | None = None,
+        from_email: str | None = None,
+        tag: str | None = None,
+        status: str | None = None,
+        from_date: datetime | None = None,
+        to_date: datetime | None = None,
+        subject: str | None = None,
+        message_stream: str | None = None,
+        metadata: dict[str, str] | None = None,
     ) -> AsyncGenerator[Message, None]:
         """Stream messages with automatic pagination."""
         async for msg in paginate(
@@ -307,21 +308,21 @@ class OutboundManager:
         self,
         count: int = 100,
         offset: int = 0,
-        recipient: Optional[str] = None,
-        tag: Optional[str] = None,
-        client_name: Optional[str] = None,
-        client_company: Optional[str] = None,
-        client_family: Optional[str] = None,
-        os_name: Optional[str] = None,
-        os_family: Optional[str] = None,
-        os_company: Optional[str] = None,
-        platform: Optional[str] = None,
-        country: Optional[str] = None,
-        region: Optional[str] = None,
-        city: Optional[str] = None,
-        message_stream: Optional[str] = None,
-        from_date: Optional[datetime] = None,
-        to_date: Optional[datetime] = None,
+        recipient: str | None = None,
+        tag: str | None = None,
+        client_name: str | None = None,
+        client_company: str | None = None,
+        client_family: str | None = None,
+        os_name: str | None = None,
+        os_family: str | None = None,
+        os_company: str | None = None,
+        platform: str | None = None,
+        country: str | None = None,
+        region: str | None = None,
+        city: str | None = None,
+        message_stream: str | None = None,
+        from_date: datetime | None = None,
+        to_date: datetime | None = None,
     ) -> Page[OpenEvent]:
         """List open tracking events across all messages."""
         if count > 500:
@@ -329,7 +330,7 @@ class OutboundManager:
         if count + offset > 10000:
             raise ValueError("Count + Offset cannot exceed 10,000")
 
-        params: Dict[str, Any] = {"count": count, "offset": offset}
+        params: dict[str, Any] = {"count": count, "offset": offset}
 
         if recipient is not None:
             params["recipient"] = recipient
@@ -378,7 +379,7 @@ class OutboundManager:
         if count + offset > 10000:
             raise ValueError("Count + Offset cannot exceed 10,000")
 
-        params: Dict[str, Any] = {"count": count, "offset": offset}
+        params: dict[str, Any] = {"count": count, "offset": offset}
         response = await self.client.get(
             f"/messages/outbound/opens/{message_id}", params=params
         )
@@ -396,21 +397,21 @@ class OutboundManager:
         self,
         count: int = 100,
         offset: int = 0,
-        recipient: Optional[str] = None,
-        tag: Optional[str] = None,
-        client_name: Optional[str] = None,
-        client_company: Optional[str] = None,
-        client_family: Optional[str] = None,
-        os_name: Optional[str] = None,
-        os_family: Optional[str] = None,
-        os_company: Optional[str] = None,
-        platform: Optional[str] = None,
-        country: Optional[str] = None,
-        region: Optional[str] = None,
-        city: Optional[str] = None,
-        message_stream: Optional[str] = None,
-        from_date: Optional[datetime] = None,
-        to_date: Optional[datetime] = None,
+        recipient: str | None = None,
+        tag: str | None = None,
+        client_name: str | None = None,
+        client_company: str | None = None,
+        client_family: str | None = None,
+        os_name: str | None = None,
+        os_family: str | None = None,
+        os_company: str | None = None,
+        platform: str | None = None,
+        country: str | None = None,
+        region: str | None = None,
+        city: str | None = None,
+        message_stream: str | None = None,
+        from_date: datetime | None = None,
+        to_date: datetime | None = None,
     ) -> Page[ClickEvent]:
         """List click tracking events across all messages."""
         if count > 500:
@@ -418,7 +419,7 @@ class OutboundManager:
         if count + offset > 10000:
             raise ValueError("Count + Offset cannot exceed 10,000")
 
-        params: Dict[str, Any] = {"count": count, "offset": offset}
+        params: dict[str, Any] = {"count": count, "offset": offset}
 
         if recipient is not None:
             params["recipient"] = recipient
@@ -467,7 +468,7 @@ class OutboundManager:
         if count + offset > 10000:
             raise ValueError("Count + Offset cannot exceed 10,000")
 
-        params: Dict[str, Any] = {"count": count, "offset": offset}
+        params: dict[str, Any] = {"count": count, "offset": offset}
         response = await self.client.get(
             f"/messages/outbound/clicks/{message_id}", params=params
         )

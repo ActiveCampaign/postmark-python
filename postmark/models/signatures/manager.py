@@ -1,5 +1,3 @@
-from typing import Optional
-
 from postmark.models.page import Page
 from postmark.utils.types import HTTPClient
 
@@ -44,9 +42,9 @@ class SenderSignatureManager:
         self,
         sender: str,
         name: str,
-        reply_to: Optional[str] = None,
-        return_path_domain: Optional[str] = None,
-        confirmation_personal_note: Optional[str] = None,
+        reply_to: str | None = None,
+        return_path_domain: str | None = None,
+        confirmation_personal_note: str | None = None,
     ) -> SenderSignature:
         """
         Create a new sender signature.
@@ -75,9 +73,9 @@ class SenderSignatureManager:
         self,
         signature_id: int,
         name: str,
-        reply_to: Optional[str] = None,
-        return_path_domain: Optional[str] = None,
-        confirmation_personal_note: Optional[str] = None,
+        reply_to: str | None = None,
+        return_path_domain: str | None = None,
+        confirmation_personal_note: str | None = None,
     ) -> SenderSignature:
         """
         Update a sender signature.

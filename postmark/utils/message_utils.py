@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import List
 
 from pydantic import (
     EmailStr,
@@ -43,7 +42,7 @@ def validate_formatted_email(v: str) -> str:
     return v
 
 
-def validate_email_list(v: List[str]) -> List[str]:
+def validate_email_list(v: list[str]) -> list[str]:
     """Validate that all items in a list are valid email addresses"""
     for email in v:
         try:

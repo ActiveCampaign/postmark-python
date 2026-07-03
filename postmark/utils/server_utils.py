@@ -1,10 +1,10 @@
 import json
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 
 
-def _coerce_postmark_error_code(raw: Any) -> Optional[int]:
+def _coerce_postmark_error_code(raw: Any) -> int | None:
     """Normalize Postmark ``ErrorCode`` from JSON (int or numeric string) to ``int`` or ``None``."""
     if raw is None:
         return None
@@ -25,7 +25,7 @@ def _coerce_postmark_error_code(raw: Any) -> Optional[int]:
     return None
 
 
-def parse_error_response(response: httpx.Response) -> tuple[str, Optional[int]]:
+def parse_error_response(response: httpx.Response) -> tuple[str, int | None]:
     """Parse error details from Postmark API response."""
     try:
         error_data = response.json()

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Generic, List, TypeVar
+from typing import Generic, TypeVar
 
 T = TypeVar("T")
 
@@ -14,5 +14,5 @@ class Page(Generic[T]):
         total: The total number of records matching the query (across all pages).
     """
 
-    items: List[T]
+    items: list[T]
     total: int

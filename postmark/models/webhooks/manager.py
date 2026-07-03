@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+import builtins
 
 from postmark.utils.types import HTTPClient
 
@@ -9,7 +9,7 @@ class WebhookManager:
     def __init__(self, client: HTTPClient):
         self.client = client
 
-    async def list(self, message_stream: Optional[str] = None) -> List[Webhook]:
+    async def list(self, message_stream: str | None = None) -> list[Webhook]:
         """List all webhooks on the server, optionally filtered by message stream."""
         params: dict = {}
         if message_stream is not None:
@@ -26,10 +26,10 @@ class WebhookManager:
     async def create(
         self,
         url: str,
-        message_stream: Optional[str] = None,
-        http_auth: Optional[Dict] = None,
-        http_headers: Optional[List[Dict]] = None,
-        triggers: Optional[Dict] = None,
+        message_stream: str | None = None,
+        http_auth: dict | None = None,
+        http_headers: builtins.list[dict] | None = None,
+        triggers: dict | None = None,
     ) -> Webhook:
         """
         Create a webhook.
@@ -61,10 +61,10 @@ class WebhookManager:
     async def edit(
         self,
         webhook_id: int,
-        url: Optional[str] = None,
-        http_auth: Optional[Dict] = None,
-        http_headers: Optional[List[Dict]] = None,
-        triggers: Optional[Dict] = None,
+        url: str | None = None,
+        http_auth: dict | None = None,
+        http_headers: builtins.list[dict] | None = None,
+        triggers: dict | None = None,
     ) -> Webhook:
         """
         Update a webhook.

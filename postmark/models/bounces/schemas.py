@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -13,7 +12,7 @@ class Bounce(BaseModel):
     type: BounceType = Field(alias="Type")
     type_code: int = Field(alias="TypeCode")
     name: str = Field(alias="Name")
-    tag: Optional[str] = Field(None, alias="Tag")
+    tag: str | None = Field(None, alias="Tag")
     message_id: str = Field(alias="MessageID")
     server_id: int = Field(alias="ServerID")
     message_stream: str = Field(alias="MessageStream")
@@ -26,7 +25,7 @@ class Bounce(BaseModel):
     inactive: bool = Field(alias="Inactive")
     can_activate: bool = Field(alias="CanActivate")
     subject: str = Field(alias="Subject")
-    content: Optional[str] = Field(None, alias="Content")
+    content: str | None = Field(None, alias="Content")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -46,7 +45,7 @@ class DeliveryStats(BaseModel):
     """Response from ``GET /deliverystats``"""
 
     inactive_mails: int = Field(alias="InactiveMails")
-    bounces: List[BounceTypeCount] = Field(alias="Bounces")
+    bounces: list[BounceTypeCount] = Field(alias="Bounces")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -55,7 +54,7 @@ class BouncesListResponse(BaseModel):
     """Response from ``GET /bounces``"""
 
     total_count: int = Field(alias="TotalCount")
-    bounces: List[Bounce] = Field(alias="Bounces")
+    bounces: list[Bounce] = Field(alias="Bounces")
 
     model_config = ConfigDict(populate_by_name=True)
 

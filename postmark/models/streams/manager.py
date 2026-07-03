@@ -1,5 +1,3 @@
-from typing import Optional
-
 from postmark.models.page import Page
 from postmark.utils.types import HTTPClient
 
@@ -17,7 +15,7 @@ class StreamManager:
 
     async def list(
         self,
-        message_stream_type: Optional[MessageStreamType] = None,
+        message_stream_type: MessageStreamType | None = None,
         include_archived: bool = False,
     ) -> Page[MessageStream]:
         """
@@ -47,8 +45,8 @@ class StreamManager:
         id: str,
         name: str,
         message_stream_type: MessageStreamType,
-        description: Optional[str] = None,
-        unsubscribe_handling_type: Optional[UnsubscribeHandlingType] = None,
+        description: str | None = None,
+        unsubscribe_handling_type: UnsubscribeHandlingType | None = None,
     ) -> MessageStream:
         """
         Create a new message stream.
@@ -79,9 +77,9 @@ class StreamManager:
     async def edit(
         self,
         stream_id: str,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-        unsubscribe_handling_type: Optional[UnsubscribeHandlingType] = None,
+        name: str | None = None,
+        description: str | None = None,
+        unsubscribe_handling_type: UnsubscribeHandlingType | None = None,
     ) -> MessageStream:
         """
         Update a message stream.

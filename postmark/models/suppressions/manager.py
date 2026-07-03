@@ -1,5 +1,4 @@
 from datetime import date
-from typing import List, Optional
 
 from postmark.utils.types import HTTPClient
 
@@ -14,12 +13,12 @@ class SuppressionManager:
     async def dump(
         self,
         stream_id: str,
-        suppression_reason: Optional[SuppressionReason] = None,
-        origin: Optional[SuppressionOrigin] = None,
-        from_date: Optional[date] = None,
-        to_date: Optional[date] = None,
-        email_address: Optional[str] = None,
-    ) -> List[SuppressionEntry]:
+        suppression_reason: SuppressionReason | None = None,
+        origin: SuppressionOrigin | None = None,
+        from_date: date | None = None,
+        to_date: date | None = None,
+        email_address: str | None = None,
+    ) -> list[SuppressionEntry]:
         """
         Return all suppressions for a message stream.
 
@@ -49,8 +48,8 @@ class SuppressionManager:
         return [SuppressionEntry(**s) for s in response.json()["Suppressions"]]
 
     async def create(
-        self, stream_id: str, email_addresses: List[str]
-    ) -> List[SuppressionResult]:
+        self, stream_id: str, email_addresses: list[str]
+    ) -> list[SuppressionResult]:
         """
         Suppress one or more email addresses on a message stream (max 50 per call).
 
@@ -67,8 +66,8 @@ class SuppressionManager:
         return [SuppressionResult(**s) for s in response.json()["Suppressions"]]
 
     async def delete(
-        self, stream_id: str, email_addresses: List[str]
-    ) -> List[SuppressionResult]:
+        self, stream_id: str, email_addresses: list[str]
+    ) -> list[SuppressionResult]:
         """
         Remove suppressions for one or more email addresses (max 50 per call).
 

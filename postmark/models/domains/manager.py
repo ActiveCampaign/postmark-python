@@ -1,5 +1,3 @@
-from typing import Optional
-
 from postmark.models.page import Page
 from postmark.utils.types import HTTPClient
 
@@ -42,7 +40,7 @@ class DomainManager:
     async def create(
         self,
         name: str,
-        return_path_domain: Optional[str] = None,
+        return_path_domain: str | None = None,
     ) -> Domain:
         """
         Create a new domain on the account.
@@ -62,7 +60,7 @@ class DomainManager:
     async def edit(
         self,
         domain_id: int,
-        return_path_domain: Optional[str] = None,
+        return_path_domain: str | None = None,
     ) -> Domain:
         """
         Update a domain.
