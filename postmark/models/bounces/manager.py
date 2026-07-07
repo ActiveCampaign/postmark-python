@@ -1,6 +1,6 @@
 import logging
+from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import AsyncGenerator, Optional
 
 from postmark.models.page import Page
 from postmark.utils.pagination import paginate
@@ -33,14 +33,14 @@ class BounceManager:
         self,
         count: int = 100,
         offset: int = 0,
-        type: Optional[BounceType] = None,
-        inactive: Optional[bool] = None,
-        email_filter: Optional[str] = None,
-        tag: Optional[str] = None,
-        message_id: Optional[str] = None,
-        from_date: Optional[datetime] = None,
-        to_date: Optional[datetime] = None,
-        message_stream: Optional[str] = None,
+        type: BounceType | None = None,
+        inactive: bool | None = None,
+        email_filter: str | None = None,
+        tag: str | None = None,
+        message_id: str | None = None,
+        from_date: datetime | None = None,
+        to_date: datetime | None = None,
+        message_stream: str | None = None,
     ) -> Page[Bounce]:
         """
         List bounces for the server.
@@ -90,14 +90,14 @@ class BounceManager:
         self,
         batch_size: int = 500,
         max_bounces: int = 1000,
-        type: Optional[BounceType] = None,
-        inactive: Optional[bool] = None,
-        email_filter: Optional[str] = None,
-        tag: Optional[str] = None,
-        message_id: Optional[str] = None,
-        from_date: Optional[datetime] = None,
-        to_date: Optional[datetime] = None,
-        message_stream: Optional[str] = None,
+        type: BounceType | None = None,
+        inactive: bool | None = None,
+        email_filter: str | None = None,
+        tag: str | None = None,
+        message_id: str | None = None,
+        from_date: datetime | None = None,
+        to_date: datetime | None = None,
+        message_stream: str | None = None,
     ) -> AsyncGenerator[Bounce, None]:
         """Yield bounces with automatic pagination."""
         async for bounce in paginate(

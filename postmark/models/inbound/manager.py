@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from postmark.models.page import Page
 from postmark.utils.types import HTTPClient
@@ -15,14 +15,14 @@ class InboundManager:
         self,
         count: int = 100,
         offset: int = 0,
-        recipient: Optional[str] = None,
-        from_email: Optional[str] = None,
-        tag: Optional[str] = None,
-        subject: Optional[str] = None,
-        mailbox_hash: Optional[str] = None,
-        status: Optional[str] = None,
-        from_date: Optional[datetime] = None,
-        to_date: Optional[datetime] = None,
+        recipient: str | None = None,
+        from_email: str | None = None,
+        tag: str | None = None,
+        subject: str | None = None,
+        mailbox_hash: str | None = None,
+        status: str | None = None,
+        from_date: datetime | None = None,
+        to_date: datetime | None = None,
     ) -> Page[InboundMessage]:
         """List inbound messages."""
         if count > 500:
@@ -30,7 +30,7 @@ class InboundManager:
         if count + offset > 10000:
             raise ValueError("Count + Offset cannot exceed 10,000")
 
-        params: Dict[str, Any] = {"count": count, "offset": offset}
+        params: dict[str, Any] = {"count": count, "offset": offset}
 
         if recipient is not None:
             params["recipient"] = recipient

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from postmark.utils.types import HTTPClient
 
 from .enums import ServerColor, TrackLinks
@@ -19,22 +17,22 @@ class ServerManager:
 
     async def edit(
         self,
-        name: Optional[str] = None,
-        color: Optional[ServerColor] = None,
-        raw_email_enabled: Optional[bool] = None,
-        smtp_api_activated: Optional[bool] = None,
-        inbound_hook_url: Optional[str] = None,
-        bounce_hook_url: Optional[str] = None,
-        open_hook_url: Optional[str] = None,
-        delivery_hook_url: Optional[str] = None,
-        click_hook_url: Optional[str] = None,
-        post_first_open_only: Optional[bool] = None,
-        track_opens: Optional[bool] = None,
-        track_links: Optional[TrackLinks] = None,
-        inbound_domain: Optional[str] = None,
-        inbound_spam_threshold: Optional[int] = None,
-        include_bounce_content_in_hook: Optional[bool] = None,
-        enable_smtp_api_error_hooks: Optional[bool] = None,
+        name: str | None = None,
+        color: ServerColor | None = None,
+        raw_email_enabled: bool | None = None,
+        smtp_api_activated: bool | None = None,
+        inbound_hook_url: str | None = None,
+        bounce_hook_url: str | None = None,
+        open_hook_url: str | None = None,
+        delivery_hook_url: str | None = None,
+        click_hook_url: str | None = None,
+        post_first_open_only: bool | None = None,
+        track_opens: bool | None = None,
+        track_links: TrackLinks | None = None,
+        inbound_domain: str | None = None,
+        inbound_spam_threshold: int | None = None,
+        include_bounce_content_in_hook: bool | None = None,
+        enable_smtp_api_error_hooks: bool | None = None,
     ) -> Server:
         """
         Update configuration for the current server.

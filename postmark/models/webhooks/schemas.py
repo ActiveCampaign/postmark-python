@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -73,8 +71,8 @@ class Webhook(BaseModel):
     id: int = Field(alias="ID")
     url: str = Field(alias="Url")
     message_stream: str = Field(alias="MessageStream")
-    http_auth: Optional[HttpAuth] = Field(None, alias="HttpAuth")
-    http_headers: Optional[List[HttpHeader]] = Field(None, alias="HttpHeaders")
+    http_auth: HttpAuth | None = Field(None, alias="HttpAuth")
+    http_headers: list[HttpHeader] | None = Field(None, alias="HttpHeaders")
     triggers: WebhookTriggers = Field(alias="Triggers")
 
     model_config = ConfigDict(populate_by_name=True)
@@ -83,7 +81,7 @@ class Webhook(BaseModel):
 class WebhooksListResponse(BaseModel):
     """Response from ``GET /webhooks``."""
 
-    webhooks: List[Webhook] = Field(alias="Webhooks")
+    webhooks: list[Webhook] = Field(alias="Webhooks")
 
     model_config = ConfigDict(populate_by_name=True)
 

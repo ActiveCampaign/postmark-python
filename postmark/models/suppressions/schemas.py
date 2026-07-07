@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -22,6 +21,6 @@ class SuppressionResult(BaseModel):
 
     email_address: str = Field(alias="EmailAddress")
     status: str = Field(alias="Status")
-    message: Optional[str] = Field(None, alias="Message")
+    message: str | None = Field(None, alias="Message")
 
     model_config = ConfigDict(populate_by_name=True)

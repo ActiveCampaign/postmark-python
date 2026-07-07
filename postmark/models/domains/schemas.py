@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -22,25 +20,25 @@ class Domain(BaseModel):
     id: int = Field(alias="ID")
     name: str = Field(alias="Name")
     spf_verified: bool = Field(False, alias="SPFVerified")  # deprecated by Postmark
-    spf_host: Optional[str] = Field(None, alias="SPFHost")
-    spf_text_value: Optional[str] = Field(None, alias="SPFTextValue")
+    spf_host: str | None = Field(None, alias="SPFHost")
+    spf_text_value: str | None = Field(None, alias="SPFTextValue")
     dkim_verified: bool = Field(alias="DKIMVerified")
     weak_dkim: bool = Field(alias="WeakDKIM")
-    dkim_host: Optional[str] = Field(None, alias="DKIMHost")
-    dkim_text_value: Optional[str] = Field(None, alias="DKIMTextValue")
-    dkim_pending_host: Optional[str] = Field(None, alias="DKIMPendingHost")
-    dkim_pending_text_value: Optional[str] = Field(None, alias="DKIMPendingTextValue")
-    dkim_revoked_host: Optional[str] = Field(None, alias="DKIMRevokedHost")
-    dkim_revoked_text_value: Optional[str] = Field(None, alias="DKIMRevokedTextValue")
-    safe_to_remove_revoked_key_from_dns: Optional[bool] = Field(
+    dkim_host: str | None = Field(None, alias="DKIMHost")
+    dkim_text_value: str | None = Field(None, alias="DKIMTextValue")
+    dkim_pending_host: str | None = Field(None, alias="DKIMPendingHost")
+    dkim_pending_text_value: str | None = Field(None, alias="DKIMPendingTextValue")
+    dkim_revoked_host: str | None = Field(None, alias="DKIMRevokedHost")
+    dkim_revoked_text_value: str | None = Field(None, alias="DKIMRevokedTextValue")
+    safe_to_remove_revoked_key_from_dns: bool | None = Field(
         None, alias="SafeToRemoveRevokedKeyFromDNS"
     )
-    dkim_update_status: Optional[str] = Field(None, alias="DKIMUpdateStatus")
-    return_path_domain: Optional[str] = Field(None, alias="ReturnPathDomain")
-    return_path_domain_verified: Optional[bool] = Field(
+    dkim_update_status: str | None = Field(None, alias="DKIMUpdateStatus")
+    return_path_domain: str | None = Field(None, alias="ReturnPathDomain")
+    return_path_domain_verified: bool | None = Field(
         None, alias="ReturnPathDomainVerified"
     )
-    return_path_domain_cname_value: Optional[str] = Field(
+    return_path_domain_cname_value: str | None = Field(
         None, alias="ReturnPathDomainCNAMEValue"
     )
 
@@ -51,7 +49,7 @@ class DomainsListResponse(BaseModel):
     """Response from ``GET /domains``."""
 
     total_count: int = Field(alias="TotalCount")
-    domains: List[DomainListItem] = Field(alias="Domains")
+    domains: list[DomainListItem] = Field(alias="Domains")
 
     model_config = ConfigDict(populate_by_name=True)
 

@@ -1,4 +1,4 @@
-from typing import Any, Dict, Union
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -10,7 +10,7 @@ class AccountTemplateManager:
     def __init__(self, client: HTTPClient):
         self.client = client
 
-    async def push(self, request: Union[Dict[str, Any], Any]) -> Any:
+    async def push(self, request: dict[str, Any] | Any) -> Any:
         """Push templates from one server to another."""
         from .schemas import PushTemplatesRequest, PushTemplatesResponse
 

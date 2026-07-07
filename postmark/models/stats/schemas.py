@@ -1,4 +1,4 @@
-from typing import Any, Dict, List
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -36,7 +36,7 @@ class SentDay(BaseModel):
 class SentCounts(BaseModel):
     """Response from ``GET /stats/outbound/sends``."""
 
-    days: List[SentDay] = Field(alias="Days")
+    days: list[SentDay] = Field(alias="Days")
     sent: int = Field(0, alias="Sent")
 
     model_config = ConfigDict(populate_by_name=True)
@@ -55,7 +55,7 @@ class BounceDay(BaseModel):
 class BounceCounts(BaseModel):
     """Response from ``GET /stats/outbound/bounces``."""
 
-    days: List[BounceDay] = Field(alias="Days")
+    days: list[BounceDay] = Field(alias="Days")
     hard_bounce: int = Field(0, alias="HardBounce")
     smtp_api_error: int = Field(0, alias="SMTPApiError")
     soft_bounce: int = Field(0, alias="SoftBounce")
@@ -74,7 +74,7 @@ class SpamComplaintDay(BaseModel):
 class SpamComplaints(BaseModel):
     """Response from ``GET /stats/outbound/spam``."""
 
-    days: List[SpamComplaintDay] = Field(alias="Days")
+    days: list[SpamComplaintDay] = Field(alias="Days")
     spam_complaint: int = Field(0, alias="SpamComplaint")
 
     model_config = ConfigDict(populate_by_name=True)
@@ -90,7 +90,7 @@ class TrackedDay(BaseModel):
 class TrackedCounts(BaseModel):
     """Response from ``GET /stats/outbound/tracked``."""
 
-    days: List[TrackedDay] = Field(alias="Days")
+    days: list[TrackedDay] = Field(alias="Days")
     tracked: int = Field(0, alias="Tracked")
 
     model_config = ConfigDict(populate_by_name=True)
@@ -107,7 +107,7 @@ class OpenDay(BaseModel):
 class OpenCounts(BaseModel):
     """Response from ``GET /stats/outbound/opens``."""
 
-    days: List[OpenDay] = Field(alias="Days")
+    days: list[OpenDay] = Field(alias="Days")
     opens: int = Field(0, alias="Opens")
     unique: int = Field(0, alias="Unique")
 
@@ -127,7 +127,7 @@ class PlatformDay(BaseModel):
 class PlatformUsage(BaseModel):
     """Response from ``GET /stats/outbound/opens/platforms``."""
 
-    days: List[PlatformDay] = Field(alias="Days")
+    days: list[PlatformDay] = Field(alias="Days")
     desktop: int = Field(0, alias="Desktop")
     mobile: int = Field(0, alias="Mobile")
     unknown: int = Field(0, alias="Unknown")
@@ -144,7 +144,7 @@ class EmailClientUsage(BaseModel):
     ``model_extra`` and individual day dicts via ``days``.
     """
 
-    days: List[Dict[str, Any]] = Field(alias="Days")
+    days: list[dict[str, Any]] = Field(alias="Days")
 
     model_config = ConfigDict(populate_by_name=True, extra="allow")
 
@@ -160,7 +160,7 @@ class ClickDay(BaseModel):
 class ClickCounts(BaseModel):
     """Response from ``GET /stats/outbound/clicks``."""
 
-    days: List[ClickDay] = Field(alias="Days")
+    days: list[ClickDay] = Field(alias="Days")
     clicks: int = Field(0, alias="Clicks")
     unique: int = Field(0, alias="Unique")
 
@@ -174,7 +174,7 @@ class BrowserUsage(BaseModel):
     and within each day object.  Access totals via ``model_extra``.
     """
 
-    days: List[Dict[str, Any]] = Field(alias="Days")
+    days: list[dict[str, Any]] = Field(alias="Days")
 
     model_config = ConfigDict(populate_by_name=True, extra="allow")
 
@@ -191,7 +191,7 @@ class BrowserPlatformDay(BaseModel):
 class BrowserPlatformUsage(BaseModel):
     """Response from ``GET /stats/outbound/clicks/platforms``."""
 
-    days: List[BrowserPlatformDay] = Field(alias="Days")
+    days: list[BrowserPlatformDay] = Field(alias="Days")
     desktop: int = Field(0, alias="Desktop")
     mobile: int = Field(0, alias="Mobile")
     unknown: int = Field(0, alias="Unknown")
@@ -210,7 +210,7 @@ class ClickLocationDay(BaseModel):
 class ClickLocation(BaseModel):
     """Response from ``GET /stats/outbound/clicks/location``."""
 
-    days: List[ClickLocationDay] = Field(alias="Days")
+    days: list[ClickLocationDay] = Field(alias="Days")
     html: int = Field(0, alias="HTML")
     text: int = Field(0, alias="Text")
 
@@ -224,6 +224,6 @@ class ReadTimes(BaseModel):
     day object alongside ``Date``.  Access totals via ``model_extra``.
     """
 
-    days: List[Dict[str, Any]] = Field(alias="Days")
+    days: list[dict[str, Any]] = Field(alias="Days")
 
     model_config = ConfigDict(populate_by_name=True, extra="allow")

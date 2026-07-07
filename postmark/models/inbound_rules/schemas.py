@@ -1,5 +1,3 @@
-from typing import List
-
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -16,7 +14,7 @@ class InboundRulesListResponse(BaseModel):
     """Response from ``GET /triggers/inboundrules``."""
 
     total_count: int = Field(alias="TotalCount")
-    inbound_rules: List[InboundRule] = Field(alias="InboundRules")
+    inbound_rules: list[InboundRule] = Field(alias="InboundRules")
 
     model_config = ConfigDict(populate_by_name=True)
 
