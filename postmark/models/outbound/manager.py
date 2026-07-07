@@ -15,8 +15,6 @@ from postmark.utils.types import HTTPClient
 if TYPE_CHECKING:
     from postmark.models.templates.schemas import TemplateEmail
 
-import builtins
-
 from .schemas import (
     BulkEmail,
     BulkSendResponse,
@@ -94,8 +92,8 @@ class OutboundManager:
     # -------------------------------------------------------------------------
 
     async def send_batch(
-        self, messages: builtins.list[Email | dict[str, Any]]
-    ) -> builtins.list[SendResponse]:
+        self, messages: list[Email | dict[str, Any]]
+    ) -> list[SendResponse]:
         """
         Send up to 500 different emails in a single request.
         Use this when each recipient needs a **completely different** message.
@@ -175,8 +173,8 @@ class OutboundManager:
         return SendResponse(**response.json())
 
     async def send_batch_with_template(
-        self, messages: builtins.list[TemplateEmail | dict[str, Any]]
-    ) -> builtins.list[SendResponse]:
+        self, messages: list[TemplateEmail | dict[str, Any]]
+    ) -> list[SendResponse]:
         """Send up to 500 template emails in a single batch request."""
         if len(messages) > 500:
             raise ValueError("Batch size cannot exceed 500 messages")
