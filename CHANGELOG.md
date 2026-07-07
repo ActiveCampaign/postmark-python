@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.5] - 2026-07-07
+
+### Changed
+
+- Modernized type hints to Python 3.10+ syntax throughout: `Optional[X]` to `X | None`, `Union[X, Y]` to `X | Y`, `List[X]` to `list[X]`, `Dict[K, V]` to `dict[K, V]`. `AsyncGenerator`, `Callable`, and `Awaitable` moved from `typing` to `collections.abc`. No functional changes.
+- Added `target-version = "py310"` and the `UP` ruleset to ruff config, enforcing the modernized syntax going forward.
+
+---
+
 ## [0.3.4] - 2026-06-29
 
 ### Changed
