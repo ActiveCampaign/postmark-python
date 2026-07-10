@@ -40,7 +40,7 @@ Issues = "https://github.com/ActiveCampaign/postmark-python/issues"
 packages = [{ include = "postmark" }]
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.1.1"             # Testing framework
+pytest = "^9.1.1"             # Testing framework
 pytest-asyncio = "^1.0.0"     # To run async tests with pytest
 respx = "^0.21.0"             # Mocking HTTP requests for testing
 pytest-cov = "^7.0.0"         # For coverage reports
