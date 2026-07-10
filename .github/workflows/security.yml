@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -28,13 +28,18 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
 
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v6
+        with:
+          path: .venv
+          key: venv-security-${{ runner.os }}-3.12-${{ hashFiles('**/poetry.lock') }}
+
       - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
 
-      - name: Export requirements
-        run: poetry export --without-hashes -f requirements.txt -o /tmp/requirements.txt
-
-      - name: Run pip-audit
+      - name: Audit dependencies
         uses: pypa/gh-action-pip-audit@v1.1.0
         with:
-          inputs: /tmp/requirements.txt
+          virtual-environment: .venv
