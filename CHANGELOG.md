@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - **Publish gate** (`publish.yml`): `pip-audit` now runs before every PyPI release; a known-vulnerable dependency blocks the publish job.
   - **Secret detection** (`.pre-commit-config.yaml`): `detect-secrets` pre-commit hook blocks commits containing hard-coded credentials.
   - **`SECURITY.md`**: published security policy with private vulnerability reporting instructions and scope definition.
+- Updated `idna` (transitive dependency via `httpx`) from 3.11 to 3.18 to address PYSEC-2026-215, a DoS vulnerability in `idna.encode()` for arbitrarily large inputs.
 
 ---
 
