@@ -1,6 +1,6 @@
 [project]
 name = "postmark-python"
-version = "0.3.5"
+version = "0.3.6"
 description = "The Official Postmark Python SDK."
 authors = [
     { name = "Greg Svoboda", email = "gsvoboda@activecampaign.com" },

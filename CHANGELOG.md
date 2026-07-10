@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.6] - 2026-07-10
+
+### Added
+
+- Security hardening for the repository and release pipeline:
+  - **Dependabot** (`.github/dependabot.yml`): weekly automated PRs for Python dependency and GitHub Actions updates; minor and patch updates grouped to reduce noise.
+  - **CodeQL** (`.github/workflows/codeql.yml`): SAST scanning on every push, PR, and weekly schedule; results surface in the GitHub Security tab.
+  - **Dependency vulnerability scanning** (`.github/workflows/security.yml`): `pip-audit` checks all locked dependencies against OSV/PyPI advisory databases on push, PR, and weekly.
+  - **Publish gate** (`publish.yml`): `pip-audit` now runs before every PyPI release; a known-vulnerable dependency blocks the publish job.
+  - **Secret detection** (`.pre-commit-config.yaml`): `detect-secrets` pre-commit hook blocks commits containing hard-coded credentials.
+  - **`SECURITY.md`**: published security policy with private vulnerability reporting instructions and scope definition.
+
+---
+
 ## [0.3.5] - 2026-07-07
 
 ### Changed
