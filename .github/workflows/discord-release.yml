@@ -6,8 +6,13 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing release tag to test the announcement with (e.g. v0.3.7)"
+        description: "Existing release tag to announce or test (e.g. v0.3.7)"
         required: true
+      test:
+        description: "Prefix the message with [TEST] (uncheck to send a real announcement)"
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -23,6 +28,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           DISPATCH_TAG: ${{ github.event.inputs.tag }}
+          DISPATCH_IS_TEST: ${{ github.event.inputs.test }}
           EVT_RELEASE_NAME: ${{ github.event.release.name }}
           EVT_RELEASE_TAG: ${{ github.event.release.tag_name }}
           EVT_RELEASE_BODY: ${{ github.event.release.body }}
@@ -32,7 +38,12 @@ jobs:
         run: |
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             RELEASE_TAG="$DISPATCH_TAG"
-            RELEASE_NAME="[TEST] $(gh release view "$DISPATCH_TAG" --repo "$REPO" --json name --jq '.name // .tagName')"
+            RAW_NAME="$(gh release view "$DISPATCH_TAG" --repo "$REPO" --json name --jq '.name // .tagName')"
+            if [ "$DISPATCH_IS_TEST" = "true" ]; then
+              RELEASE_NAME="[TEST] $RAW_NAME"
+            else
+              RELEASE_NAME="$RAW_NAME"
+            fi
             RELEASE_BODY=$(gh release view "$DISPATCH_TAG" --repo "$REPO" --json body --jq '.body')
             RELEASE_URL=$(gh release view "$DISPATCH_TAG" --repo "$REPO" --json url --jq '.url')
             AUTHOR_LOGIN=$(gh release view "$DISPATCH_TAG" --repo "$REPO" --json author --jq '.author.login')
