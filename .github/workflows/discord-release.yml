@@ -1,0 +1,38 @@
+name: Send Discord Release Announcement
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    if: github.event.release.prerelease == false
+    steps:
+      - name: Send Discord embed
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
+          RELEASE_NAME: ${{ github.event.release.name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_BODY: ${{ github.event.release.body }}
+          RELEASE_URL: ${{ github.event.release.html_url }}
+          AUTHOR_LOGIN: ${{ github.event.release.author.login }}
+          AUTHOR_AVATAR: ${{ github.event.release.author.avatar_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          BODY_TRUNCATED=$(printf '%s' "$RELEASE_BODY" | head -c 4000)
+          PAYLOAD=$(jq -n \
+            --arg title "🚀 New Release: ${RELEASE_NAME:-$RELEASE_TAG}" \
+            --arg desc "**Version:** \`$RELEASE_TAG\`
+
+          **What's Changed:**
+          $BODY_TRUNCATED" \
+            --arg url "$RELEASE_URL" \
+            --arg footer "$REPO • Published by @$AUTHOR_LOGIN" \
+            --arg icon "$AUTHOR_AVATAR" \
+            '{embeds: [{title: $title, description: $desc, url: $url, color: 5814783, footer: {text: $footer, icon_url: $icon}}]}')
+
+          curl -sf -X POST -H "Content-Type: application/json" -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
