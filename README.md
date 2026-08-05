@@ -45,15 +45,19 @@ import postmark
 # Tokens are read from the environment here. Optionally: pip install python-dotenv,
 # then use load_dotenv() to populate os.environ from a .env file.
 
+
 async def main():
     async with postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"]) as client:
-        response = await client.outbound.send({
-            "sender": "sender@example.com",
-            "to": "recipient@example.com",
-            "subject": "Hello from Postmark",
-            "text_body": "Sent with the Postmark Python SDK.",
-        })
+        response = await client.outbound.send(
+            {
+                "sender": "sender@example.com",
+                "to": "recipient@example.com",
+                "subject": "Hello from Postmark",
+                "text_body": "Sent with the Postmark Python SDK.",
+            }
+        )
         print(f"Sent: {response.message_id}")
+
 
 asyncio.run(main())
 ```
@@ -66,12 +70,14 @@ import os
 import postmark.sync
 
 with postmark.sync.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"]) as client:
-    response = client.outbound.send({
-        "sender": "sender@example.com",
-        "to": "recipient@example.com",
-        "subject": "Hello from Postmark",
-        "text_body": "Sent with the Postmark Python SDK.",
-    })
+    response = client.outbound.send(
+        {
+            "sender": "sender@example.com",
+            "to": "recipient@example.com",
+            "subject": "Hello from Postmark",
+            "text_body": "Sent with the Postmark Python SDK.",
+        }
+    )
     print(f"Sent: {response.message_id}")
 ```
 
