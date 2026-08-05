@@ -78,7 +78,7 @@ class InactiveRecipientException(PostmarkAPIException):
         request_id: str | None = None,
     ):
         super().__init__(message, error_code, http_status, request_id)
-        match = re.search(r"Found inactive addresses: ([^.]+)", message)
+        match = re.search(r"Found inactive addresses:\s*(.+?)\.(?:\s|$)", message)
         self.inactive_recipients: list[str] = (
             [a for addr in match.group(1).split(",") if (a := addr.strip())]
             if match
