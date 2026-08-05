@@ -3,6 +3,11 @@ name: Send Discord Release Announcement
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to test the announcement with (e.g. v0.3.7)"
+        required: true
 
 permissions:
   contents: read
@@ -10,17 +15,52 @@ permissions:
 jobs:
   announce:
     runs-on: ubuntu-latest
-    if: github.event.release.prerelease == false
+    if: github.event_name == 'workflow_dispatch' || github.event.release.prerelease == false
     steps:
+      - name: Resolve release data
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          DISPATCH_TAG: ${{ github.event.inputs.tag }}
+          EVT_RELEASE_NAME: ${{ github.event.release.name }}
+          EVT_RELEASE_TAG: ${{ github.event.release.tag_name }}
+          EVT_RELEASE_BODY: ${{ github.event.release.body }}
+          EVT_RELEASE_URL: ${{ github.event.release.html_url }}
+          EVT_AUTHOR_LOGIN: ${{ github.event.release.author.login }}
+          EVT_AUTHOR_AVATAR: ${{ github.event.release.author.avatar_url }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            RELEASE_TAG="$DISPATCH_TAG"
+            RELEASE_NAME="[TEST] $(gh release view "$DISPATCH_TAG" --repo "$REPO" --json name --jq '.name // .tagName')"
+            RELEASE_BODY=$(gh release view "$DISPATCH_TAG" --repo "$REPO" --json body --jq '.body')
+            RELEASE_URL=$(gh release view "$DISPATCH_TAG" --repo "$REPO" --json url --jq '.url')
+            AUTHOR_LOGIN=$(gh release view "$DISPATCH_TAG" --repo "$REPO" --json author --jq '.author.login')
+            AUTHOR_AVATAR="https://github.com/${AUTHOR_LOGIN}.png"
+          else
+            RELEASE_NAME="$EVT_RELEASE_NAME"
+            RELEASE_TAG="$EVT_RELEASE_TAG"
+            RELEASE_BODY="$EVT_RELEASE_BODY"
+            RELEASE_URL="$EVT_RELEASE_URL"
+            AUTHOR_LOGIN="$EVT_AUTHOR_LOGIN"
+            AUTHOR_AVATAR="$EVT_AUTHOR_AVATAR"
+          fi
+
+          EOF_MARKER="GHA_EOF_${RANDOM}${RANDOM}"
+          {
+            echo "RELEASE_NAME=$RELEASE_NAME"
+            echo "RELEASE_TAG=$RELEASE_TAG"
+            echo "RELEASE_URL=$RELEASE_URL"
+            echo "AUTHOR_LOGIN=$AUTHOR_LOGIN"
+            echo "AUTHOR_AVATAR=$AUTHOR_AVATAR"
+            echo "RELEASE_BODY<<$EOF_MARKER"
+            echo "$RELEASE_BODY"
+            echo "$EOF_MARKER"
+          } >> "$GITHUB_ENV"
+
       - name: Send Discord embed
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
-          RELEASE_NAME: ${{ github.event.release.name }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-          RELEASE_BODY: ${{ github.event.release.body }}
-          RELEASE_URL: ${{ github.event.release.html_url }}
-          AUTHOR_LOGIN: ${{ github.event.release.author.login }}
-          AUTHOR_AVATAR: ${{ github.event.release.author.avatar_url }}
           REPO: ${{ github.repository }}
         run: |
           BODY_TRUNCATED=$(printf '%s' "$RELEASE_BODY" | head -c 4000)
