@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.7] - 2026-08-05
+
+### Fixed
+
+- `InactiveRecipientException` no longer truncates inactive email addresses at the first `.` in the domain (e.g. `john@example.com` was truncated to `john@example`). Handles single and multiple inactive recipients correctly. (Thanks, [@bharara](https://github.com/bharara).)
+
+### Changed
+
+- Updated `pytest` to `9.1.1`, addressing PYSEC-2026-1845 (local privilege escalation via a temp-directory race condition).
+- Updated `respx` test dependency constraint and lockfile.
+- Updated dev tooling: `mypy`, `ruff`, and `pre-commit`; reformatted README code examples for the `ruff` 0.16 formatter.
+- CI: updated `actions/setup-python` to `v7` and `github/codeql-action` to `4.37.4`.
+- CI: free disk space before CodeQL scans to prevent runner out-of-disk failures.
+
+---
+
 ## [0.3.6] - 2026-07-10
 
 ### Added
