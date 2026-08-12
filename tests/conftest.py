@@ -3,6 +3,13 @@
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+
+try:
+    import django  # noqa: F401
+except ImportError:
+    # The `django` extra is optional; don't let its absence break collection
+    # of the rest of the suite.
+    collect_ignore = ["django_backend"]
 from httpx import Response
 
 from postmark.models.bounces import BounceManager

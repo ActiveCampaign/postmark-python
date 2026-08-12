@@ -46,6 +46,42 @@ jobs:
         run: |
           poetry run pytest --cov=postmark --cov-report=xml --cov-report=term --cov-fail-under=85
 
+  django-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Currently supported Django release series. The main `test` job above
+        # already exercises tests/django_backend/ against the pinned dev version
+        # (Django 5.2) across every supported Python version; this job additionally
+        # checks the Django backend against the rest of the support matrix.
+        django-version: ["4.2", "5.2", "6.0", "6.1"]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          # 3.12 is the one Python version every entry in the matrix supports:
+          # Django 4.2 added 3.12 support in 4.2.8; Django 6.0/6.1 require 3.12+.
+          python-version: "3.12"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 2.4.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: poetry install --no-interaction
+
+      - name: Install Django ${{ matrix.django-version }}
+        run: poetry run pip install "django~=${{ matrix.django-version }}.0"
+
+      - name: Run Django backend tests
+        run: poetry run pytest tests/django_backend/ -v
+
   lint:
     runs-on: ubuntu-latest
 
