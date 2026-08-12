@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Unreleased]
+
+### Added
+
+- Django email backend (`postmark.django.EmailBackend`), gated behind the new `django` extra (`pip install postmark-python[django]`). Supports Django 4.2 LTS, 5.2 LTS, 6.0, and 6.1 — including Django 6.0's ["modern email API" change](https://docs.djangoproject.com/en/6.0/releases/6.0/#adoption-of-python-s-modern-email-api). The Postmark payload is built from `EmailMessage`'s high-level attributes rather than `EmailMessage.message()`, so this backend is unaffected by that change.
+  - `postmark.django.PostmarkEmailMessage` / `PostmarkEmailMultiAlternatives` / `PostmarkEmailMixin` for setting `tag`, `metadata`, and `message_stream`.
+  - `postmark.django.pre_send` / `post_send` / `on_exception` signals.
+  - New settings: `POSTMARK_SERVER_TOKEN`, `POSTMARK_TEST_MODE`, `POSTMARK_TRACK_OPENS`, `POSTMARK_MESSAGE_STREAM`.
+  - See the [Django Backend wiki page](https://github.com/ActiveCampaign/postmark-python/wiki/Django-Backend) and `examples/django/`.
+
+---
+
 ## [0.3.7] - 2026-08-05
 
 ### Fixed

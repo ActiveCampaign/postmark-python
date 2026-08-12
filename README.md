@@ -105,6 +105,22 @@ client = postmark.ServerClient(os.environ["POSTMARK_SERVER_TOKEN"])
 await client.close()
 ```
 
+## Django
+
+`postmark.django.EmailBackend` is a drop-in `EMAIL_BACKEND` for Django's `django.core.mail`, supporting Django 4.2 LTS through 6.1. Requires the `django` extra:
+
+```bash
+pip install postmark-python[django]
+```
+
+```python
+# settings.py
+EMAIL_BACKEND = "postmark.django.EmailBackend"
+POSTMARK_SERVER_TOKEN = "your-server-token"
+```
+
+See the [Django Backend wiki page](https://github.com/ActiveCampaign/postmark-python/wiki/Django-Backend) and [`examples/django/`](examples/django/) for tags, metadata, attachments, and signals.
+
 ## Development
 
 ```bash
@@ -124,11 +140,7 @@ poetry run pre-commit run --all-files
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for your changes
-4. Ensure all checks pass (`poetry run pre-commit run --all-files`)
-5. Open a Pull Request
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, testing, and PR guidelines.
 
 ## Support
 

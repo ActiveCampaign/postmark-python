@@ -33,6 +33,26 @@ typing_extensions = {version = ">=4.5", markers = "python_version < \"3.13\""}
 trio = ["trio (>=0.32.0)"]
 
 [[package]]
+name = "asgiref"
+version = "3.12.1"
+description = "ASGI specs, helper code, and adapters"
+optional = false
+python-versions = ">=3.10"
+groups = ["main", "dev"]
+files = [
+    {file = "asgiref-3.12.1-py3-none-any.whl", hash = "sha256:fe386d1c2bff7259ea95929266d12a8cf9a8b5a1c2598402967d8792e7a7c094"},
+    {file = "asgiref-3.12.1.tar.gz", hash = "sha256:59dcb51c272ad209d59bed5708a64a333083e86017d7fcdd67498eeab7784340"},
+]
+markers = {main = "extra == \"django\""}
+
+[package.dependencies]
+typing_extensions = {version = ">=4", markers = "python_version < \"3.11\""}
+
+[package.extras]
+mypy = ["mypy (>=1.14.0)"]
+tests = ["pytest", "pytest-asyncio"]
+
+[[package]]
 name = "ast-serialize"
 version = "0.6.0"
 description = "Python bindings for mypy AST serialization"
@@ -259,6 +279,28 @@ files = [
     {file = "distlib-0.4.0-py2.py3-none-any.whl", hash = "sha256:9659f7d87e46584a30b5780e43ac7a2143098441670ff0a49d5f9034c54a6c16"},
     {file = "distlib-0.4.0.tar.gz", hash = "sha256:feec40075be03a04501a973d81f633735b4b69f98b05450592310c0f401a4e0d"},
 ]
+
+[[package]]
+name = "django"
+version = "5.2.17"
+description = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
+optional = false
+python-versions = ">=3.10"
+groups = ["main", "dev"]
+files = [
+    {file = "django-5.2.17-py3-none-any.whl", hash = "sha256:f04fb3b36ee119e1af4fa1d397d5fd6cf12700f49321e84d4f4c642c5b1973db"},
+    {file = "django-5.2.17.tar.gz", hash = "sha256:9d4d93be539a18ab80d058eb515900e10951e04c537c5a6b394fc49528d3251f"},
+]
+markers = {main = "extra == \"django\""}
+
+[package.dependencies]
+asgiref = ">=3.8.1"
+sqlparse = ">=0.3.1"
+tzdata = {version = "*", markers = "sys_platform == \"win32\""}
+
+[package.extras]
+argon2 = ["argon2-cffi (>=19.1.0)"]
+bcrypt = ["bcrypt"]
 
 [[package]]
 name = "dnspython"
@@ -1103,6 +1145,23 @@ files = [
 ]
 
 [[package]]
+name = "sqlparse"
+version = "0.5.5"
+description = "A non-validating SQL parser."
+optional = false
+python-versions = ">=3.8"
+groups = ["main", "dev"]
+files = [
+    {file = "sqlparse-0.5.5-py3-none-any.whl", hash = "sha256:12a08b3bf3eec877c519589833aed092e2444e68240a3577e8e26148acc7b1ba"},
+    {file = "sqlparse-0.5.5.tar.gz", hash = "sha256:e20d4a9b0b8585fdf63b10d30066c7c94c5d7a7ec47c889a2d83a3caa93ff28e"},
+]
+markers = {main = "extra == \"django\""}
+
+[package.extras]
+dev = ["build"]
+doc = ["sphinx"]
+
+[[package]]
 name = "tenacity"
 version = "8.5.0"
 description = "Retry code until it succeeds"
@@ -1204,6 +1263,19 @@ files = [
 typing-extensions = ">=4.12.0"
 
 [[package]]
+name = "tzdata"
+version = "2026.3"
+description = "Provider of IANA time zone data"
+optional = false
+python-versions = ">=2"
+groups = ["main", "dev"]
+files = [
+    {file = "tzdata-2026.3-py2.py3-none-any.whl", hash = "sha256:dc096730c87af6cab1b171c9d532be840741ff5d459015e7f6947bd7d7e54931"},
+    {file = "tzdata-2026.3.tar.gz", hash = "sha256:4a1518b8993086a7982523e071643f3c0e5f213e75b21318e78bcabfff9d1415"},
+]
+markers = {main = "extra == \"django\" and sys_platform == \"win32\"", dev = "sys_platform == \"win32\""}
+
+[[package]]
 name = "virtualenv"
 version = "21.2.3"
 description = "Virtual Python Environment builder"
@@ -1222,7 +1294,10 @@ platformdirs = ">=3.9.1,<5"
 python-discovery = ">=1.2.2"
 typing-extensions = {version = ">=4.13.2", markers = "python_version < \"3.11\""}
 
+[extras]
+django = ["django"]
+
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4.0"
-content-hash = "49018c992ad7299eda309c53c63a01f861fc25ffc6cfd5081b0e4ec1bd870da9"
+content-hash = "e4cd399941932af9503476b15c25292eda4a60aff2994681b7abce5d21cf6c04"

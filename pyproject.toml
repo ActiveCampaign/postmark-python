@@ -5,6 +5,7 @@ description = "The Official Postmark Python SDK."
 authors = [
     { name = "Greg Svoboda", email = "gsvoboda@activecampaign.com" },
 ]
+keywords = ["postmark", "email", "transactional-email", "sdk", "api-client"]
 license = "MIT"
 license-files = ["LICENSE"]
 readme = "README.md"
@@ -29,6 +30,9 @@ dependencies = [
     "tenacity>=8.2.3,<9.0.0",         # resilience and retry logic
 ]
 
+[project.optional-dependencies]
+django = ["django>=4.2,<6.2"]
+
 [project.urls]
 Homepage = "https://postmarkapp.com/developer/integration/official-libraries"
 Repository = "https://github.com/ActiveCampaign/postmark-python"
@@ -48,6 +52,7 @@ mypy = "^2.3.0"
 ruff = "^0.16.0"
 pre-commit = "^4.6.1"
 python-dotenv = "^1.2.2"
+django = "^5.2"               # For running tests/django/ locally; CI matrix also covers 4.2, 6.0, 6.1
 
 [tool.ruff]
 line-length = 88
@@ -66,7 +71,7 @@ exclude = ["^examples/"]
 
 [tool.bandit]
 skips = ["B101"]  # assert statements are fine in tests
-exclude_dirs = ["tests"]
+exclude_dirs = ["tests", "examples"]  # example snippets use placeholder tokens, not real secrets
 
 [tool.coverage.report]
 omit = ["*/enums.py"]
