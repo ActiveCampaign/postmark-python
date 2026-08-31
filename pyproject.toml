@@ -25,7 +25,7 @@ classifiers = [
 ]
 dependencies = [
     "httpx>=0.28.1,<0.29.0",          # concurrency (async) and HTTP requests
-    "pydantic>=2.6.0,<3.0.0",         # type safety and validation
+    "pydantic>=2.13.5,<3.0.0",         # type safety and validation
     "email-validator>=2.1.1,<3.0.0",  # required by pydantic.EmailStr for email format validation
     "tenacity>=8.2.3,<9.0.0",         # resilience and retry logic
 ]
@@ -48,10 +48,10 @@ pytest = "^9.1.1"             # Testing framework
 pytest-asyncio = "^1.0.0"     # To run async tests with pytest
 respx = "^0.23.1"             # Mocking HTTP requests for testing
 pytest-cov = "^7.0.0"         # For coverage reports
-mypy = "^2.3.0"
-ruff = "^0.16.2"
-pre-commit = "^4.6.1"
-python-dotenv = "^1.2.2"
+mypy = "^2.3.1"
+ruff = "^0.16.5"
+pre-commit = "^4.6.2"
+python-dotenv = "^1.2.3"
 django = "^5.2"               # For running tests/django/ locally; CI matrix also covers 4.2, 6.0, 6.1
 
 [tool.ruff]
