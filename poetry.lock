@@ -1307,4 +1307,4 @@ django = ["django"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10,<4.0"
-content-hash = "a5026c90242e9099bec76d0c80dac11275bf9530a271e7016a18614b29f1a5bf"
+content-hash = "67966c7132e9bf15848d4baba65fbf2afb81c49b15a5b342d54e306f294da759"
