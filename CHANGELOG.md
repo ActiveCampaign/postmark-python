@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- Django backend closes clients it automatically opens when a batch send fails, while preserving caller-owned connections for reuse.
+
+---
+
 ## [0.4.0] - 2026-08-12
 
 ### Added

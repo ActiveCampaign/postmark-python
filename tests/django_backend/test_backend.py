@@ -411,3 +411,58 @@ def test_context_manager_reuses_and_closes_connection(
 
     assert len(fake_sync_client.outbound.calls) == 2
     assert fake_sync_client.closed is True
+
+
+@pytest.mark.parametrize("failure_mode", ["transport", "response"])
+@pytest.mark.parametrize("already_open", [False, True])
+@pytest.mark.parametrize("fail_silently", [False, True])
+def test_send_failure_closes_only_automatically_opened_client(
+    sync_client_factory,
+    fake_sync_client,
+    monkeypatch,
+    failure_mode,
+    already_open,
+    fail_silently,
+):
+    backend = EmailBackend(fail_silently=fail_silently)
+    if already_open:
+        backend.open()
+
+    if failure_mode == "transport":
+
+        def fail_send(messages):
+            raise RuntimeError("local send failure")
+
+        monkeypatch.setattr(fake_sync_client.outbound, "send_batch", fail_send)
+        error_type: type[Exception] = RuntimeError
+    else:
+        fake_sync_client.outbound.responses_queue.append(
+            [
+                SendResponse(
+                    To="receiver@example.com",
+                    SubmittedAt="2024-01-01T00:00:00",
+                    MessageID="example",
+                    ErrorCode=300,
+                    Message="local response failure",
+                )
+            ]
+        )
+        error_type = ValidationException
+
+    message = EmailMessage(
+        "Subject", "Body", "sender@example.com", ["receiver@example.com"]
+    )
+    try:
+        if fail_silently:
+            assert backend.send_messages([message]) == 0
+        else:
+            with pytest.raises(error_type):
+                backend.send_messages([message])
+
+        assert fake_sync_client.closed is not already_open
+        if already_open:
+            assert backend.client is fake_sync_client
+        else:
+            assert backend.client is None
+    finally:
+        backend.close()
