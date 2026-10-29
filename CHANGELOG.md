@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `get_delivery_stats()` no longer raises: the `All` total entry has no `Type`/`TypeCode`.
 - `templates.push()` accepts integer `SourceServerID` / `DestinationServerID` (strings still work and are sent unchanged).
 - Stats: `platform_usage()`, `browser_platform_usage()`, `click_location()` and the other per-day stats models no longer raise when Postmark omits a category whose count is zero (for example a day with no mobile activity). Missing counts read as `0` and a missing `days` as `[]`.
+- **Behaviour change:** `list_opens()` / `list_clicks()` client and OS filters (`client_name`, `client_company`, `client_family`, `os_name`, `os_family`, `os_company`) are now sent with the parameter names Postmark understands. They were sent in camelCase, which the API silently ignored, so these filters previously had no effect and returned unfiltered results. Calls that pass them will now return filtered results.
 
 ### Changed
 
