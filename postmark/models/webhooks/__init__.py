@@ -10,7 +10,10 @@ from .schemas import (
     SpamComplaintTrigger,
     SubscriptionChangeTrigger,
     Webhook,
+    WebhookMetrics,
     WebhooksListResponse,
+    WebhookStatistics,
+    WebhookTimeRange,
     WebhookTriggers,
 )
 
@@ -26,6 +29,9 @@ __all__ = [
     "SubscriptionChangeTrigger",
     "WebhookTriggers",
     "Webhook",
+    "WebhookMetrics",
+    "WebhookTimeRange",
+    "WebhookStatistics",
     "WebhooksListResponse",
     "DeleteWebhookResponse",
     # Manager

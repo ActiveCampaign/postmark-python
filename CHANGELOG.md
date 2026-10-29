@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - `outbound.list_bulk_requests(count, pagination_key)` for `GET /email/bulk`, returning the new `CursorPage` (`items`, `next_key`; `next_key` is `None` on the last page), and `outbound.stream_bulk_requests()` which follows the cursor automatically. `count` must be 1-500 (Postmark answers 0 with an HTTP 500).
+- `webhooks.get_statistics(webhook_id)` for `GET /webhooks/{id}/statistics` (24-hour window, overall and per-trigger metrics, per-trigger verification status), with `WebhookStatistics`, `WebhookMetrics` and `WebhookTimeRange` models.
 
 ### Fixed
 

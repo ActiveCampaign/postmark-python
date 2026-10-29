@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -91,5 +93,57 @@ class DeleteWebhookResponse(BaseModel):
 
     error_code: int = Field(alias="ErrorCode")
     message: str = Field(alias="Message")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class WebhookMetrics(BaseModel):
+    """Delivery metrics for a webhook (or for one of its triggers) over the window."""
+
+    total_requests: int = Field(0, alias="TotalRequests")
+    success_count: int = Field(0, alias="SuccessCount")
+    failure_count: int = Field(0, alias="FailureCount")
+    retry_count: int = Field(0, alias="RetryCount")
+    success_rate: float = Field(0.0, alias="SuccessRate")
+    slow_count: int = Field(0, alias="SlowCount")
+    very_slow_count: int = Field(0, alias="VerySlowCount")
+    # Absent when there was no traffic / no retries in the window.
+    average_terminal_response_time_ms: float | None = Field(
+        None, alias="AverageTerminalResponseTimeMs"
+    )
+    average_retry_response_time_ms: float | None = Field(
+        None, alias="AverageRetryResponseTimeMs"
+    )
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class WebhookTimeRange(BaseModel):
+    """The window the statistics cover (currently the last 24 hours)."""
+
+    start_time: datetime = Field(alias="StartTime")
+    end_time: datetime = Field(alias="EndTime")
+    hours: int = Field(alias="Hours")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class WebhookStatistics(BaseModel):
+    """Response from ``GET /webhooks/{id}/statistics``."""
+
+    webhook_id: int = Field(alias="WebhookId")
+    server_id: int | None = Field(None, alias="ServerId")
+    message_stream_id: str | None = Field(None, alias="MessageStreamId")
+    url: str | None = Field(None, alias="Url")
+    # Enabled triggers only, e.g. {"Delivery": "verified"}.
+    statuses: dict[str, str] = Field(default_factory=dict, alias="Statuses")
+    time_range: WebhookTimeRange | None = Field(None, alias="TimeRange")
+    metrics: WebhookMetrics = Field(
+        default_factory=lambda: WebhookMetrics.model_validate({}), alias="Metrics"
+    )
+    # Keyed by trigger name (Open, Click, Delivery, Bounce, ...).
+    metrics_by_trigger: dict[str, WebhookMetrics] = Field(
+        default_factory=dict, alias="MetricsByTrigger"
+    )
 
     model_config = ConfigDict(populate_by_name=True)
