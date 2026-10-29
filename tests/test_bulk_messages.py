@@ -4,6 +4,7 @@ import pytest
 
 from postmark.exceptions import InvalidEmailException
 from postmark.models.outbound import BulkEmail, BulkRecipient
+from postmark.models.outbound.enums import BulkJobStatus
 
 
 class TestBulkSend:
@@ -11,10 +12,16 @@ class TestBulkSend:
 
     @pytest.fixture
     def bulk_accepted_response(self):
+        """Shape captured from the live API (POST /email/bulk)."""
         return {
-            "ID": "f24af63c-533d-4b7a-ad65-4a7b3202d3a7",
-            "Status": "Accepted",
+            "Id": "f24af63c-533d-4b7a-ad65-4a7b3202d3a7",
             "SubmittedAt": "2024-03-17T07:25:01.4178645-05:00",
+            "TotalMessages": 2,
+            "PercentageCompleted": 0,
+            "Status": "Accepted",
+            "Subject": "Hello {{FirstName}}",
+            "ReleasedCount": 0,
+            "FailedCount": 0,
         }
 
     @pytest.fixture
@@ -26,6 +33,8 @@ class TestBulkSend:
             "PercentageCompleted": 100.0,
             "Status": "Completed",
             "Subject": "Hello {{FirstName}}",
+            "ReleasedCount": 3,
+            "FailedCount": 0,
         }
 
     @pytest.fixture
@@ -281,3 +290,88 @@ class TestBulkSend:
         assert status.status == "Processing"
         assert status.percentage_completed == 45.5
         assert status.total_messages == 1000
+
+    # -------------------------------------------------------------------------
+    # Response shape: live API uses "Id"; "ID" kept for backward compatibility
+    # -------------------------------------------------------------------------
+
+    @pytest.mark.asyncio
+    async def test_send_bulk_response_exposes_all_live_fields(
+        self, outbound, bulk_accepted_response, minimal_bulk_dict
+    ):
+        manager, fake = outbound
+        fake.mock_post_response(bulk_accepted_response)
+
+        response = await manager.send_bulk(minimal_bulk_dict)
+
+        assert response.id == "f24af63c-533d-4b7a-ad65-4a7b3202d3a7"
+        assert response.subject == "Hello {{FirstName}}"
+        assert response.total_messages == 2
+        assert response.percentage_completed == 0
+        assert response.released_count == 0
+        assert response.failed_count == 0
+
+    @pytest.mark.asyncio
+    async def test_send_bulk_response_still_accepts_legacy_uppercase_id(
+        self, outbound, minimal_bulk_dict
+    ):
+        """Payloads recorded with the old "ID" key keep parsing."""
+        manager, fake = outbound
+        fake.mock_post_response(
+            {
+                "ID": "legacy-1",
+                "Status": "Accepted",
+                "SubmittedAt": "2024-03-17T07:25:01Z",
+            }
+        )
+
+        response = await manager.send_bulk(minimal_bulk_dict)
+
+        assert response.id == "legacy-1"
+        assert response.total_messages is None
+
+    @pytest.mark.asyncio
+    async def test_send_bulk_response_without_optional_counters(
+        self, outbound, minimal_bulk_dict
+    ):
+        manager, fake = outbound
+        fake.mock_post_response(
+            {"Id": "x", "Status": "Accepted", "SubmittedAt": "2024-03-17T07:25:01Z"}
+        )
+
+        response = await manager.send_bulk(minimal_bulk_dict)
+
+        assert response.released_count is None
+        assert response.failed_count is None
+
+    @pytest.mark.asyncio
+    async def test_get_bulk_status_cancelled(self, outbound):
+        """Postmark documents a Cancelled status; it must parse."""
+        manager, fake = outbound
+        fake.mock_get_response(
+            {
+                "Id": "abc-123",
+                "SubmittedAt": "2024-03-17T07:25:01Z",
+                "TotalMessages": 10,
+                "PercentageCompleted": 30.0,
+                "Status": "Cancelled",
+                "ReleasedCount": 3,
+                "FailedCount": 0,
+            }
+        )
+
+        status = await manager.get_bulk_status("abc-123")
+
+        assert status.status == BulkJobStatus.CANCELLED
+        assert status.released_count == 3
+        assert status.failed_count == 0
+
+    def test_bulk_job_status_keeps_failed_for_backward_compatibility(self):
+        assert BulkJobStatus.FAILED.value == "Failed"
+        assert {s.value for s in BulkJobStatus} >= {
+            "Accepted",
+            "Processing",
+            "Completed",
+            "Cancelled",
+            "Failed",
+        }

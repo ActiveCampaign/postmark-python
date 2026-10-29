@@ -37,4 +37,5 @@ class BulkJobStatus(str, Enum):
     ACCEPTED = "Accepted"
     PROCESSING = "Processing"
     COMPLETED = "Completed"
-    FAILED = "Failed"
+    CANCELLED = "Cancelled"
+    FAILED = "Failed"  # kept for backward compatibility; Postmark documents Cancelled
