@@ -2,7 +2,12 @@ import builtins
 
 from postmark.utils.types import HTTPClient
 
-from .schemas import DeleteWebhookResponse, Webhook, WebhooksListResponse
+from .schemas import (
+    DeleteWebhookResponse,
+    Webhook,
+    WebhooksListResponse,
+    WebhookStatistics,
+)
 
 
 class WebhookManager:
@@ -112,6 +117,17 @@ class WebhookManager:
 
         response = await self.client.put(f"/webhooks/{webhook_id}", json=body)
         return Webhook(**response.json())
+
+    async def get_statistics(self, webhook_id: int) -> WebhookStatistics:
+        """
+        Return delivery statistics for a webhook over the last 24 hours.
+
+        Includes overall and per-trigger request, success, failure and retry counts,
+        the success rate and average response times, plus each enabled trigger's
+        verification status. The window is fixed by Postmark; there are no filters.
+        """
+        response = await self.client.get(f"/webhooks/{webhook_id}/statistics")
+        return WebhookStatistics(**response.json())
 
     async def delete(self, webhook_id: int) -> DeleteWebhookResponse:
         """Delete a webhook by ID."""

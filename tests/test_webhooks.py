@@ -451,3 +451,163 @@ class TestDeleteWebhook:
         fake.get.assert_not_called()
         fake.post.assert_not_called()
         fake.put.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# Webhook statistics (shape captured from the live API)
+# ---------------------------------------------------------------------------
+
+_ZERO_METRICS = {
+    "TotalRequests": 0,
+    "SuccessCount": 0,
+    "FailureCount": 0,
+    "RetryCount": 0,
+    "SuccessRate": 0,
+    "SlowCount": 0,
+    "VerySlowCount": 0,
+}
+
+STATISTICS = {
+    "WebhookId": 1234,
+    "ServerId": 11111,
+    "MessageStreamId": "outbound",
+    "Url": "https://example.com/hook",
+    "Statuses": {"Open": "verified", "Delivery": "verified"},
+    "TimeRange": {
+        "StartTime": "2026-10-20T20:00:00Z",
+        "EndTime": "2026-10-21T20:28:07.9440221Z",
+        "Hours": 24,
+    },
+    "Metrics": {
+        "TotalRequests": 1,
+        "SuccessCount": 1,
+        "FailureCount": 0,
+        "RetryCount": 0,
+        "SuccessRate": 100,
+        "SlowCount": 0,
+        "VerySlowCount": 0,
+        "AverageTerminalResponseTimeMs": 98,
+    },
+    "MetricsByTrigger": {
+        "Open": _ZERO_METRICS,
+        "Delivery": {
+            "TotalRequests": 1,
+            "SuccessCount": 1,
+            "FailureCount": 0,
+            "RetryCount": 0,
+            "SuccessRate": 100,
+            "SlowCount": 0,
+            "VerySlowCount": 0,
+            "AverageTerminalResponseTimeMs": 98,
+        },
+    },
+}
+
+
+class TestWebhookStatistics:
+    @pytest.mark.asyncio
+    async def test_calls_the_statistics_endpoint(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_get_response(STATISTICS)
+
+        await manager.get_statistics(1234)
+
+        fake.get.assert_called_once_with("/webhooks/1234/statistics")
+
+    @pytest.mark.asyncio
+    async def test_parses_identity_window_and_statuses(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_get_response(STATISTICS)
+
+        stats = await manager.get_statistics(1234)
+
+        assert stats.webhook_id == 1234
+        assert stats.server_id == 11111
+        assert stats.message_stream_id == "outbound"
+        assert stats.url == "https://example.com/hook"
+        assert stats.statuses == {"Open": "verified", "Delivery": "verified"}
+        assert stats.time_range.hours == 24
+        assert stats.time_range.start_time.isoformat() == "2026-10-20T20:00:00+00:00"
+        assert stats.time_range.end_time.year == 2026
+
+    @pytest.mark.asyncio
+    async def test_parses_overall_metrics(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_get_response(STATISTICS)
+
+        m = (await manager.get_statistics(1)).metrics
+
+        assert (m.total_requests, m.success_count, m.failure_count) == (1, 1, 0)
+        assert m.retry_count == 0
+        assert m.success_rate == 100.0
+        assert (m.slow_count, m.very_slow_count) == (0, 0)
+        assert m.average_terminal_response_time_ms == 98
+
+    @pytest.mark.asyncio
+    async def test_parses_metrics_by_trigger(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_get_response(STATISTICS)
+
+        by_trigger = (await manager.get_statistics(1)).metrics_by_trigger
+
+        assert set(by_trigger) == {"Open", "Delivery"}
+        assert by_trigger["Delivery"].total_requests == 1
+        assert by_trigger["Open"].total_requests == 0
+
+    @pytest.mark.asyncio
+    async def test_averages_are_none_without_traffic_or_retries(self, webhooks):
+        """The averages are absent from the response when nothing was sent."""
+        manager, fake = webhooks
+        fake.mock_get_response({**STATISTICS, "Metrics": _ZERO_METRICS})
+
+        m = (await manager.get_statistics(1)).metrics
+
+        assert m.average_terminal_response_time_ms is None
+        assert m.average_retry_response_time_ms is None
+
+    @pytest.mark.asyncio
+    async def test_retry_average_when_present(self, webhooks):
+        manager, fake = webhooks
+        metrics = {
+            **_ZERO_METRICS,
+            "RetryCount": 2,
+            "AverageRetryResponseTimeMs": 310.5,
+        }
+        fake.mock_get_response({**STATISTICS, "Metrics": metrics})
+
+        m = (await manager.get_statistics(1)).metrics
+
+        assert m.retry_count == 2
+        assert m.average_retry_response_time_ms == 310.5
+
+    @pytest.mark.asyncio
+    async def test_minimal_response_uses_defaults(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_get_response({"WebhookId": 5})
+
+        stats = await manager.get_statistics(5)
+
+        assert stats.webhook_id == 5
+        assert stats.statuses == {}
+        assert stats.time_range is None
+        assert stats.metrics_by_trigger == {}
+        assert stats.metrics.total_requests == 0
+        assert stats.url is None
+
+    @pytest.mark.asyncio
+    async def test_unknown_trigger_and_status_values_do_not_break_parsing(
+        self, webhooks
+    ):
+        manager, fake = webhooks
+        fake.mock_get_response(
+            {
+                **STATISTICS,
+                "Statuses": {"BrandNew": "pending"},
+                "MetricsByTrigger": {"BrandNew": _ZERO_METRICS},
+            }
+        )
+
+        stats = await manager.get_statistics(1)
+
+        assert stats.statuses == {"BrandNew": "pending"}
+        assert "BrandNew" in stats.metrics_by_trigger
