@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - Django backend closes clients it automatically opens when a batch send fails, while preserving caller-owned connections for reuse.
+- `send_bulk()` no longer raises `ValidationError` after Postmark accepts the request. The response key is `Id` (`ID` is still accepted); `BulkSendResponse` and `BulkSendStatus` now also expose `subject`, `total_messages`, `percentage_completed`, `released_count` and `failed_count`.
+- `BulkJobStatus` gains `CANCELLED`. `FAILED` is kept for backward compatibility.
 
 ---
 

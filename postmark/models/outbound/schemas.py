@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Annotated, Any
 
 from pydantic import (
+    AliasChoices,
     BaseModel,
     BeforeValidator,
     ConfigDict,
@@ -259,11 +260,19 @@ class BulkEmail(BaseModel):
 class BulkSendResponse(BaseModel):
     """
     Response from POST /email/bulk.
+
+    Postmark returns the request ID as ``Id``. ``ID`` is still accepted so that
+    payloads recorded before this was corrected keep parsing.
     """
 
-    id: str = Field(alias="ID")
+    id: str = Field(validation_alias=AliasChoices("Id", "ID"), serialization_alias="Id")
     status: BulkJobStatus = Field(alias="Status")
     submitted_at: datetime = Field(alias="SubmittedAt")
+    subject: str | None = Field(None, alias="Subject")
+    total_messages: int | None = Field(None, alias="TotalMessages")
+    percentage_completed: float | None = Field(None, alias="PercentageCompleted")
+    released_count: int | None = Field(None, alias="ReleasedCount")
+    failed_count: int | None = Field(None, alias="FailedCount")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -279,5 +288,7 @@ class BulkSendStatus(BaseModel):
     percentage_completed: float = Field(alias="PercentageCompleted")
     status: BulkJobStatus = Field(alias="Status")
     subject: str | None = Field(None, alias="Subject")
+    released_count: int | None = Field(None, alias="ReleasedCount")
+    failed_count: int | None = Field(None, alias="FailedCount")
 
     model_config = ConfigDict(populate_by_name=True)
