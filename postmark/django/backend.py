@@ -79,6 +79,7 @@ class EmailBackend(BaseEmailBackend):
         sent_count = 0
         try:
             client_created = self.open()
+            send_failed = True
             try:
                 for start in range(0, len(emails), _BATCH_LIMIT):
                     chunk = emails[start : start + _BATCH_LIMIT]
@@ -91,9 +92,21 @@ class EmailBackend(BaseEmailBackend):
                     sent_count += len(responses) - len(failures)
                     if failures:
                         self._raise_for_failures(failures)
+                send_failed = False
             finally:
                 if client_created:
-                    self.close()
+                    try:
+                        self.close()
+                    except Exception:
+                        # A cleanup error must not hide the send error that is
+                        # already propagating. After a successful send it is raised.
+                        if not send_failed:
+                            raise
+                        logger.warning(
+                            "postmark.django: error closing the client after a "
+                            "failed send",
+                            exc_info=True,
+                        )
         except Exception as exc:
             on_exception.send_robust(
                 self.__class__, raw_messages=email_messages, exception=exc
