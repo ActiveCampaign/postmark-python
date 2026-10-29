@@ -15,10 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `send_bulk()` no longer raises `ValidationError` after Postmark accepts the request. The response key is `Id` (`ID` is still accepted); `BulkSendResponse` and `BulkSendStatus` now also expose `subject`, `total_messages`, `percentage_completed`, `released_count` and `failed_count`.
 - `BulkJobStatus` gains `CANCELLED`. `FAILED` is kept for backward compatibility.
 - `send_batch()` and `send_batch_with_template()` no longer raise when an entry fails. Failed entries come back as results (check `success` / `error_code`) instead of discarding the whole batch.
+- `get_delivery_stats()` no longer raises: the `All` total entry has no `Type`/`TypeCode`.
 
 ### Changed
 
 - **Typing only:** `SendResponse.to`, `.submitted_at` and `.message_id` are now `X | None` (they are `None` for failed batch entries; successful sends still populate them). Type checkers may flag code that assumes they are always set.
+- **Typing only:** `BounceTypeCount.type` and `.type_code` are now `X | None`.
 
 ---
 

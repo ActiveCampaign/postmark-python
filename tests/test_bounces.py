@@ -86,6 +86,39 @@ class TestDeliveryStats:
         assert stats.inactive_mails == 0
         assert stats.bounces == []
 
+    @pytest.mark.asyncio
+    async def test_get_delivery_stats_all_entry_without_type(self, bounces):
+        """Live API returns the 'All' total with only Name and Count."""
+        manager, fake = bounces
+        fake.mock_get_response(
+            {"InactiveMails": 0, "Bounces": [{"Name": "All", "Count": 0}]}
+        )
+
+        stats = await manager.get_delivery_stats()
+
+        assert stats.bounces[0].name == "All"
+        assert stats.bounces[0].count == 0
+        assert stats.bounces[0].type is None
+        assert stats.bounces[0].type_code is None
+
+    @pytest.mark.asyncio
+    async def test_get_delivery_stats_all_alongside_typed_entries(self, bounces):
+        manager, fake = bounces
+        fake.mock_get_response(
+            {
+                "InactiveMails": 1,
+                "Bounces": [
+                    {"Name": "All", "Count": 3},
+                    {"Name": "Hard bounce", "Type": "HardBounce", "Count": 3},
+                ],
+            }
+        )
+
+        stats = await manager.get_delivery_stats()
+
+        assert [b.type for b in stats.bounces] == [None, "HardBounce"]
+        assert stats.bounces[1].type_code is None
+
 
 # ---------------------------------------------------------------------------
 # Bounce List

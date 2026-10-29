@@ -34,9 +34,10 @@ class BounceTypeCount(BaseModel):
     """Aggregate count for a single bounce type, returned within DeliveryStats"""
 
     name: str = Field(alias="Name")
-    type: str = Field(alias="Type")
+    # The "All" total entry returned by Postmark carries only Name and Count.
+    type: str | None = Field(None, alias="Type")
     count: int = Field(alias="Count")
-    type_code: int = Field(alias="TypeCode")
+    type_code: int | None = Field(None, alias="TypeCode")
 
     model_config = ConfigDict(populate_by_name=True)
 
