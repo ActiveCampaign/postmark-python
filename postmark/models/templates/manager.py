@@ -70,8 +70,18 @@ class TemplateManager:
         count: int = 100,
         offset: int = 0,
         template_type: TemplateTypeFilter | None = None,
+        layout_template: str | None = None,
     ) -> Page[TemplateSummary]:
-        """List templates with optional type filter."""
+        """
+        List templates with optional filters.
+
+        Args:
+            count: Templates per page (max 500).
+            offset: Records to skip (count + offset <= 10,000).
+            template_type: Only templates of this type.
+            layout_template: Only templates that use the Layout template with this
+                **alias**. An unknown alias is an API error (422).
+        """
         if count > 500:
             raise ValueError("count cannot exceed 500 templates per request")
         if count + offset > 10000:
@@ -80,6 +90,8 @@ class TemplateManager:
         params: dict[str, Any] = {"count": count, "offset": offset}
         if template_type is not None:
             params["templateType"] = template_type.value
+        if layout_template is not None:
+            params["layoutTemplate"] = layout_template
 
         response = await self.client.get("/templates", params=params)
         data = TemplateListResponse(**response.json())
