@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## [0.5.0] - 2026-10-29
+
+Upgrading from 0.4.x? See the [Upgrading to 0.5.0](https://github.com/ActiveCampaign/postmark-python/wiki/Upgrading-to-0.5.0) guide for the few behaviour changes to check.
 
 ### Added
 
@@ -20,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
-- Django backend closes clients it automatically opens when a batch send fails, while preserving caller-owned connections for reuse.
+- Django backend closes clients it automatically opens when a batch send fails, while preserving caller-owned connections for reuse. Thanks to @Kayvan-Zahiri for reporting (#38) and fixing (#39) this.
 - `send_bulk()` no longer raises `ValidationError` after Postmark accepts the request. The response key is `Id` (`ID` is still accepted); `BulkSendResponse` and `BulkSendStatus` now also expose `subject`, `total_messages`, `percentage_completed`, `released_count` and `failed_count`.
 - `BulkJobStatus` gains `CANCELLED`. `FAILED` is kept for backward compatibility.
 - `send_batch()` and `send_batch_with_template()` no longer raise when an entry fails. Failed entries come back as results (check `success` / `error_code`) instead of discarding the whole batch.
