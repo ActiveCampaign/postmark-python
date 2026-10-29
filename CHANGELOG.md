@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `send_batch()` and `send_batch_with_template()` no longer raise when an entry fails. Failed entries come back as results (check `success` / `error_code`) instead of discarding the whole batch.
 - `get_delivery_stats()` no longer raises: the `All` total entry has no `Type`/`TypeCode`.
 - `templates.push()` accepts integer `SourceServerID` / `DestinationServerID` (strings still work and are sent unchanged).
+- Stats: `platform_usage()`, `browser_platform_usage()`, `click_location()` and the other per-day stats models no longer raise when Postmark omits a category whose count is zero (for example a day with no mobile activity). Missing counts read as `0` and a missing `days` as `[]`.
 
 ### Changed
 
