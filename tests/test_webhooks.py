@@ -772,3 +772,98 @@ class TestVerifyWebhook:
 
         assert result.results[0].trigger_type == "BrandNew"
         assert result.results[0].status_code is None
+
+
+# ---------------------------------------------------------------------------
+# verify=False: Postmark takes it as the ?verify=false QUERY parameter. A body
+# field named "Verify" is silently ignored by the API (verified live).
+# ---------------------------------------------------------------------------
+
+
+class TestSkipVerification:
+    @pytest.mark.asyncio
+    async def test_create_verifies_by_default(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_post_response(WEBHOOK)
+
+        await manager.create("https://example.com/hook")
+
+        assert fake.post.call_args[0][0] == "/webhooks"
+
+    @pytest.mark.asyncio
+    async def test_create_explicit_true_is_the_same_as_the_default(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_post_response(WEBHOOK)
+
+        await manager.create("https://example.com/hook", verify=True)
+
+        assert fake.post.call_args[0][0] == "/webhooks"
+
+    @pytest.mark.asyncio
+    async def test_create_without_verification_uses_the_query_parameter(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_post_response(WEBHOOK)
+
+        await manager.create("https://example.com/hook", verify=False)
+
+        assert fake.post.call_args[0][0] == "/webhooks?verify=false"
+
+    @pytest.mark.asyncio
+    async def test_create_never_puts_verify_in_the_body(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_post_response(WEBHOOK)
+
+        await manager.create("https://example.com/hook", verify=False)
+
+        body = fake.post.call_args[1]["json"]
+        assert "Verify" not in body
+        assert "verify" not in body
+        assert body == {"Url": "https://example.com/hook"}
+
+    @pytest.mark.asyncio
+    async def test_edit_verifies_by_default(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_get_response(LIVE_WEBHOOK)
+        fake.mock_put_response(LIVE_WEBHOOK)
+
+        await manager.edit(1, url="https://x.com/h")
+
+        assert fake.put.call_args[0][0] == "/webhooks/1"
+
+    @pytest.mark.asyncio
+    async def test_edit_without_verification_uses_the_query_parameter(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_get_response(LIVE_WEBHOOK)
+        fake.mock_put_response(LIVE_WEBHOOK)
+
+        await manager.edit(1, url="https://x.com/h", verify=False)
+
+        assert fake.put.call_args[0][0] == "/webhooks/1?verify=false"
+        assert "Verify" not in fake.put.call_args[1]["json"]
+
+    @pytest.mark.asyncio
+    async def test_edit_reads_the_webhook_without_the_query_parameter(self, webhooks):
+        """Only the write is affected; the read-before-write stays a plain GET."""
+        manager, fake = webhooks
+        fake.mock_get_response(LIVE_WEBHOOK)
+        fake.mock_put_response(LIVE_WEBHOOK)
+
+        await manager.edit(5, url="https://x.com/h", verify=False)
+
+        fake.get.assert_called_once_with("/webhooks/5")
+
+    @pytest.mark.asyncio
+    async def test_unverified_trigger_status_is_parsed(self, webhooks):
+        manager, fake = webhooks
+        unverified = {
+            **WEBHOOK,
+            "Triggers": {
+                **TRIGGERS,
+                "Delivery": {"Enabled": True, "Status": "unverified"},
+            },
+        }
+        fake.mock_post_response(unverified)
+
+        wh = await manager.create("https://example.com/hook", verify=False)
+
+        assert wh.triggers.delivery.enabled is True
