@@ -268,6 +268,62 @@ class TestListTemplates:
         assert params["templateType"] == "Layout"
 
     @pytest.mark.asyncio
+    async def test_layout_template_filter_is_sent_as_layouttemplate(self, templates):
+        """Filters to templates that use the Layout with this alias (verified live)."""
+        manager, fake = templates
+        fake.mock_get_response({"TotalCount": 0, "Templates": []})
+
+        await manager.list(layout_template="my-layout")
+
+        fake.get.assert_called_once_with(
+            "/templates",
+            params={"count": 100, "offset": 0, "layoutTemplate": "my-layout"},
+        )
+
+    @pytest.mark.asyncio
+    async def test_layout_template_combines_with_template_type(self, templates):
+        manager, fake = templates
+        fake.mock_get_response({"TotalCount": 0, "Templates": []})
+
+        await manager.list(
+            template_type=TemplateTypeFilter.STANDARD, layout_template="my-layout"
+        )
+
+        params = fake.get.call_args[1]["params"]
+        assert params["templateType"] == "Standard"
+        assert params["layoutTemplate"] == "my-layout"
+
+    @pytest.mark.asyncio
+    async def test_layout_template_not_sent_when_omitted(self, templates):
+        manager, fake = templates
+        fake.mock_get_response({"TotalCount": 0, "Templates": []})
+
+        await manager.list(template_type=TemplateTypeFilter.STANDARD)
+
+        assert "layoutTemplate" not in fake.get.call_args[1]["params"]
+
+    @pytest.mark.asyncio
+    async def test_layout_template_is_the_last_positional_parameter(self, templates):
+        """Added at the end so existing positional calls keep their meaning."""
+        manager, fake = templates
+        fake.mock_get_response({"TotalCount": 0, "Templates": []})
+
+        await manager.list(10, 5, TemplateTypeFilter.STANDARD)
+
+        params = fake.get.call_args[1]["params"]
+        assert params == {"count": 10, "offset": 5, "templateType": "Standard"}
+
+    @pytest.mark.asyncio
+    async def test_all_type_is_still_sent(self, templates):
+        """The live API accepts templateType=All, so the existing member keeps working."""
+        manager, fake = templates
+        fake.mock_get_response({"TotalCount": 0, "Templates": []})
+
+        await manager.list(template_type=TemplateTypeFilter.ALL)
+
+        assert fake.get.call_args[1]["params"]["templateType"] == "All"
+
+    @pytest.mark.asyncio
     async def test_count_too_large_raises(self, templates):
         manager, fake = templates
 
