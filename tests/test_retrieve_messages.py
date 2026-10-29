@@ -467,3 +467,51 @@ class TestTrackingFilterWireNames:
             await getattr(manager, list_method)(count=500, offset=9501)
 
         fake.get.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "list_method,response_key",
+    [("list_opens", "Opens"), ("list_clicks", "Clicks")],
+)
+class TestTrackingDateFiltersUnsupported:
+    """Postmark's opens/clicks endpoints ignore date filters, so the arguments warn
+    and are not sent (the signature is kept so existing calls do not break)."""
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "kwargs",
+        [
+            {"from_date": datetime(2024, 1, 1)},
+            {"to_date": datetime(2024, 1, 31)},
+            {"from_date": datetime(2024, 1, 1), "to_date": datetime(2024, 1, 31)},
+        ],
+    )
+    async def test_date_arguments_warn_and_are_not_sent(
+        self, outbound, list_method, response_key, kwargs
+    ):
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 0, response_key: []})
+
+        with pytest.warns(FutureWarning, match="have no effect") as record:
+            result = await getattr(manager, list_method)(**kwargs)
+
+        params = fake.get.call_args[1]["params"]
+        assert "fromdate" not in params
+        assert "todate" not in params
+        assert result.total == 0
+        # The warning points at the caller, not at the SDK internals
+        assert record[0].filename == __file__
+        assert list_method in str(record[0].message)
+
+    @pytest.mark.asyncio
+    async def test_no_warning_without_date_arguments(
+        self, outbound, list_method, response_key
+    ):
+        import warnings
+
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 0, response_key: []})
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            await getattr(manager, list_method)(tag="promo")

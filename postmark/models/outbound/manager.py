@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from collections.abc import AsyncGenerator
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
@@ -66,6 +67,17 @@ def _parse_bulk_email(message: BulkEmail | dict[str, Any]) -> BulkEmail:
         return BulkEmail.model_validate(message)
     except ValidationError as e:
         raise InvalidEmailException(e.errors()) from e
+
+
+def _warn_date_filters_unsupported(method: str) -> None:
+    """Postmark's opens/clicks endpoints have no date filter; the arguments are no-ops."""
+    warnings.warn(
+        f"{method}(): from_date/to_date have no effect. Postmark's opens and clicks "
+        "endpoints do not support date filtering, so the arguments are ignored "
+        "and not sent. Filter the returned events by received_at instead.",
+        FutureWarning,
+        stacklevel=3,
+    )
 
 
 class OutboundManager:
@@ -322,7 +334,13 @@ class OutboundManager:
         from_date: datetime | None = None,
         to_date: datetime | None = None,
     ) -> Page[OpenEvent]:
-        """List open tracking events across all messages."""
+        """
+        List open tracking events across all messages.
+
+        ``from_date`` / ``to_date`` have no effect: Postmark does not support date
+        filtering on this endpoint. Passing them emits a ``FutureWarning`` and they
+        are not sent.
+        """
         if count > 500:
             raise ValueError("Count cannot exceed 500 per request")
         if count + offset > 10000:
@@ -356,10 +374,8 @@ class OutboundManager:
             params["city"] = city
         if message_stream is not None:
             params["messagestream"] = message_stream
-        if from_date is not None:
-            params["fromdate"] = from_date.strftime("%Y-%m-%dT%H:%M:%S")
-        if to_date is not None:
-            params["todate"] = to_date.strftime("%Y-%m-%dT%H:%M:%S")
+        if from_date is not None or to_date is not None:
+            _warn_date_filters_unsupported("list_opens")
 
         response = await self.client.get("/messages/outbound/opens", params=params)
         data = response.json()
@@ -411,7 +427,13 @@ class OutboundManager:
         from_date: datetime | None = None,
         to_date: datetime | None = None,
     ) -> Page[ClickEvent]:
-        """List click tracking events across all messages."""
+        """
+        List click tracking events across all messages.
+
+        ``from_date`` / ``to_date`` have no effect: Postmark does not support date
+        filtering on this endpoint. Passing them emits a ``FutureWarning`` and they
+        are not sent.
+        """
         if count > 500:
             raise ValueError("Count cannot exceed 500 per request")
         if count + offset > 10000:
@@ -445,10 +467,8 @@ class OutboundManager:
             params["city"] = city
         if message_stream is not None:
             params["messagestream"] = message_stream
-        if from_date is not None:
-            params["fromdate"] = from_date.strftime("%Y-%m-%dT%H:%M:%S")
-        if to_date is not None:
-            params["todate"] = to_date.strftime("%Y-%m-%dT%H:%M:%S")
+        if from_date is not None or to_date is not None:
+            _warn_date_filters_unsupported("list_clicks")
 
         response = await self.client.get("/messages/outbound/clicks", params=params)
         data = response.json()
