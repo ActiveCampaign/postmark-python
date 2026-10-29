@@ -79,19 +79,34 @@ class EmailBackend(BaseEmailBackend):
         sent_count = 0
         try:
             client_created = self.open()
-            for start in range(0, len(emails), _BATCH_LIMIT):
-                chunk = emails[start : start + _BATCH_LIMIT]
-                pre_send.send_robust(self.__class__, messages=chunk)
-                responses = self.client.outbound.send_batch(chunk)
-                post_send.send_robust(
-                    self.__class__, messages=chunk, response=responses
-                )
-                failures = [r for r in responses if not r.success]
-                sent_count += len(responses) - len(failures)
-                if failures:
-                    self._raise_for_failures(failures)
-            if client_created:
-                self.close()
+            send_failed = True
+            try:
+                for start in range(0, len(emails), _BATCH_LIMIT):
+                    chunk = emails[start : start + _BATCH_LIMIT]
+                    pre_send.send_robust(self.__class__, messages=chunk)
+                    responses = self.client.outbound.send_batch(chunk)
+                    post_send.send_robust(
+                        self.__class__, messages=chunk, response=responses
+                    )
+                    failures = [r for r in responses if not r.success]
+                    sent_count += len(responses) - len(failures)
+                    if failures:
+                        self._raise_for_failures(failures)
+                send_failed = False
+            finally:
+                if client_created:
+                    try:
+                        self.close()
+                    except Exception:
+                        # A cleanup error must not hide the send error that is
+                        # already propagating. After a successful send it is raised.
+                        if not send_failed:
+                            raise
+                        logger.warning(
+                            "postmark.django: error closing the client after a "
+                            "failed send",
+                            exc_info=True,
+                        )
         except Exception as exc:
             on_exception.send_robust(
                 self.__class__, raw_messages=email_messages, exception=exc
