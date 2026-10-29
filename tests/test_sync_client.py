@@ -306,3 +306,25 @@ class TestModuleLevelLoop:
         assert result == "child"
         assert int(stored_pid_str) == int(child_pid_str)
         assert int(child_pid_str) == pid
+
+
+class TestSyncClientClose:
+    def test_server_client_close_closes_the_async_client(self):
+        client = SyncServerClient("test-token")
+
+        client.close()
+
+        assert client._async._http_client.is_closed
+
+    def test_account_client_close_closes_the_async_client(self):
+        client = SyncAccountClient("test-token")
+
+        client.close()
+
+        assert client._async._http_client.is_closed
+
+    def test_closing_twice_does_not_raise(self):
+        client = SyncServerClient("test-token")
+
+        client.close()
+        client.close()

@@ -335,3 +335,35 @@ class TestAccountClient:
                 await client.request("GET", "/servers")
 
         assert mock_req.call_count == 1
+
+
+class TestAccountClientRemainingVerbs:
+    @pytest.fixture
+    def client(self):
+        return AccountClient(account_token="test-account-token", retries=0)
+
+    @pytest.mark.asyncio
+    async def test_patch_delegates_to_request(self, client):
+        with patch.object(client, "request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = Mock(spec=Response)
+            await client.patch("/servers/42", json={"Name": "Renamed"})
+            mock_req.assert_called_once_with(
+                "PATCH", "/servers/42", json={"Name": "Renamed"}
+            )
+
+    @pytest.mark.asyncio
+    async def test_request_guard_when_the_retry_loop_yields_no_attempt(self, client):
+        """Defensive: if the retry loop never runs, fail loudly rather than return None."""
+
+        class NoAttempts:
+            def __aiter__(self):
+                return self
+
+            async def __anext__(self):
+                raise StopAsyncIteration
+
+        with patch(
+            "postmark.clients.account_client.AsyncRetrying", return_value=NoAttempts()
+        ):
+            with pytest.raises(AssertionError, match="unreachable"):
+                await client.request("GET", "/x")

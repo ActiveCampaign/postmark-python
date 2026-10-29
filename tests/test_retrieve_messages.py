@@ -469,6 +469,58 @@ class TestTrackingFilterWireNames:
         fake.get.assert_not_called()
 
 
+class TestListMessageFilters:
+    """Remaining GET /messages/outbound filters and their wire names."""
+
+    @pytest.mark.asyncio
+    async def test_from_email_subject_and_stream_filters(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 0, "Messages": []})
+
+        await manager.list(
+            from_email="sender@example.com",
+            subject="Welcome",
+            message_stream="broadcast",
+        )
+
+        params = fake.get.call_args[1]["params"]
+        assert params["fromemail"] == "sender@example.com"
+        assert params["subject"] == "Welcome"
+        assert params["messagestream"] == "broadcast"
+
+    @pytest.mark.asyncio
+    async def test_single_metadata_filter(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 0, "Messages": []})
+
+        await manager.list(metadata={"customer": "42"})
+
+        assert fake.get.call_args[1]["params"]["metadata_customer"] == "42"
+
+    @pytest.mark.asyncio
+    async def test_multiple_metadata_filters_rejected(self, outbound):
+        manager, fake = outbound
+
+        with pytest.raises(ValueError, match="one metadata field at a time"):
+            await manager.list(metadata={"a": "1", "b": "2"})
+
+        fake.get.assert_not_called()
+
+
+@pytest.mark.parametrize("msg_method", ["list_message_opens", "list_message_clicks"])
+class TestPerMessageTrackingValidation:
+    @pytest.mark.asyncio
+    async def test_count_and_offset_limits(self, outbound, msg_method):
+        manager, fake = outbound
+
+        with pytest.raises(ValueError, match="Count cannot exceed 500"):
+            await getattr(manager, msg_method)("msg-1", count=501)
+        with pytest.raises(ValueError, match="Count \\+ Offset cannot exceed 10,000"):
+            await getattr(manager, msg_method)("msg-1", count=500, offset=9501)
+
+        fake.get.assert_not_called()
+
+
 @pytest.mark.parametrize(
     "list_method,response_key",
     [("list_opens", "Opens"), ("list_clicks", "Clicks")],

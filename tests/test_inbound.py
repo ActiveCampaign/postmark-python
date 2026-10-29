@@ -262,3 +262,37 @@ class TestRetryInbound:
 
         fake.get.assert_not_called()
         fake.post.assert_not_called()
+
+
+class TestListInboundFilters:
+    @pytest.mark.asyncio
+    async def test_every_filter_uses_its_wire_name(self, inbound):
+        from datetime import datetime
+
+        manager, fake = inbound
+        fake.mock_get_response({"TotalCount": 0, "InboundMessages": []})
+
+        await manager.list(
+            recipient="inbox@example.com",
+            from_email="sender@example.com",
+            tag="support",
+            subject="Hello",
+            mailbox_hash="abc123",
+            status="blocked",
+            from_date=datetime(2024, 1, 1, 10, 0, 0),
+            to_date=datetime(2024, 1, 31, 23, 59, 59),
+        )
+
+        assert fake.get.call_args[0][0] == "/messages/inbound"
+        assert fake.get.call_args[1]["params"] == {
+            "count": 100,
+            "offset": 0,
+            "recipient": "inbox@example.com",
+            "fromemail": "sender@example.com",
+            "tag": "support",
+            "subject": "Hello",
+            "mailboxhash": "abc123",
+            "status": "blocked",
+            "fromdate": "2024-01-01T10:00:00",
+            "todate": "2024-01-31T23:59:59",
+        }
