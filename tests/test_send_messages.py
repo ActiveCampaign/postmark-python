@@ -175,6 +175,50 @@ class TestEmailSending:
         assert len(fake.post.call_args[1]["json"]) == 2
 
     @pytest.mark.asyncio
+    async def test_send_batch_failed_entry_is_returned_not_raised(self, outbound):
+        """A failed entry has no To/SubmittedAt/MessageID (captured live) and must
+        come back as a result so the successful entries are not lost."""
+        manager, fake = outbound
+        fake.mock_post_response(
+            [
+                {
+                    "To": "user1@example.com",
+                    "SubmittedAt": "2024-01-01T00:00:00",
+                    "MessageID": "id-1",
+                    "ErrorCode": 0,
+                    "Message": "OK",
+                },
+                {
+                    "ErrorCode": 300,
+                    "Message": "Error parsing 'To': Illegal email address "
+                    "'not-an-address'. It must contain the '@' symbol.",
+                },
+            ]
+        )
+
+        responses = await manager.send_batch(
+            [
+                {"sender": "s@example.com", "to": "user1@example.com", "subject": "1"},
+                {"sender": "s@example.com", "to": "not-an-address", "subject": "2"},
+            ]
+        )
+
+        assert [r.success for r in responses] == [True, False]
+        assert responses[0].message_id == "id-1"
+        assert responses[1].error_code == 300
+        assert "Illegal email address" in responses[1].message
+        assert responses[1].to is None
+        assert responses[1].message_id is None
+        assert responses[1].submitted_at is None
+
+    def test_send_response_success_is_false_for_error_code(self):
+        from postmark.models.outbound import SendResponse
+
+        failed = SendResponse(ErrorCode=406, Message="Inactive recipient")
+        assert failed.success is False
+        assert SendResponse(ErrorCode=0, Message="OK").success is True
+
+    @pytest.mark.asyncio
     async def test_send_batch_limit(self, outbound):
         """Test that batches over 500 are rejected before any API call."""
         manager, fake = outbound
@@ -310,6 +354,27 @@ class TestSendBatchWithTemplates:
         assert len(results) == 2
         endpoint = fake.post.call_args[0][0]
         assert endpoint == "/email/batchWithTemplates"
+
+    @pytest.mark.asyncio
+    async def test_failed_entry_is_returned_not_raised(self, outbound, two_messages):
+        """Unknown template alias: the failed entry has only ErrorCode/Message."""
+        manager, fake = outbound
+        fake.mock_post_response(
+            [
+                SEND_RESPONSE,
+                {
+                    "ErrorCode": 1101,
+                    "Message": "The 'TemplateAlias' associated with this request "
+                    "is not valid or was not found.",
+                },
+            ]
+        )
+
+        results = await manager.send_batch_with_template(two_messages)
+
+        assert [r.success for r in results] == [True, False]
+        assert results[1].error_code == 1101
+        assert results[1].message_id is None
 
     @pytest.mark.asyncio
     async def test_wraps_in_messages_key(self, outbound, two_messages):
