@@ -95,9 +95,17 @@ class MessageEvent(BaseModel):
 
 
 class SendResponse(BaseModel):
-    to: str = Field(alias="To")
-    submitted_at: datetime = Field(alias="SubmittedAt")
-    message_id: str = Field(alias="MessageID")
+    """
+    Result of sending one message.
+
+    Batch endpoints return HTTP 200 even when individual entries fail. A failed
+    entry carries only ``error_code`` and ``message``, so ``to``,
+    ``submitted_at`` and ``message_id`` are ``None`` for it. Check ``success``.
+    """
+
+    to: str | None = Field(None, alias="To")
+    submitted_at: datetime | None = Field(None, alias="SubmittedAt")
+    message_id: str | None = Field(None, alias="MessageID")
     error_code: int = Field(alias="ErrorCode")
     message: str = Field(alias="Message")
 
