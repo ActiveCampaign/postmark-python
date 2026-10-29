@@ -7,6 +7,7 @@ from .schemas import (
     Webhook,
     WebhooksListResponse,
     WebhookStatistics,
+    WebhookVerificationResult,
 )
 
 
@@ -128,6 +129,23 @@ class WebhookManager:
         """
         response = await self.client.get(f"/webhooks/{webhook_id}/statistics")
         return WebhookStatistics(**response.json())
+
+    async def verify(self, webhook_id: int) -> WebhookVerificationResult:
+        """
+        Send a test event for every enabled trigger to the webhook's URL.
+
+        A failed verification is **not** an error: Postmark answers HTTP 200 with
+        ``success=False`` and a per-trigger breakdown (``results``), including the
+        status code your endpoint returned (``0`` if it could not be reached). Check
+        ``result.success``.
+
+        Each call sends real test requests to your endpoint. Like every call, this
+        one is retried automatically on timeouts and 5xx responses, which would send
+        the test events again, so give a slow endpoint a generous ``timeout`` on the
+        client (the default is 5 seconds).
+        """
+        response = await self.client.post(f"/webhooks/{webhook_id}/verify")
+        return WebhookVerificationResult(**response.json())
 
     async def delete(self, webhook_id: int) -> DeleteWebhookResponse:
         """Delete a webhook by ID."""

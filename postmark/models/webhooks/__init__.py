@@ -15,6 +15,8 @@ from .schemas import (
     WebhookStatistics,
     WebhookTimeRange,
     WebhookTriggers,
+    WebhookTriggerVerification,
+    WebhookVerificationResult,
 )
 
 __all__ = [
@@ -32,6 +34,8 @@ __all__ = [
     "WebhookMetrics",
     "WebhookTimeRange",
     "WebhookStatistics",
+    "WebhookTriggerVerification",
+    "WebhookVerificationResult",
     "WebhooksListResponse",
     "DeleteWebhookResponse",
     # Manager
