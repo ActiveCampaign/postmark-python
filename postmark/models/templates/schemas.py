@@ -167,8 +167,10 @@ class ValidateTemplateResponse(BaseModel):
 
 
 class PushTemplatesRequest(BaseModel):
-    source_server_id: str = Field(alias="SourceServerID")
-    destination_server_id: str = Field(alias="DestinationServerID")
+    # Server IDs are integers in the API, which also accepts them as strings.
+    # The value is sent exactly as the caller passed it.
+    source_server_id: int | str = Field(alias="SourceServerID")
+    destination_server_id: int | str = Field(alias="DestinationServerID")
     perform_changes: bool = Field(alias="PerformChanges")
 
     model_config = ConfigDict(populate_by_name=True)

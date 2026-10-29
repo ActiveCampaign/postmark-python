@@ -441,3 +441,59 @@ class TestPushTemplates:
         pushed = result.templates[0]
         assert pushed.alias == "welcome"
         assert pushed.template_type == TemplateType.STANDARD
+
+    @pytest.mark.asyncio
+    async def test_push_accepts_integer_server_ids(self, account_templates):
+        """Server IDs are integers in the API; ints must be accepted and sent as ints."""
+        manager, fake = account_templates
+        fake.mock_put_response(PUSH_RESPONSE)
+
+        await manager.push(
+            {
+                "SourceServerID": 11111,
+                "DestinationServerID": 22222,
+                "PerformChanges": False,
+            }
+        )
+
+        body = fake.put.call_args[1]["json"]
+        assert body == {
+            "SourceServerID": 11111,
+            "DestinationServerID": 22222,
+            "PerformChanges": False,
+        }
+        assert isinstance(body["SourceServerID"], int)
+
+    @pytest.mark.asyncio
+    async def test_push_string_server_ids_are_sent_unchanged(self, account_templates):
+        """Existing callers passing strings keep the same wire format."""
+        manager, fake = account_templates
+        fake.mock_put_response(PUSH_RESPONSE)
+
+        await manager.push(
+            {
+                "SourceServerID": "11111",
+                "DestinationServerID": "22222",
+                "PerformChanges": True,
+            }
+        )
+
+        body = fake.put.call_args[1]["json"]
+        assert body["SourceServerID"] == "11111"
+        assert isinstance(body["DestinationServerID"], str)
+
+    def test_push_request_model_accepts_int_and_str(self):
+        req = PushTemplatesRequest(
+            SourceServerID=1, DestinationServerID="2", PerformChanges=False
+        )
+        assert req.source_server_id == 1
+        assert req.destination_server_id == "2"
+
+    @pytest.mark.asyncio
+    async def test_push_missing_server_id_still_rejected(self, account_templates):
+        from postmark.exceptions import InvalidEmailException
+
+        manager, fake = account_templates
+        with pytest.raises(InvalidEmailException):
+            await manager.push({"DestinationServerID": 2, "PerformChanges": False})
+        fake.put.assert_not_called()
