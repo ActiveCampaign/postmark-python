@@ -53,6 +53,16 @@ ruff = "^0.16.5"
 pre-commit = "^4.6.2"
 python-dotenv = "^1.2.3"
 django = "^5.2"               # For running tests/django/ locally; CI matrix also covers 4.2, 6.0, 6.1
+# Security floors for transitive packages. Their fixed releases need Python >= 3.11, so
+# without these the lock keeps the vulnerable build for 3.11-3.14. Dev group only: not published.
+dnspython = [
+    { version = ">=2.9.0", python = ">=3.11" },
+    { version = ">=2.0.0", python = "<3.11" },
+]
+filelock = [
+    { version = ">=4.2.1", python = ">=3.11" },
+    { version = ">=3.24.2", python = "<3.11" },
+]
 
 [tool.ruff]
 line-length = 88
