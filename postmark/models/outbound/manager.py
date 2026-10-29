@@ -335,17 +335,17 @@ class OutboundManager:
         if tag is not None:
             params["tag"] = tag
         if client_name is not None:
-            params["clientName"] = client_name
+            params["client_name"] = client_name
         if client_company is not None:
-            params["clientCompany"] = client_company
+            params["client_company"] = client_company
         if client_family is not None:
-            params["clientFamily"] = client_family
+            params["client_family"] = client_family
         if os_name is not None:
-            params["osName"] = os_name
+            params["os_name"] = os_name
         if os_family is not None:
-            params["osFamily"] = os_family
+            params["os_family"] = os_family
         if os_company is not None:
-            params["osCompany"] = os_company
+            params["os_company"] = os_company
         if platform is not None:
             params["platform"] = platform
         if country is not None:
@@ -424,17 +424,17 @@ class OutboundManager:
         if tag is not None:
             params["tag"] = tag
         if client_name is not None:
-            params["clientName"] = client_name
+            params["client_name"] = client_name
         if client_company is not None:
-            params["clientCompany"] = client_company
+            params["client_company"] = client_company
         if client_family is not None:
-            params["clientFamily"] = client_family
+            params["client_family"] = client_family
         if os_name is not None:
-            params["osName"] = os_name
+            params["os_name"] = os_name
         if os_family is not None:
-            params["osFamily"] = os_family
+            params["os_family"] = os_family
         if os_company is not None:
-            params["osCompany"] = os_company
+            params["os_company"] = os_company
         if platform is not None:
             params["platform"] = platform
         if country is not None:

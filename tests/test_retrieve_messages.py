@@ -386,3 +386,84 @@ class TestTrackingEvents:
 
         assert result.total == 1
         assert result.items[0].message_id == "msg-123"
+
+
+# ---------------------------------------------------------------------------
+# Opens / clicks: wire names of the filters (verified against the live API)
+# ---------------------------------------------------------------------------
+
+TRACKING_FILTERS = [
+    # (python argument, wire query parameter)
+    ("recipient", "recipient"),
+    ("tag", "tag"),
+    ("client_name", "client_name"),
+    ("client_company", "client_company"),
+    ("client_family", "client_family"),
+    ("os_name", "os_name"),
+    ("os_family", "os_family"),
+    ("os_company", "os_company"),
+    ("platform", "platform"),
+    ("country", "country"),
+    ("region", "region"),
+    ("city", "city"),
+    ("message_stream", "messagestream"),
+]
+
+
+@pytest.mark.parametrize(
+    "list_method,response_key",
+    [("list_opens", "Opens"), ("list_clicks", "Clicks")],
+)
+class TestTrackingFilterWireNames:
+    """The API silently ignores unknown query parameters, so the exact wire
+    spelling matters: ``client_family`` filters, ``clientFamily`` does nothing."""
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("argument,wire", TRACKING_FILTERS)
+    async def test_each_filter_uses_its_wire_name(
+        self, outbound, list_method, response_key, argument, wire
+    ):
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 0, response_key: []})
+
+        await getattr(manager, list_method)(**{argument: "value"})
+
+        params = fake.get.call_args[1]["params"]
+        assert params[wire] == "value"
+        assert set(params) == {"count", "offset", wire}
+
+    @pytest.mark.asyncio
+    async def test_all_filters_together_send_only_snake_case_names(
+        self, outbound, list_method, response_key
+    ):
+        manager, fake = outbound
+        fake.mock_get_response({"TotalCount": 0, response_key: []})
+
+        await getattr(manager, list_method)(
+            **{argument: f"v-{argument}" for argument, _ in TRACKING_FILTERS}
+        )
+
+        params = fake.get.call_args[1]["params"]
+        assert {wire: params[wire] for _, wire in TRACKING_FILTERS} == {
+            wire: f"v-{argument}" for argument, wire in TRACKING_FILTERS
+        }
+        camel = {
+            "clientName",
+            "clientCompany",
+            "clientFamily",
+            "osName",
+            "osFamily",
+            "osCompany",
+        }
+        assert camel.isdisjoint(params)
+
+    @pytest.mark.asyncio
+    async def test_count_plus_offset_validation(
+        self, outbound, list_method, response_key
+    ):
+        manager, fake = outbound
+
+        with pytest.raises(ValueError, match="Count \\+ Offset cannot exceed 10,000"):
+            await getattr(manager, list_method)(count=500, offset=9501)
+
+        fake.get.assert_not_called()
