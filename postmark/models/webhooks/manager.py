@@ -69,25 +69,46 @@ class WebhookManager:
         """
         Update a webhook.
 
-        Only fields you provide are changed; omitted fields are left unchanged.
+        Only fields you provide are changed; omitted fields keep their current value.
+
+        Postmark's ``PUT /webhooks/{id}`` always requires ``Url`` and verifies the
+        endpoint using only what the request contains, so this method first reads
+        the current webhook, merges your changes into it and sends the complete
+        configuration. That costs one extra ``GET`` and is not atomic if the
+        webhook is changed elsewhere at the same time.
 
         Args:
             webhook_id: ID of the webhook to update.
             url: New destination URL.
-            http_auth: Basic auth credentials dict.
-            http_headers: Custom headers list.
-            triggers: Trigger configuration dict.
+            http_auth: Basic auth credentials dict (replaces the stored credentials).
+            http_headers: Custom headers list (replaces the stored list; ``[]`` clears).
+            triggers: Trigger configuration. Merged field by field into the existing
+                triggers, so ``{"Bounce": {"Enabled": False}}`` leaves every other
+                trigger and every other Bounce setting as it is.
         """
-        body: dict = {}
+        current = (await self.client.get(f"/webhooks/{webhook_id}")).json()
 
-        if url is not None:
-            body["Url"] = url
-        if http_auth is not None:
-            body["HttpAuth"] = http_auth
-        if http_headers is not None:
-            body["HttpHeaders"] = http_headers
-        if triggers is not None:
-            body["Triggers"] = triggers
+        body: dict = {"Url": url if url is not None else current["Url"]}
+
+        auth = http_auth if http_auth is not None else current.get("HttpAuth")
+        if auth is not None:
+            body["HttpAuth"] = auth
+
+        headers = (
+            http_headers if http_headers is not None else current.get("HttpHeaders")
+        )
+        if headers is not None:
+            body["HttpHeaders"] = headers
+
+        # Responses carry a read-only per-trigger "Status"; it must not be sent back.
+        merged: dict = {
+            name: {k: v for k, v in config.items() if k != "Status"}
+            for name, config in (current.get("Triggers") or {}).items()
+        }
+        for name, config in (triggers or {}).items():
+            merged[name] = {**merged.get(name, {}), **config}
+        if merged:
+            body["Triggers"] = merged
 
         response = await self.client.put(f"/webhooks/{webhook_id}", json=body)
         return Webhook(**response.json())
