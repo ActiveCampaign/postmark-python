@@ -256,3 +256,62 @@ class TestEditServer:
         assert body["PostFirstOpenOnly"] is True
         assert body["IncludeBounceContentInHook"] is True
         assert body["EnableSmtpApiErrorHooks"] is True
+
+
+class TestEditServerAllFields:
+    @pytest.mark.asyncio
+    async def test_every_field_is_sent_with_its_wire_name(self, servers):
+        manager, fake = servers
+        fake.mock_put_response(SERVER)
+
+        await manager.edit(
+            name="Renamed",
+            color=ServerColor.GREEN,
+            raw_email_enabled=True,
+            smtp_api_activated=False,
+            inbound_hook_url="https://example.com/in",
+            bounce_hook_url="https://example.com/bounce",
+            open_hook_url="https://example.com/open",
+            delivery_hook_url="https://example.com/delivery",
+            click_hook_url="https://example.com/click",
+            post_first_open_only=True,
+            track_opens=True,
+            track_links=TrackLinks.HTML_AND_TEXT,
+            inbound_domain="inbound.example.com",
+            inbound_spam_threshold=10,
+            include_bounce_content_in_hook=True,
+            enable_smtp_api_error_hooks=True,
+        )
+
+        assert fake.put.call_args[0][0] == "/server"
+        assert fake.put.call_args[1]["json"] == {
+            "Name": "Renamed",
+            "Color": ServerColor.GREEN.value,
+            "RawEmailEnabled": True,
+            "SmtpApiActivated": False,
+            "InboundHookUrl": "https://example.com/in",
+            "BounceHookUrl": "https://example.com/bounce",
+            "OpenHookUrl": "https://example.com/open",
+            "DeliveryHookUrl": "https://example.com/delivery",
+            "ClickHookUrl": "https://example.com/click",
+            "PostFirstOpenOnly": True,
+            "TrackOpens": True,
+            "TrackLinks": TrackLinks.HTML_AND_TEXT.value,
+            "InboundDomain": "inbound.example.com",
+            "InboundSpamThreshold": 10,
+            "IncludeBounceContentInHook": True,
+            "EnableSmtpApiErrorHooks": True,
+        }
+
+    @pytest.mark.asyncio
+    async def test_false_and_zero_are_sent_not_dropped(self, servers):
+        """Only None means 'leave unchanged'; False and 0 are real values."""
+        manager, fake = servers
+        fake.mock_put_response(SERVER)
+
+        await manager.edit(track_opens=False, inbound_spam_threshold=0)
+
+        assert fake.put.call_args[1]["json"] == {
+            "TrackOpens": False,
+            "InboundSpamThreshold": 0,
+        }

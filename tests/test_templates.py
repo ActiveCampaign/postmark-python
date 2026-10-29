@@ -553,3 +553,41 @@ class TestPushTemplates:
         with pytest.raises(InvalidEmailException):
             await manager.push({"DestinationServerID": 2, "PerformChanges": False})
         fake.put.assert_not_called()
+
+
+class TestInvalidTemplateRequests:
+    """Bad input is rejected locally with InvalidEmailException; nothing is sent."""
+
+    @pytest.mark.asyncio
+    async def test_create_without_a_name_is_rejected(self, templates):
+        from postmark.exceptions import InvalidEmailException
+
+        manager, fake = templates
+
+        with pytest.raises(InvalidEmailException) as exc_info:
+            await manager.create({"subject": "no name"})
+
+        assert "Name" in str(exc_info.value)
+        fake.post.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_edit_with_a_wrongly_typed_field_is_rejected(self, templates):
+        from postmark.exceptions import InvalidEmailException
+
+        manager, fake = templates
+
+        with pytest.raises(InvalidEmailException):
+            await manager.edit("welcome", {"name": ["not", "a", "string"]})
+
+        fake.put.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_validate_with_a_non_dict_model_is_rejected(self, templates):
+        from postmark.exceptions import InvalidEmailException
+
+        manager, fake = templates
+
+        with pytest.raises(InvalidEmailException):
+            await manager.validate({"test_render_model": "not-a-dict"})
+
+        fake.post.assert_not_called()

@@ -91,3 +91,26 @@ class TestParseErrorResponse:
         message, code = parse_error_response(response)
         assert message == "HTTP 500 error"
         assert code is None
+
+
+class TestErrorCodeEdgeCases:
+    def _response(self, error_code):
+        response = MagicMock()
+        response.status_code = 422
+        response.text = ""
+        response.json.return_value = {"Message": "Bad", "ErrorCode": error_code}
+        return response
+
+    def test_blank_string_error_code_returns_none(self):
+        for blank in ("", "   "):
+            _, code = parse_error_response(self._response(blank))
+            assert code is None
+
+    def test_non_integer_types_return_none(self):
+        for odd in (12.5, [1], {"code": 1}):
+            _, code = parse_error_response(self._response(odd))
+            assert code is None
+
+    def test_padded_numeric_string_is_stripped_and_parsed(self):
+        _, code = parse_error_response(self._response(" 406 "))
+        assert code == 406

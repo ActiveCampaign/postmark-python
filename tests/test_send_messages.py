@@ -377,6 +377,18 @@ class TestSendBatchWithTemplates:
         assert results[1].message_id is None
 
     @pytest.mark.asyncio
+    async def test_invalid_message_includes_index(self, outbound, two_messages):
+        """A bad entry is reported with its index and nothing is sent."""
+        manager, fake = outbound
+        bad = [two_messages[0], {"To": "b@example.com", "TemplateId": 1}]  # no sender
+
+        with pytest.raises(InvalidEmailException) as exc_info:
+            await manager.send_batch_with_template(bad)
+
+        assert "messages[1]" in str(exc_info.value)
+        fake.post.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_wraps_in_messages_key(self, outbound, two_messages):
         manager, fake = outbound
         fake.mock_post_response([SEND_RESPONSE, SEND_RESPONSE])

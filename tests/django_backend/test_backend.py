@@ -516,3 +516,18 @@ def test_close_error_after_a_successful_send_is_still_raised(
 
     with pytest.raises(OSError, match="close failed"):
         EmailBackend().send_messages([message])
+
+
+def test_close_without_open_is_a_noop(sync_client_factory):
+    backend = EmailBackend()
+
+    backend.close()  # nothing was opened; must not raise
+
+    assert backend.client is None
+
+
+def test_send_messages_with_nothing_to_send_returns_zero(
+    sync_client_factory, fake_sync_client
+):
+    assert EmailBackend().send_messages([]) == 0
+    assert fake_sync_client.outbound.calls == []

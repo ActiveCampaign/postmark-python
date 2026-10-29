@@ -257,3 +257,29 @@ class TestDeleteSuppression:
 
         args, kwargs = fake.post.call_args
         assert args[0] == "/message-streams/broadcasts/suppressions/delete"
+
+
+class TestSuppressionBatchLimit:
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("method", ["create", "delete"])
+    async def test_more_than_50_addresses_is_rejected_before_any_request(
+        self, suppressions, method
+    ):
+        manager, fake = suppressions
+        addresses = [f"user{i}@example.com" for i in range(51)]
+
+        with pytest.raises(ValueError, match="cannot exceed 50"):
+            await getattr(manager, method)("outbound", addresses)
+
+        fake.post.assert_not_called()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("method", ["create", "delete"])
+    async def test_exactly_50_addresses_is_accepted(self, suppressions, method):
+        manager, fake = suppressions
+        fake.mock_post_response({"Suppressions": []})
+        addresses = [f"user{i}@example.com" for i in range(50)]
+
+        await getattr(manager, method)("outbound", addresses)
+
+        assert len(fake.post.call_args[1]["json"]["Suppressions"]) == 50
