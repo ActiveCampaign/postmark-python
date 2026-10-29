@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - `outbound.list_bulk_requests(count, pagination_key)` for `GET /email/bulk`, returning the new `CursorPage` (`items`, `next_key`; `next_key` is `None` on the last page), and `outbound.stream_bulk_requests()` which follows the cursor automatically. `count` must be 1-500 (Postmark answers 0 with an HTTP 500).
 - `webhooks.get_statistics(webhook_id)` for `GET /webhooks/{id}/statistics` (24-hour window, overall and per-trigger metrics, per-trigger verification status), with `WebhookStatistics`, `WebhookMetrics` and `WebhookTimeRange` models.
+- `webhooks.verify(webhook_id)` for `POST /webhooks/{id}/verify`. A failed verification is returned with `success=False` and per-trigger details (status code, message), not raised. Each call sends real test requests to the endpoint, and the client's automatic retry on timeouts would resend them, so use a generous `timeout` for slow endpoints.
 
 ### Fixed
 

@@ -147,3 +147,31 @@ class WebhookStatistics(BaseModel):
     )
 
     model_config = ConfigDict(populate_by_name=True)
+
+
+class WebhookTriggerVerification(BaseModel):
+    """Outcome of the test event sent for one trigger."""
+
+    # "Open", "Click", "Delivery", "Bounce", "SpamComplaint" or "SubscriptionChange".
+    trigger_type: str = Field(alias="TriggerType")
+    success: bool = Field(alias="Success")
+    # HTTP status your endpoint returned; 0 when it could not be reached at all.
+    status_code: int | None = Field(None, alias="StatusCode")
+    message: str | None = Field(None, alias="Message")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class WebhookVerificationResult(BaseModel):
+    """Response from ``POST /webhooks/{id}/verify``."""
+
+    id: int = Field(alias="Id")
+    url: str | None = Field(None, alias="Url")
+    # True only if every enabled trigger's test event got HTTP 200.
+    success: bool = Field(alias="Success")
+    results: list[WebhookTriggerVerification] = Field(
+        default_factory=list, alias="Results"
+    )
+    message: str | None = Field(None, alias="Message")
+
+    model_config = ConfigDict(populate_by_name=True)

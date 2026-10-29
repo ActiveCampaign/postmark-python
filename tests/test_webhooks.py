@@ -611,3 +611,164 @@ class TestWebhookStatistics:
 
         assert stats.statuses == {"BrandNew": "pending"}
         assert "BrandNew" in stats.metrics_by_trigger
+
+
+# ---------------------------------------------------------------------------
+# Webhook verification (responses captured from the live API)
+# ---------------------------------------------------------------------------
+
+VERIFY_OK = {
+    "Id": 101,
+    "Url": "https://example.com/hook",
+    "Success": True,
+    "Results": [
+        {
+            "TriggerType": "Open",
+            "Success": True,
+            "StatusCode": 200,
+            "Message": "Success!",
+        },
+        {
+            "TriggerType": "Delivery",
+            "Success": True,
+            "StatusCode": 200,
+            "Message": "Success!",
+        },
+    ],
+    "Message": "All 2 triggers verified successfully",
+}
+
+VERIFY_REJECTED = {
+    "Id": 102,
+    "Url": "https://example.com/hook",
+    "Success": False,
+    "Results": [
+        {
+            "TriggerType": "Delivery",
+            "Success": False,
+            "StatusCode": 401,
+            "Message": "ok",
+        },
+        {
+            "TriggerType": "Bounce",
+            "Success": False,
+            "StatusCode": 401,
+            "Message": "ok",
+        },
+    ],
+    "Message": "0/2 triggers verified successfully",
+}
+
+VERIFY_UNREACHABLE = {
+    "Id": 103,
+    "Url": "https://no-such-host.invalid/hook",
+    "Success": False,
+    "Results": [
+        {
+            "TriggerType": "Delivery",
+            "Success": False,
+            "StatusCode": 0,
+            "Message": "The request failed due to a SocketException, which means "
+            "the webhook url could not be reached.",
+        }
+    ],
+    "Message": "0/1 triggers verified successfully",
+}
+
+VERIFY_NO_TRIGGERS = {
+    "Id": 104,
+    "Url": "https://example.com/hook",
+    "Success": False,
+    "Results": [],
+    "Message": "No triggers configured for this webhook",
+}
+
+
+class TestVerifyWebhook:
+    @pytest.mark.asyncio
+    async def test_posts_to_the_verify_endpoint_without_a_body(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_post_response(VERIFY_OK)
+
+        await manager.verify(101)
+
+        fake.post.assert_called_once_with("/webhooks/101/verify")
+
+    @pytest.mark.asyncio
+    async def test_successful_verification(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_post_response(VERIFY_OK)
+
+        result = await manager.verify(101)
+
+        assert result.success is True
+        assert result.id == 101
+        assert result.url == "https://example.com/hook"
+        assert result.message == "All 2 triggers verified successfully"
+        assert [(r.trigger_type, r.success, r.status_code) for r in result.results] == [
+            ("Open", True, 200),
+            ("Delivery", True, 200),
+        ]
+        assert result.results[0].message == "Success!"
+
+    @pytest.mark.asyncio
+    async def test_rejecting_endpoint_is_returned_not_raised(self, webhooks):
+        """Postmark answers HTTP 200 with Success=false; the caller inspects it."""
+        manager, fake = webhooks
+        fake.mock_post_response(VERIFY_REJECTED)
+
+        result = await manager.verify(102)
+
+        assert result.success is False
+        assert all(r.status_code == 401 for r in result.results)
+        assert result.message == "0/2 triggers verified successfully"
+
+    @pytest.mark.asyncio
+    async def test_unreachable_endpoint_reports_status_code_zero(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_post_response(VERIFY_UNREACHABLE)
+
+        result = await manager.verify(103)
+
+        assert result.success is False
+        assert result.results[0].status_code == 0
+        assert "could not be reached" in result.results[0].message
+
+    @pytest.mark.asyncio
+    async def test_no_triggers_enabled(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_post_response(VERIFY_NO_TRIGGERS)
+
+        result = await manager.verify(104)
+
+        assert result.success is False
+        assert result.results == []
+        assert result.message == "No triggers configured for this webhook"
+
+    @pytest.mark.asyncio
+    async def test_minimal_response(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_post_response({"Id": 7, "Success": True})
+
+        result = await manager.verify(7)
+
+        assert result.success is True
+        assert result.results == []
+        assert result.url is None
+        assert result.message is None
+
+    @pytest.mark.asyncio
+    async def test_unknown_trigger_type_does_not_break_parsing(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_post_response(
+            {
+                "Id": 7,
+                "Success": True,
+                "Results": [{"TriggerType": "BrandNew", "Success": True}],
+            }
+        )
+
+        result = await manager.verify(7)
+
+        assert result.results[0].trigger_type == "BrandNew"
+        assert result.results[0].status_code is None
