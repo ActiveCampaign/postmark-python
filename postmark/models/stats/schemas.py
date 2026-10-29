@@ -28,7 +28,7 @@ class OutboundOverview(BaseModel):
 
 class SentDay(BaseModel):
     date: str = Field(alias="Date")
-    sent: int = Field(alias="Sent")
+    sent: int = Field(0, alias="Sent")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -36,7 +36,7 @@ class SentDay(BaseModel):
 class SentCounts(BaseModel):
     """Response from ``GET /stats/outbound/sends``."""
 
-    days: list[SentDay] = Field(alias="Days")
+    days: list[SentDay] = Field(default_factory=list, alias="Days")
     sent: int = Field(0, alias="Sent")
 
     model_config = ConfigDict(populate_by_name=True)
@@ -44,10 +44,10 @@ class SentCounts(BaseModel):
 
 class BounceDay(BaseModel):
     date: str = Field(alias="Date")
-    hard_bounce: int = Field(alias="HardBounce")
-    smtp_api_error: int = Field(alias="SMTPApiError")
-    soft_bounce: int = Field(alias="SoftBounce")
-    transient: int = Field(alias="Transient")
+    hard_bounce: int = Field(0, alias="HardBounce")
+    smtp_api_error: int = Field(0, alias="SMTPApiError")
+    soft_bounce: int = Field(0, alias="SoftBounce")
+    transient: int = Field(0, alias="Transient")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -55,7 +55,7 @@ class BounceDay(BaseModel):
 class BounceCounts(BaseModel):
     """Response from ``GET /stats/outbound/bounces``."""
 
-    days: list[BounceDay] = Field(alias="Days")
+    days: list[BounceDay] = Field(default_factory=list, alias="Days")
     hard_bounce: int = Field(0, alias="HardBounce")
     smtp_api_error: int = Field(0, alias="SMTPApiError")
     soft_bounce: int = Field(0, alias="SoftBounce")
@@ -66,7 +66,7 @@ class BounceCounts(BaseModel):
 
 class SpamComplaintDay(BaseModel):
     date: str = Field(alias="Date")
-    spam_complaint: int = Field(alias="SpamComplaint")
+    spam_complaint: int = Field(0, alias="SpamComplaint")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -74,7 +74,7 @@ class SpamComplaintDay(BaseModel):
 class SpamComplaints(BaseModel):
     """Response from ``GET /stats/outbound/spam``."""
 
-    days: list[SpamComplaintDay] = Field(alias="Days")
+    days: list[SpamComplaintDay] = Field(default_factory=list, alias="Days")
     spam_complaint: int = Field(0, alias="SpamComplaint")
 
     model_config = ConfigDict(populate_by_name=True)
@@ -82,7 +82,7 @@ class SpamComplaints(BaseModel):
 
 class TrackedDay(BaseModel):
     date: str = Field(alias="Date")
-    tracked: int = Field(alias="Tracked")
+    tracked: int = Field(0, alias="Tracked")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -90,7 +90,7 @@ class TrackedDay(BaseModel):
 class TrackedCounts(BaseModel):
     """Response from ``GET /stats/outbound/tracked``."""
 
-    days: list[TrackedDay] = Field(alias="Days")
+    days: list[TrackedDay] = Field(default_factory=list, alias="Days")
     tracked: int = Field(0, alias="Tracked")
 
     model_config = ConfigDict(populate_by_name=True)
@@ -98,8 +98,8 @@ class TrackedCounts(BaseModel):
 
 class OpenDay(BaseModel):
     date: str = Field(alias="Date")
-    opens: int = Field(alias="Opens")
-    unique: int = Field(alias="Unique")
+    opens: int = Field(0, alias="Opens")
+    unique: int = Field(0, alias="Unique")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -107,7 +107,7 @@ class OpenDay(BaseModel):
 class OpenCounts(BaseModel):
     """Response from ``GET /stats/outbound/opens``."""
 
-    days: list[OpenDay] = Field(alias="Days")
+    days: list[OpenDay] = Field(default_factory=list, alias="Days")
     opens: int = Field(0, alias="Opens")
     unique: int = Field(0, alias="Unique")
 
@@ -116,10 +116,10 @@ class OpenCounts(BaseModel):
 
 class PlatformDay(BaseModel):
     date: str = Field(alias="Date")
-    desktop: int = Field(alias="Desktop")
-    mobile: int = Field(alias="Mobile")
-    unknown: int = Field(alias="Unknown")
-    web_mail: int = Field(alias="WebMail")
+    desktop: int = Field(0, alias="Desktop")
+    mobile: int = Field(0, alias="Mobile")
+    unknown: int = Field(0, alias="Unknown")
+    web_mail: int = Field(0, alias="WebMail")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -127,7 +127,7 @@ class PlatformDay(BaseModel):
 class PlatformUsage(BaseModel):
     """Response from ``GET /stats/outbound/opens/platforms``."""
 
-    days: list[PlatformDay] = Field(alias="Days")
+    days: list[PlatformDay] = Field(default_factory=list, alias="Days")
     desktop: int = Field(0, alias="Desktop")
     mobile: int = Field(0, alias="Mobile")
     unknown: int = Field(0, alias="Unknown")
@@ -144,15 +144,15 @@ class EmailClientUsage(BaseModel):
     ``model_extra`` and individual day dicts via ``days``.
     """
 
-    days: list[dict[str, Any]] = Field(alias="Days")
+    days: list[dict[str, Any]] = Field(default_factory=list, alias="Days")
 
     model_config = ConfigDict(populate_by_name=True, extra="allow")
 
 
 class ClickDay(BaseModel):
     date: str = Field(alias="Date")
-    clicks: int = Field(alias="Clicks")
-    unique: int = Field(alias="Unique")
+    clicks: int = Field(0, alias="Clicks")
+    unique: int = Field(0, alias="Unique")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -160,7 +160,7 @@ class ClickDay(BaseModel):
 class ClickCounts(BaseModel):
     """Response from ``GET /stats/outbound/clicks``."""
 
-    days: list[ClickDay] = Field(alias="Days")
+    days: list[ClickDay] = Field(default_factory=list, alias="Days")
     clicks: int = Field(0, alias="Clicks")
     unique: int = Field(0, alias="Unique")
 
@@ -174,16 +174,16 @@ class BrowserUsage(BaseModel):
     and within each day object.  Access totals via ``model_extra``.
     """
 
-    days: list[dict[str, Any]] = Field(alias="Days")
+    days: list[dict[str, Any]] = Field(default_factory=list, alias="Days")
 
     model_config = ConfigDict(populate_by_name=True, extra="allow")
 
 
 class BrowserPlatformDay(BaseModel):
     date: str = Field(alias="Date")
-    desktop: int = Field(alias="Desktop")
-    mobile: int = Field(alias="Mobile")
-    unknown: int = Field(alias="Unknown")
+    desktop: int = Field(0, alias="Desktop")
+    mobile: int = Field(0, alias="Mobile")
+    unknown: int = Field(0, alias="Unknown")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -191,7 +191,7 @@ class BrowserPlatformDay(BaseModel):
 class BrowserPlatformUsage(BaseModel):
     """Response from ``GET /stats/outbound/clicks/platforms``."""
 
-    days: list[BrowserPlatformDay] = Field(alias="Days")
+    days: list[BrowserPlatformDay] = Field(default_factory=list, alias="Days")
     desktop: int = Field(0, alias="Desktop")
     mobile: int = Field(0, alias="Mobile")
     unknown: int = Field(0, alias="Unknown")
@@ -201,8 +201,8 @@ class BrowserPlatformUsage(BaseModel):
 
 class ClickLocationDay(BaseModel):
     date: str = Field(alias="Date")
-    html: int = Field(alias="HTML")
-    text: int = Field(alias="Text")
+    html: int = Field(0, alias="HTML")
+    text: int = Field(0, alias="Text")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -210,7 +210,7 @@ class ClickLocationDay(BaseModel):
 class ClickLocation(BaseModel):
     """Response from ``GET /stats/outbound/clicks/location``."""
 
-    days: list[ClickLocationDay] = Field(alias="Days")
+    days: list[ClickLocationDay] = Field(default_factory=list, alias="Days")
     html: int = Field(0, alias="HTML")
     text: int = Field(0, alias="Text")
 
@@ -224,6 +224,6 @@ class ReadTimes(BaseModel):
     day object alongside ``Date``.  Access totals via ``model_extra``.
     """
 
-    days: list[dict[str, Any]] = Field(alias="Days")
+    days: list[dict[str, Any]] = Field(default_factory=list, alias="Days")
 
     model_config = ConfigDict(populate_by_name=True, extra="allow")

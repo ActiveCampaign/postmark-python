@@ -342,3 +342,113 @@ class TestResponseParsing:
         assert result.html == 14
         assert result.text == 6
         assert result.days[0].html == 14
+
+
+# ---------------------------------------------------------------------------
+# Zero-valued categories are omitted by the API (captured live)
+# ---------------------------------------------------------------------------
+
+
+class TestOmittedZeroValues:
+    """Postmark leaves out categories whose count is zero. Those must parse as 0."""
+
+    @pytest.mark.asyncio
+    async def test_platform_usage_missing_categories(self, stats):
+        manager, fake = stats
+        fake.mock_get_response(
+            {"Days": [{"Date": "2026-08-25", "WebMail": 3}], "WebMail": 3}
+        )
+
+        result = await manager.platform_usage()
+
+        day = result.days[0]
+        assert (day.desktop, day.mobile, day.unknown, day.web_mail) == (0, 0, 0, 3)
+        assert result.web_mail == 3
+        assert result.desktop == 0
+
+    @pytest.mark.asyncio
+    async def test_browser_platform_usage_missing_categories(self, stats):
+        manager, fake = stats
+        fake.mock_get_response(
+            {"Days": [{"Date": "2026-08-25", "Desktop": 2}], "Desktop": 2}
+        )
+
+        result = await manager.browser_platform_usage()
+
+        day = result.days[0]
+        assert (day.desktop, day.mobile, day.unknown) == (2, 0, 0)
+
+    @pytest.mark.asyncio
+    async def test_click_location_missing_categories(self, stats):
+        manager, fake = stats
+        fake.mock_get_response({"Days": [{"Date": "2026-08-25", "HTML": 2}], "HTML": 2})
+
+        result = await manager.click_location()
+
+        assert result.days[0].html == 2
+        assert result.days[0].text == 0
+        assert result.text == 0
+
+    @pytest.mark.asyncio
+    async def test_bounce_counts_missing_categories(self, stats):
+        manager, fake = stats
+        fake.mock_get_response({"Days": [{"Date": "2026-08-25", "HardBounce": 1}]})
+
+        result = await manager.bounce_counts()
+
+        day = result.days[0]
+        assert (
+            day.hard_bounce,
+            day.soft_bounce,
+            day.transient,
+            day.smtp_api_error,
+        ) == (1, 0, 0, 0)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "method,attrs",
+        [
+            ("sent_counts", ["sent"]),
+            ("spam_counts", ["spam_complaint"]),
+            ("tracked_counts", ["tracked"]),
+            ("open_counts", ["opens", "unique"]),
+            ("click_counts", ["clicks", "unique"]),
+        ],
+    )
+    async def test_day_with_only_date_defaults_counts_to_zero(
+        self, stats, method, attrs
+    ):
+        manager, fake = stats
+        fake.mock_get_response({"Days": [{"Date": "2026-08-25"}]})
+
+        result = await getattr(manager, method)()
+
+        assert result.days[0].date == "2026-08-25"
+        for attr in attrs:
+            assert getattr(result.days[0], attr) == 0
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "method",
+        [
+            "sent_counts",
+            "bounce_counts",
+            "spam_counts",
+            "tracked_counts",
+            "open_counts",
+            "platform_usage",
+            "email_client_usage",
+            "click_counts",
+            "browser_usage",
+            "browser_platform_usage",
+            "click_location",
+            "read_times",
+        ],
+    )
+    async def test_missing_days_defaults_to_empty_list(self, stats, method):
+        manager, fake = stats
+        fake.mock_get_response({})
+
+        result = await getattr(manager, method)()
+
+        assert result.days == []
