@@ -375,3 +375,192 @@ class TestBulkSend:
             "Cancelled",
             "Failed",
         }
+
+
+# ---------------------------------------------------------------------------
+# GET /email/bulk — cursor-paginated listing
+# ---------------------------------------------------------------------------
+
+
+def _bulk_request(n: int, **overrides) -> dict:
+    """Shape captured from the live API (GET /email/bulk)."""
+    return {
+        "Id": f"bulk-{n}",
+        "SubmittedAt": "2026-10-21T20:18:16.3590414Z",
+        "TotalMessages": 2,
+        "PercentageCompleted": 100,
+        "Status": "Completed",
+        "Subject": f"Bulk {n}",
+        "ReleasedCount": 2,
+        "FailedCount": 0,
+        **overrides,
+    }
+
+
+class TestListBulkRequests:
+    @pytest.mark.asyncio
+    async def test_list_parses_requests(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"Requests": [_bulk_request(1), _bulk_request(2)]})
+
+        page = await manager.list_bulk_requests()
+
+        assert [r.id for r in page.items] == ["bulk-1", "bulk-2"]
+        assert page.items[0].status == BulkJobStatus.COMPLETED
+        assert page.items[0].total_messages == 2
+        assert page.items[0].released_count == 2
+        assert page.items[0].subject == "Bulk 1"
+
+    @pytest.mark.asyncio
+    async def test_default_request(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"Requests": []})
+
+        await manager.list_bulk_requests()
+
+        fake.get.assert_called_once_with("/email/bulk", params={"count": 100})
+
+    @pytest.mark.asyncio
+    async def test_last_page_has_no_next_key(self, outbound):
+        """PaginationKey is absent on the last page (observed live)."""
+        manager, fake = outbound
+        fake.mock_get_response({"Requests": [_bulk_request(1)]})
+
+        page = await manager.list_bulk_requests()
+
+        assert page.next_key is None
+
+    @pytest.mark.asyncio
+    async def test_empty_server(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"Requests": []})
+
+        page = await manager.list_bulk_requests()
+
+        assert page.items == []
+        assert page.next_key is None
+
+    @pytest.mark.asyncio
+    async def test_missing_requests_key_is_empty(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({})
+
+        page = await manager.list_bulk_requests()
+
+        assert page.items == []
+
+    @pytest.mark.asyncio
+    async def test_next_key_is_returned_and_passed_back_unchanged(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response(
+            {"Requests": [_bulk_request(1)], "PaginationKey": "opaque+key=="}
+        )
+
+        first = await manager.list_bulk_requests(count=1)
+        assert first.next_key == "opaque+key=="
+
+        await manager.list_bulk_requests(count=1, pagination_key=first.next_key)
+        assert fake.get.call_args[1]["params"] == {
+            "count": 1,
+            "paginationKey": "opaque+key==",
+        }
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("count", [0, -1, 501])
+    async def test_count_outside_1_to_500_is_rejected_before_any_request(
+        self, outbound, count
+    ):
+        """Postmark answers count=0/-1 with HTTP 500, which the client would retry."""
+        manager, fake = outbound
+
+        with pytest.raises(ValueError, match="between 1 and 500"):
+            await manager.list_bulk_requests(count=count)
+
+        fake.get.assert_not_called()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("count", [1, 500])
+    async def test_count_boundaries_accepted(self, outbound, count):
+        manager, fake = outbound
+        fake.mock_get_response({"Requests": []})
+
+        await manager.list_bulk_requests(count=count)
+
+        assert fake.get.call_args[1]["params"]["count"] == count
+
+
+class TestStreamBulkRequests:
+    @pytest.mark.asyncio
+    async def test_follows_the_cursor_until_it_runs_out(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_responses(
+            {"Requests": [_bulk_request(1), _bulk_request(2)], "PaginationKey": "k1"},
+            {"Requests": [_bulk_request(3), _bulk_request(4)], "PaginationKey": "k2"},
+            {"Requests": [_bulk_request(5)]},
+        )
+
+        got = [r.id async for r in manager.stream_bulk_requests(batch_size=2)]
+
+        assert got == ["bulk-1", "bulk-2", "bulk-3", "bulk-4", "bulk-5"]
+        sent = [c[1]["params"] for c in fake.get.call_args_list]
+        assert sent == [
+            {"count": 2},
+            {"count": 2, "paginationKey": "k1"},
+            {"count": 2, "paginationKey": "k2"},
+        ]
+
+    @pytest.mark.asyncio
+    async def test_stops_at_max_requests(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_responses(
+            {"Requests": [_bulk_request(1), _bulk_request(2)], "PaginationKey": "k1"},
+            {"Requests": [_bulk_request(3)], "PaginationKey": "k2"},
+        )
+
+        got = [
+            r.id
+            async for r in manager.stream_bulk_requests(batch_size=2, max_requests=3)
+        ]
+
+        assert got == ["bulk-1", "bulk-2", "bulk-3"]
+        assert fake.get.call_count == 2
+        # the second page only asks for what is still needed
+        assert fake.get.call_args_list[1][1]["params"]["count"] == 1
+
+    @pytest.mark.asyncio
+    async def test_batch_size_is_capped_at_500(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"Requests": []})
+
+        _ = [r async for r in manager.stream_bulk_requests(batch_size=9999)]
+
+        assert fake.get.call_args[1]["params"]["count"] == 500
+
+    @pytest.mark.asyncio
+    async def test_empty_page_with_a_key_does_not_loop_forever(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"Requests": [], "PaginationKey": "stuck"})
+
+        got = [r async for r in manager.stream_bulk_requests()]
+
+        assert got == []
+        assert fake.get.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_empty_server_yields_nothing(self, outbound):
+        manager, fake = outbound
+        fake.mock_get_response({"Requests": []})
+
+        assert [r async for r in manager.stream_bulk_requests()] == []
+
+
+class TestCursorPage:
+    def test_defaults_and_immutability(self):
+        from dataclasses import FrozenInstanceError
+
+        from postmark import CursorPage
+
+        page = CursorPage(items=[1, 2])
+        assert page.next_key is None
+        with pytest.raises(FrozenInstanceError):
+            page.items = []  # type: ignore[misc]

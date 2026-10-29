@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 from pydantic import ValidationError
 
 from postmark.exceptions import InvalidEmailException
-from postmark.models.page import Page
+from postmark.models.page import CursorPage, Page
 from postmark.utils.pagination import paginate
 from postmark.utils.types import HTTPClient
 
@@ -167,6 +167,52 @@ class OutboundManager:
         """
         response = await self.client.get(f"/email/bulk/{bulk_id}")
         return BulkSendStatus(**response.json())
+
+    async def list_bulk_requests(
+        self, count: int = 100, pagination_key: str | None = None
+    ) -> CursorPage[BulkSendStatus]:
+        """
+        List the bulk requests submitted on this server, newest first.
+
+        Pagination uses an opaque cursor instead of offsets: pass the previous
+        page's ``next_key`` as ``pagination_key`` to get the following page.
+        ``next_key`` is ``None`` on the last page.
+
+        Args:
+            count: Requests per page, 1 to 500.
+            pagination_key: Cursor from the previous page. Do not build or modify it.
+        """
+        if not 1 <= count <= 500:
+            raise ValueError("Count must be between 1 and 500")
+
+        params: dict[str, Any] = {"count": count}
+        if pagination_key is not None:
+            params["paginationKey"] = pagination_key
+
+        response = await self.client.get("/email/bulk", params=params)
+        data = response.json()
+        return CursorPage(
+            items=[BulkSendStatus(**item) for item in data.get("Requests", [])],
+            next_key=data.get("PaginationKey"),
+        )
+
+    async def stream_bulk_requests(
+        self, batch_size: int = 100, max_requests: int = 1000
+    ) -> AsyncGenerator[BulkSendStatus, None]:
+        """Stream bulk requests, following the pagination cursor automatically."""
+        yielded = 0
+        key: str | None = None
+        while yielded < max_requests:
+            page = await self.list_bulk_requests(
+                count=min(batch_size, 500, max_requests - yielded),
+                pagination_key=key,
+            )
+            for item in page.items:
+                yield item
+                yielded += 1
+            key = page.next_key
+            if key is None or not page.items:
+                break
 
     # -------------------------------------------------------------------------
     # Template sends

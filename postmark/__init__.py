@@ -22,7 +22,7 @@ from .exceptions import (
 )
 from .models import outbound
 from .models.outbound import Attachment, Email, Header, Message, SendResponse
-from .models.page import Page
+from .models.page import CursorPage, Page
 from .utils import server_utils
 
 # Base logger
@@ -49,6 +49,7 @@ __all__ = [
     "ServerException",
     "TimeoutException",
     "server_utils",
+    "CursorPage",
     "Page",
     "__version__",
 ]

@@ -16,3 +16,20 @@ class Page(Generic[T]):
 
     items: list[T]
     total: int
+
+
+@dataclass(frozen=True)
+class CursorPage(Generic[T]):
+    """
+    A single page of results from a cursor-paginated list endpoint.
+
+    Unlike :class:`Page`, these endpoints report no total, only an opaque cursor.
+
+    Attributes:
+        items: The list of results for this page.
+        next_key: Opaque cursor for the next page, or ``None`` on the last page.
+            Pass it back unchanged; Postmark rejects altered values.
+    """
+
+    items: list[T]
+    next_key: str | None = None
