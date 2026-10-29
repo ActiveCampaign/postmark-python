@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `webhooks.verify(webhook_id)` for `POST /webhooks/{id}/verify`. A failed verification is returned with `success=False` and per-trigger details (status code, message), not raised. Each call sends real test requests to the endpoint, and the client's automatic retry on timeouts would resend them, so use a generous `timeout` for slow endpoints.
 - `templates.list(layout_template=...)` filters to templates that use the Layout template with the given alias (`layoutTemplate`).
 - `webhooks.create(..., verify=False)` and `webhooks.edit(..., verify=False)` save a webhook without first sending test events (sent as the `?verify=false` query parameter; a body field is ignored by the API). Its triggers then report status `unverified` and receive no events until `webhooks.verify()` succeeds.
+- Webhook trigger models (`OpenTrigger`, `ClickTrigger`, ...) expose `status` (`"verified"` / `"unverified"`, `None` on disabled triggers), which the API returns per enabled trigger and which was previously dropped.
 
 ### Fixed
 

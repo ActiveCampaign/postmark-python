@@ -20,18 +20,24 @@ class HttpHeader(BaseModel):
 class OpenTrigger(BaseModel):
     enabled: bool = Field(alias="Enabled")
     post_first_open_only: bool = Field(alias="PostFirstOpenOnly")
+    # "verified" or "unverified"; only present on enabled triggers.
+    status: str | None = Field(None, alias="Status")
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class ClickTrigger(BaseModel):
     enabled: bool = Field(alias="Enabled")
+    # "verified" or "unverified"; only present on enabled triggers.
+    status: str | None = Field(None, alias="Status")
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class DeliveryTrigger(BaseModel):
     enabled: bool = Field(alias="Enabled")
+    # "verified" or "unverified"; only present on enabled triggers.
+    status: str | None = Field(None, alias="Status")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -39,6 +45,8 @@ class DeliveryTrigger(BaseModel):
 class BounceTrigger(BaseModel):
     enabled: bool = Field(alias="Enabled")
     include_content: bool = Field(alias="IncludeContent")
+    # "verified" or "unverified"; only present on enabled triggers.
+    status: str | None = Field(None, alias="Status")
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -46,12 +54,16 @@ class BounceTrigger(BaseModel):
 class SpamComplaintTrigger(BaseModel):
     enabled: bool = Field(alias="Enabled")
     include_content: bool = Field(alias="IncludeContent")
+    # "verified" or "unverified"; only present on enabled triggers.
+    status: str | None = Field(None, alias="Status")
 
     model_config = ConfigDict(populate_by_name=True)
 
 
 class SubscriptionChangeTrigger(BaseModel):
     enabled: bool = Field(alias="Enabled")
+    # "verified" or "unverified"; only present on enabled triggers.
+    status: str | None = Field(None, alias="Status")
 
     model_config = ConfigDict(populate_by_name=True)
 
