@@ -32,12 +32,9 @@ async def paginate(
 
     while yielded < max_records:
         remaining = max_records - yielded
+        # offset always equals yielded, and max_records <= _MAX_OFFSET, so
+        # offset + current_limit can never pass Postmark's 10,000 offset limit.
         current_limit = min(batch_size, remaining)
-
-        if offset + current_limit > _MAX_OFFSET:
-            current_limit = _MAX_OFFSET - offset
-            if current_limit <= 0:
-                break
 
         page = await list_fn(count=current_limit, offset=offset, **filters)
         if not page.items:
