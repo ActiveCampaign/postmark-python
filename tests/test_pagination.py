@@ -90,3 +90,16 @@ class TestPaginate:
     async def test_max_records_over_10000_is_rejected(self):
         with pytest.raises(ValueError, match="cannot exceed 10000"):
             _ = [x async for x in paginate(_list_fn(1, []), 10_001, 100)]
+
+
+class TestOffsetLimit:
+    @pytest.mark.asyncio
+    async def test_never_requests_past_postmarks_10000_offset(self):
+        """With the maximum allowed max_records, the last request still ends at 10,000."""
+        calls = []
+
+        got = [x async for x in paginate(_list_fn(20_000, calls), 10_000, 500)]
+
+        assert len(got) == 10_000
+        assert all(c["offset"] + c["count"] <= 10_000 for c in calls)
+        assert calls[-1]["offset"] + calls[-1]["count"] == 10_000

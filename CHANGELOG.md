@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Typing only:** `SendResponse.to`, `.submitted_at` and `.message_id` are now `X | None` (they are `None` for failed batch entries; successful sends still populate them). Type checkers may flag code that assumes they are always set.
 - **Typing only:** `BounceTypeCount.type` and `.type_code` are now `X | None`.
 - **Typing only:** `PushTemplatesRequest.source_server_id` / `.destination_server_id` are now `int | str`.
+- Internal: removed an unreachable offset guard in `utils.pagination.paginate` (no behaviour change).
 
 ---
 
