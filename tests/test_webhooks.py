@@ -867,3 +867,78 @@ class TestSkipVerification:
         wh = await manager.create("https://example.com/hook", verify=False)
 
         assert wh.triggers.delivery.enabled is True
+
+
+# ---------------------------------------------------------------------------
+# Per-trigger verification status (live responses carry it on enabled triggers)
+# ---------------------------------------------------------------------------
+
+_STATUS_TRIGGERS = {
+    "Open": {"Enabled": True, "PostFirstOpenOnly": False, "Status": "verified"},
+    "Click": {"Enabled": True, "Status": "unverified"},
+    "Delivery": {"Enabled": True, "Status": "verified"},
+    "Bounce": {"Enabled": True, "IncludeContent": False, "Status": "unverified"},
+    "SpamComplaint": {"Enabled": False, "IncludeContent": False},
+    "SubscriptionChange": {"Enabled": True, "Status": "verified"},
+}
+
+
+class TestTriggerStatus:
+    @pytest.mark.asyncio
+    async def test_status_is_exposed_on_every_trigger_type(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_get_response(_make_webhook(Triggers=_STATUS_TRIGGERS))
+
+        t = (await manager.get(1)).triggers
+
+        assert t.open.status == "verified"
+        assert t.click.status == "unverified"
+        assert t.delivery.status == "verified"
+        assert t.bounce.status == "unverified"
+        assert t.subscription_change.status == "verified"
+
+    @pytest.mark.asyncio
+    async def test_disabled_trigger_has_no_status(self, webhooks):
+        manager, fake = webhooks
+        fake.mock_get_response(_make_webhook(Triggers=_STATUS_TRIGGERS))
+
+        t = (await manager.get(1)).triggers
+
+        assert t.spam_complaint.enabled is False
+        assert t.spam_complaint.status is None
+
+    @pytest.mark.asyncio
+    async def test_status_comes_through_list_and_create(self, webhooks):
+        manager, fake = webhooks
+        wh = _make_webhook(Triggers=_STATUS_TRIGGERS)
+        fake.mock_get_response({"Webhooks": [wh]})
+        fake.mock_post_response(wh)
+
+        listed = await manager.list()
+        created = await manager.create("https://example.com/hook", verify=False)
+
+        assert listed[0].triggers.delivery.status == "verified"
+        assert created.triggers.click.status == "unverified"
+
+    @pytest.mark.asyncio
+    async def test_responses_without_status_still_parse(self, webhooks):
+        """Webhooks created before verification existed carry no Status at all."""
+        manager, fake = webhooks
+        fake.mock_get_response(WEBHOOK)
+
+        t = (await manager.get(1)).triggers
+
+        assert t.open.enabled is True
+        assert t.open.status is None
+        assert t.bounce.status is None
+
+    @pytest.mark.asyncio
+    async def test_unknown_status_value_does_not_break_parsing(self, webhooks):
+        manager, fake = webhooks
+        triggers = {
+            **_STATUS_TRIGGERS,
+            "Delivery": {"Enabled": True, "Status": "pending"},
+        }
+        fake.mock_get_response(_make_webhook(Triggers=triggers))
+
+        assert (await manager.get(1)).triggers.delivery.status == "pending"
