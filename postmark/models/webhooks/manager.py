@@ -36,6 +36,7 @@ class WebhookManager:
         http_auth: dict | None = None,
         http_headers: builtins.list[dict] | None = None,
         triggers: dict | None = None,
+        verify: bool = True,
     ) -> Webhook:
         """
         Create a webhook.
@@ -49,6 +50,10 @@ class WebhookManager:
                 ``[{"Name": "X-Custom", "Value": "val"}]``.
             triggers: Trigger configuration using Postmark's PascalCase keys, e.g.
                 ``{"Open": {"Enabled": True, "PostFirstOpenOnly": False}}``.
+            verify: By default Postmark sends a test event for every enabled trigger
+                and refuses to save the webhook if they fail. ``False`` saves it
+                anyway, with each trigger's status ``"unverified"``; use
+                :meth:`verify` to verify it later.
         """
         body: dict = {"Url": url}
 
@@ -61,7 +66,8 @@ class WebhookManager:
         if triggers is not None:
             body["Triggers"] = triggers
 
-        response = await self.client.post("/webhooks", json=body)
+        endpoint = "/webhooks" if verify else "/webhooks?verify=false"
+        response = await self.client.post(endpoint, json=body)
         return Webhook(**response.json())
 
     async def edit(
@@ -71,6 +77,7 @@ class WebhookManager:
         http_auth: dict | None = None,
         http_headers: builtins.list[dict] | None = None,
         triggers: dict | None = None,
+        verify: bool = True,
     ) -> Webhook:
         """
         Update a webhook.
@@ -91,6 +98,8 @@ class WebhookManager:
             triggers: Trigger configuration. Merged field by field into the existing
                 triggers, so ``{"Bounce": {"Enabled": False}}`` leaves every other
                 trigger and every other Bounce setting as it is.
+            verify: ``False`` saves the changes without first sending test events
+                (see :meth:`create`). Triggers then report ``"unverified"``.
         """
         current = (await self.client.get(f"/webhooks/{webhook_id}")).json()
 
@@ -116,7 +125,8 @@ class WebhookManager:
         if merged:
             body["Triggers"] = merged
 
-        response = await self.client.put(f"/webhooks/{webhook_id}", json=body)
+        suffix = "" if verify else "?verify=false"
+        response = await self.client.put(f"/webhooks/{webhook_id}{suffix}", json=body)
         return Webhook(**response.json())
 
     async def get_statistics(self, webhook_id: int) -> WebhookStatistics:
