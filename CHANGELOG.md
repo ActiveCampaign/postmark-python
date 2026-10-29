@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Stats: `platform_usage()`, `browser_platform_usage()`, `click_location()` and the other per-day stats models no longer raise when Postmark omits a category whose count is zero (for example a day with no mobile activity). Missing counts read as `0` and a missing `days` as `[]`.
 - **Behaviour change:** `list_opens()` / `list_clicks()` client and OS filters (`client_name`, `client_company`, `client_family`, `os_name`, `os_family`, `os_company`) are now sent with the parameter names Postmark understands. They were sent in camelCase, which the API silently ignored, so these filters previously had no effect and returned unfiltered results. Calls that pass them will now return filtered results.
 - `list_opens()` / `list_clicks()`: `from_date` / `to_date` never had any effect (Postmark does not support date filtering on these endpoints). They are still accepted so existing calls keep working, but now emit a `FutureWarning` and are no longer sent.
+- `webhooks.edit()` now works with partial updates. Postmark requires `Url` on every `PUT /webhooks/{id}` and verifies the endpoint using only the request body, so `edit()` reads the current webhook, merges your changes (triggers field by field) and sends the complete configuration. This costs one extra `GET` per edit; calls that already passed everything keep working.
 
 ### Changed
 
