@@ -22,6 +22,9 @@ For details about the Postmark API in general, see the **[Postmark developer doc
 
 - Python 3.10+
 
+> **Security:** the Brotli decoder is affected by [CVE-2026-111497](https://www.cve.org/CVERecord?id=CVE-2026-111497). `httpx` requests and decodes Brotli only when the optional
+> `brotli` or `brotlicffi` package is installed. If you have either, use `brotli` >= 1.2.1 or `brotlicffi` >= 1.2.1.0.
+
 ## Installation
 
 Install from PyPI as **`postmark-python`** (the Python package you import is still **`postmark`**):
